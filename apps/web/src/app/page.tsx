@@ -1,6 +1,5 @@
 'use client';
 import Link from 'next/link';
-import { useState } from 'react';
 import {
   ArrowRight,
   ArrowUpRight,
@@ -9,56 +8,21 @@ import {
   Send,
   Sparkles,
   QrCode as QrIcon,
-  Menu,
-  X,
   Leaf,
-  ChevronDown,
 } from 'lucide-react';
-import { motion, useReducedMotion } from 'motion/react';
 import { Button } from '../components/ui/button';
 import { Logo, Stars, Reveal, Badge, SectionTitle } from '../components/shared';
 import { QrCode } from '../components/qr-code';
+import { MarketingHeader } from '../components/marketing-header';
+import { HeroScene, HeroIntro, FaqItem } from '../components/template-motion';
 import { ProductShowcase } from '../components/product-showcase';
 export default function Landing() {
-  const [menu, setMenu] = useState(false);
-  const reduce = useReducedMotion();
   return (
     <>
-      <header className="site-header wrap">
-        <Logo />
-        <nav className={menu ? 'site-nav open' : 'site-nav'}>
-          <a href="#features" onClick={() => setMenu(false)}>
-            Features
-          </a>
-          <a href="#how-it-works" onClick={() => setMenu(false)}>
-            How it works
-          </a>
-          <a href="#pricing" onClick={() => setMenu(false)}>
-            Pricing
-          </a>
-        </nav>
-        <div className="nav-actions">
-          <Link href="/login" className="login-link">
-            Log in
-          </Link>
-          <Button asChild size="small">
-            <Link href="/dashboard">
-              Try the demo <ArrowUpRight size={15} />
-            </Link>
-          </Button>
-          <button
-            className="icon-button mobile-toggle"
-            onClick={() => setMenu(!menu)}
-            aria-label="Toggle navigation"
-            aria-expanded={menu}
-          >
-            {menu ? <X /> : <Menu />}
-          </button>
-        </div>
-      </header>
+      <MarketingHeader />
       <main>
         <section className="hero wrap">
-          <div className="hero-copy">
+          <HeroIntro>
             <span className="eyebrow">
               <span className="small-line" /> Reviews, feedback & replies
             </span>
@@ -88,8 +52,8 @@ export default function Landing() {
               <Check size={14} /> No credit card <span>·</span> No setup needed{' '}
               <span>·</span> Interactive demo
             </div>
-          </div>
-          <div className="hero-composition">
+          </HeroIntro>
+          <HeroScene>
             <div className="orbit orbit-one" />
             <div className="orbit orbit-two" />
             <span className="composition-label">
@@ -110,19 +74,7 @@ export default function Landing() {
                 Illustrative card · Demo preview <ArrowUpRight size={13} />
               </div>
             </div>
-            <motion.div
-              className="floating-card feedback-float"
-              initial={{ opacity: 1, y: 0 }}
-              animate={
-                reduce
-                  ? { opacity: 1, y: 0 }
-                  : { opacity: [0.85, 1], y: [18, 0] }
-              }
-              transition={{
-                delay: reduce ? 0 : 0.15,
-                duration: reduce ? 0 : 0.45,
-              }}
-            >
+            <div className="floating-card feedback-float">
               <span className="float-icon mint">
                 <MessageSquare size={18} />
               </span>
@@ -135,16 +87,8 @@ export default function Landing() {
                 </span>
               </div>
               <span className="live-dot" />
-            </motion.div>
-            <motion.div
-              className="floating-card request-float"
-              initial={{ y: 0 }}
-              animate={{ y: reduce ? 0 : [12, 0] }}
-              transition={{
-                delay: reduce ? 0 : 0.25,
-                duration: reduce ? 0 : 0.35,
-              }}
-            >
+            </div>
+            <div className="floating-card request-float">
               <span className="float-icon violet">
                 <Send size={17} />
               </span>
@@ -155,16 +99,8 @@ export default function Landing() {
                   <Check size={11} /> Consent confirmed
                 </Badge>
               </div>
-            </motion.div>
-            <motion.div
-              className="floating-card reply-float"
-              initial={{ y: 0 }}
-              animate={{ y: reduce ? 0 : [12, 0] }}
-              transition={{
-                delay: reduce ? 0 : 0.35,
-                duration: reduce ? 0 : 0.35,
-              }}
-            >
+            </div>
+            <div className="floating-card reply-float">
               <div className="reply-heading">
                 <Sparkles size={16} />
                 <strong>Editable reply draft</strong>
@@ -174,29 +110,21 @@ export default function Landing() {
                 <span>Review before approving</span>
                 <Check size={14} />
               </div>
-            </motion.div>
+            </div>
             <span className="composition-star ping-mark" aria-hidden="true" />
             <div
               className="mini-journey"
               aria-label="Product journey: scan, share feedback, prepare reply"
             >
               {['Scan', 'Share', 'Reply'].map((step, index) => (
-                <motion.span
-                  key={step}
-                  initial={{ y: 0 }}
-                  animate={{ y: reduce ? 0 : [8, 0] }}
-                  transition={{
-                    delay: reduce ? 0 : 0.3 + index * 0.2,
-                    duration: reduce ? 0 : 0.3,
-                  }}
-                >
+                <span key={step}>
                   <i>{index + 1}</i>
                   {step}
                   {index < 2 && <ArrowRight size={12} />}
-                </motion.span>
+                </span>
               ))}
             </div>
-          </div>
+          </HeroScene>
         </section>
         <section className="value-strip" aria-label="Product capabilities">
           <div className="wrap">
@@ -414,14 +342,8 @@ export default function Landing() {
                 'Can I customise the QR and messages?',
                 'Yes. Explore the QR studio to change your business name, colour, and message, then download a real SVG QR card.',
               ],
-            ].map(([q, a]) => (
-              <details key={q}>
-                <summary>
-                  {q}
-                  <ChevronDown size={18} />
-                </summary>
-                <p>{a}</p>
-              </details>
+            ].map(([q, a], index) => (
+              <FaqItem key={q} question={q} answer={a} index={index} />
             ))}
           </div>
         </section>

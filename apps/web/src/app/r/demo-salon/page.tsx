@@ -1,6 +1,8 @@
 'use client';
+import { Field } from '../../../components/shared';
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
+import { motion, useReducedMotion } from 'motion/react';
 import {
   Leaf,
   ArrowUpRight,
@@ -19,6 +21,7 @@ export default function CustomerPage() {
   const [staff, setStaff] = useState('');
   const [done, setDone] = useState(false);
   const [google, setGoogle] = useState(false);
+  const reduced = useReducedMotion();
   const [textError, setTextError] = useState('');
   const textRef = useRef<HTMLTextAreaElement>(null);
   const successRef = useRef<HTMLDivElement>(null);
@@ -39,7 +42,13 @@ export default function CustomerPage() {
           <p>Salon & beauty</p>
         </div>
         {done ? (
-          <div
+          <motion.div
+            initial={false}
+            animate={{
+              opacity: reduced ? 1 : [0.7, 1],
+              y: reduced ? 0 : [5, 0],
+            }}
+            transition={{ duration: reduced ? 0 : 0.22 }}
             className="customer-success"
             role="status"
             tabIndex={-1}
@@ -51,7 +60,11 @@ export default function CustomerPage() {
               Your feedback has been recorded in this demo only. Nothing has
               been sent to the salon.
             </p>
-            <Button variant="secondary" onClick={() => setGoogle(true)}>
+            <Button
+              variant="secondary"
+              className="w-full flex-nowrap gap-2 px-3"
+              onClick={() => setGoogle(true)}
+            >
               <Star size={17} /> Leave an honest Google review{' '}
               <ArrowUpRight size={16} />
             </Button>
@@ -68,7 +81,7 @@ export default function CustomerPage() {
             >
               Back to your options <ArrowLeft size={15} />
             </button>
-          </div>
+          </motion.div>
         ) : (
           <>
             <span className="customer-greeting">Thank you for visiting</span>
@@ -148,7 +161,7 @@ export default function CustomerPage() {
                       : 'Select a rating from 1 to 5.'}
                   </p>
                 </fieldset>
-                <label className="field">
+                <Field>
                   Anything you’d like to share?
                   <textarea
                     ref={textRef}
@@ -166,13 +179,13 @@ export default function CustomerPage() {
                       if (textError) setTextError('');
                     }}
                   />
-                </label>
+                </Field>
                 {textError && (
                   <p id="feedback-error" className="error-note" role="alert">
                     {textError}
                   </p>
                 )}
-                <label className="field">
+                <Field>
                   Who looked after you?{' '}
                   <span className="optional">(optional)</span>
                   <select
@@ -184,7 +197,7 @@ export default function CustomerPage() {
                       <option key={s}>{s}</option>
                     ))}
                   </select>
-                </label>
+                </Field>
                 <Button type="submit" disabled={!rating}>
                   Share private feedback <Heart size={16} />
                 </Button>

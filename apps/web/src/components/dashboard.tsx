@@ -1,5 +1,7 @@
 'use client';
+import { Panel, Field, panelSurface } from './shared';
 import Link from 'next/link';
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { useState, useCallback } from 'react';
 import {
   ArrowUpRight,
@@ -34,6 +36,21 @@ import {
   sampleTrend,
   sampleRequestText,
 } from '../lib/mock-data';
+export function SessionNotice({ children }: { children: React.ReactNode }) {
+  const reduced = useReducedMotion();
+  return (
+    <motion.p
+      className="success-note"
+      role="status"
+      initial={{ opacity: reduced ? 1 : 0, y: reduced ? 0 : 4 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: reduced ? 0 : 0.18 }}
+    >
+      {children}
+    </motion.p>
+  );
+}
 export function PageHeading({
   eyebrow,
   title,
@@ -46,11 +63,15 @@ export function PageHeading({
   children?: React.ReactNode;
 }) {
   return (
-    <div className="page-heading">
+    <div className="page-heading mb-7 flex flex-wrap items-end justify-between gap-5 max-md:items-start">
       <div>
         <span className="eyebrow">{eyebrow}</span>
-        <h1>{title}</h1>
-        <p>{text}</p>
+        <h1 className="mt-2 text-[30px] font-semibold leading-tight tracking-[-1px] max-md:text-[28px]">
+          {title}
+        </h1>
+        <p className="mt-2 max-w-[620px] text-[15px] leading-7 text-[#535768]">
+          {text}
+        </p>
       </div>
       {children}
     </div>
@@ -106,7 +127,7 @@ export function Overview() {
         ))}
       </div>
       <div className="dashboard-two-col">
-        <section className="panel trend-panel">
+        <Panel className="trend-panel">
           <div className="panel-heading">
             <div>
               <h2>Customer activity</h2>
@@ -162,8 +183,8 @@ export function Overview() {
             <ArrowUpRight size={15} /> A scan is a visit. A click is interest.
             Neither confirms a review.
           </div>
-        </section>
-        <section className="panel setup-panel">
+        </Panel>
+        <Panel className="setup-panel">
           <div className="panel-heading">
             <div>
               <h2>Complete your setup</h2>
@@ -200,10 +221,10 @@ export function Overview() {
             </p>
           )}
           <TextLink href="/dashboard/qr">Visit your QR studio</TextLink>
-        </section>
+        </Panel>
       </div>
       <div className="dashboard-two-col">
-        <section className="panel">
+        <Panel className="">
           <div className="panel-heading">
             <div>
               <h2>Recent private feedback</h2>
@@ -231,8 +252,8 @@ export function Overview() {
               <ArrowUpRight size={16} />
             </Link>
           ))}
-        </section>
-        <section className="panel">
+        </Panel>
+        <Panel className="">
           <div className="panel-heading">
             <div>
               <h2>Quick actions</h2>
@@ -270,7 +291,7 @@ export function Overview() {
               <ArrowRight size={17} />
             </Link>
           ))}
-        </section>
+        </Panel>
       </div>
     </>
   );
@@ -336,26 +357,26 @@ export function QrStudio() {
         text="Customise your salon’s QR card and download a print-ready SVG."
       />
       <div className="qr-editor">
-        <section className="panel qr-controls">
+        <Panel className="qr-controls">
           <h2>Customise your QR card</h2>
           <p className="muted">Changes appear instantly in the live preview.</p>
-          <label className="field">
+          <Field>
             Business name
             <input
               value={name}
               maxLength={30}
               onChange={(e) => setName(e.target.value)}
             />
-          </label>
-          <label className="field">
+          </Field>
+          <Field>
             Display text
             <input
               value={text}
               maxLength={40}
               onChange={(e) => setText(e.target.value)}
             />
-          </label>
-          <div className="field">
+          </Field>
+          <Field as="div">
             Brand colour
             <div className="color-options">
               {['#6250b5', '#253c39', '#243650', '#ad5e41'].map((c) => (
@@ -376,8 +397,8 @@ export function QrStudio() {
                 onChange={(e) => setColor(e.target.value)}
               />
             </div>
-          </div>
-          <div className="field">
+          </Field>
+          <Field as="div">
             Choose a layout
             <Tabs.Root value={template} onValueChange={setTemplate}>
               <Tabs.List className="template-tabs" aria-label="QR card layout">
@@ -410,7 +431,7 @@ export function QrStudio() {
                 A clean, straight-edged layout for display on a wall or mirror.
               </Tabs.Content>
             </Tabs.Root>
-          </div>
+          </Field>
           <div className="form-divider" />
           <div className="info-note">
             <CheckCircle2 size={18} />
@@ -428,12 +449,8 @@ export function QrStudio() {
           <Button variant="secondary" onClick={() => setPreview(true)}>
             Preview customer experience <ArrowUpRight size={16} />
           </Button>
-          {message && (
-            <p className="success-note" role="status">
-              {message}
-            </p>
-          )}
-        </section>
+          {message && <SessionNotice>{message}</SessionNotice>}
+        </Panel>
         <section className="qr-canvas">
           <div className="canvas-label">
             <span>LIVE PREVIEW</span>
@@ -533,7 +550,7 @@ export function FeedbackInbox({
         </label>
       </div>
       <div className="inbox-layout">
-        <section className="panel inbox-list" aria-label="Feedback list">
+        <Panel className="inbox-list" aria-label="Feedback list">
           {loading ? (
             <div className="loading-state" role="status">
               <span className="spinner" />
@@ -590,9 +607,9 @@ export function FeedbackInbox({
               </Button>
             </div>
           )}
-        </section>
-        <section
-          className="panel feedback-detail"
+        </Panel>
+        <Panel
+          className="feedback-detail"
           id="feedback-detail"
           tabIndex={-1}
           aria-label="Selected feedback details"
@@ -623,7 +640,7 @@ export function FeedbackInbox({
                   </strong>
                 </span>
               </div>
-              <label className="field">
+              <Field>
                 A note for your team
                 <textarea
                   placeholder="What would you like to remember or follow up on?"
@@ -634,7 +651,7 @@ export function FeedbackInbox({
                     setSaved(false);
                   }}
                 />
-              </label>
+              </Field>
               <p className="field-help">
                 Internal demo note. Not sent to the customer.
               </p>
@@ -657,11 +674,13 @@ export function FeedbackInbox({
                   Save note
                 </Button>
               </div>
-              {saved && (
-                <p className="success-note" role="status">
-                  <CheckCircle2 size={17} /> Note saved in this demo session.
-                </p>
-              )}
+              <AnimatePresence initial={false}>
+                {saved && (
+                  <SessionNotice>
+                    <CheckCircle2 size={17} /> Note saved in this demo session.
+                  </SessionNotice>
+                )}
+              </AnimatePresence>
             </>
           ) : (
             <div className="empty-state">
@@ -673,7 +692,7 @@ export function FeedbackInbox({
               </p>
             </div>
           )}
-        </section>
+        </Panel>
       </div>
     </>
   );
@@ -723,7 +742,7 @@ export function Requests({ initialAdd = false }: { initialAdd?: boolean }) {
           <span>Requests simulated this session</span>
         </div>
       </div>
-      <section className="panel">
+      <Panel className="">
         <div className="panel-heading">
           <div>
             <h2>Customers and request status</h2>
@@ -801,7 +820,7 @@ export function Requests({ initialAdd = false }: { initialAdd?: boolean }) {
             </tbody>
           </table>
         </div>
-      </section>
+      </Panel>
       <div className="request-bottom-note">
         <Leaf size={18} />
         <p>
@@ -809,11 +828,7 @@ export function Requests({ initialAdd = false }: { initialAdd?: boolean }) {
           a review.
         </p>
       </div>
-      {message && (
-        <p className="success-note" role="status">
-          {message}
-        </p>
-      )}
+      {message && <SessionNotice>{message}</SessionNotice>}
       <Dialog
         open={add}
         onOpenChange={setAdd}
@@ -840,7 +855,7 @@ export function Requests({ initialAdd = false }: { initialAdd?: boolean }) {
             setMessage('Sample customer added to this demo session.');
           }}
         >
-          <label className="field">
+          <Field>
             Full name
             <input
               required
@@ -848,8 +863,8 @@ export function Requests({ initialAdd = false }: { initialAdd?: boolean }) {
               onChange={(e) => setName(e.target.value)}
               maxLength={60}
             />
-          </label>
-          <label className="field">
+          </Field>
+          <Field>
             Email address
             <input
               type="email"
@@ -858,7 +873,7 @@ export function Requests({ initialAdd = false }: { initialAdd?: boolean }) {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="customer@example.com"
             />
-          </label>
+          </Field>
           <label className="consent-checkbox">
             <input
               type="checkbox"
@@ -899,18 +914,18 @@ export function Requests({ initialAdd = false }: { initialAdd?: boolean }) {
           </div>
         ) : (
           <>
-            <label className="field">
+            <Field>
               To
               <input readOnly value={target?.email || ''} />
-            </label>
-            <label className="field">
+            </Field>
+            <Field>
               Your message
               <textarea
                 rows={5}
                 value={requestText}
                 onChange={(e) => setRequestText(e.target.value)}
               />
-            </label>
+            </Field>
             <p className="message-preview">
               {requestText
                 .replace('{name}', target?.name.split(' ')[0] || '')
@@ -986,7 +1001,7 @@ export function Reviews() {
           {visible.length ? (
             visible.map((r) => (
               <button
-                className={`panel review-card ${active?.id === r.id ? 'selected' : ''}`}
+                className={`${panelSurface} review-card ${active?.id === r.id ? 'selected border-[#b5a2cf] bg-[#f7f5ef]' : 'border-[#e0ddd8] bg-white hover:border-[#b5a2cf] hover:bg-[#faf8f3]'}`}
                 key={r.id}
                 aria-pressed={active?.id === r.id}
                 onClick={() => {
@@ -1012,7 +1027,7 @@ export function Reviews() {
               </button>
             ))
           ) : (
-            <div className="panel empty-state">
+            <Panel as="div" className="empty-state">
               <Star size={32} />
               <h3>No matching sample reviews</h3>
               <p>Choose another rating to see a review.</p>
@@ -1022,11 +1037,11 @@ export function Reviews() {
               >
                 Show all ratings
               </Button>
-            </div>
+            </Panel>
           )}
         </section>
-        <section
-          className="panel reply-editor"
+        <Panel
+          className="reply-editor"
           id="reply-editor"
           tabIndex={-1}
           aria-label="Selected review reply editor"
@@ -1048,7 +1063,7 @@ export function Reviews() {
                   </Badge>
                 </div>
               </div>
-              <label className="field">
+              <Field>
                 Your reply draft
                 <textarea
                   rows={6}
@@ -1058,7 +1073,7 @@ export function Reviews() {
                     setApproved(approved.filter((id) => id !== active.id));
                   }}
                 />
-              </label>
+              </Field>
               <p className="field-help">
                 A prewritten sample, not a live AI response. Please review
                 before approving.
@@ -1075,10 +1090,10 @@ export function Reviews() {
                   : 'Approve demo draft'}
               </Button>
               {approved.includes(active.id) && (
-                <p className="success-note" role="status">
+                <SessionNotice>
                   Draft approved for this session. It has not been published to
                   Google.
-                </p>
+                </SessionNotice>
               )}
               <Button
                 variant="ghost"
@@ -1096,7 +1111,7 @@ export function Reviews() {
               <p>Select a sample review to prepare a reply.</p>
             </div>
           )}
-        </section>
+        </Panel>
       </div>
     </>
   );

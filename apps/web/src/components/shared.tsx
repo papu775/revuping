@@ -1,5 +1,6 @@
 'use client';
 import Link from 'next/link';
+import { Children, isValidElement } from 'react';
 import {
   AudioLines,
   ArrowUpRight,
@@ -59,7 +60,13 @@ export function Badge({
   children: React.ReactNode;
   mint?: boolean;
 }) {
-  return <span className={`badge ${mint ? 'mint' : ''}`}>{children}</span>;
+  return (
+    <span
+      className={`badge inline-flex items-center gap-1.5 whitespace-nowrap rounded-[5px] border px-2 py-1 text-xs font-semibold leading-4 ${mint ? 'mint border-[#d0e2d3] bg-[#e9f2eb] text-[#3e644e]' : 'border-[#e1d8f0] bg-[#eeeaf8] text-[#654d9a]'}`}
+    >
+      {children}
+    </span>
+  );
 }
 export function SectionTitle({
   eyebrow,
@@ -100,5 +107,46 @@ export function TextLink({
       {children}
       {external ? <ArrowUpRight size={16} /> : <ArrowRight size={16} />}
     </Link>
+  );
+}
+
+export function Field({
+  children,
+  as: Component = 'label',
+}: {
+  children: React.ReactNode;
+  as?: 'label' | 'div';
+}) {
+  const parts = Children.toArray(children);
+  const firstControl = parts.findIndex(
+    (child) => isValidElement(child) && child.type !== 'span',
+  );
+  const heading = firstControl < 0 ? parts : parts.slice(0, firstControl);
+  const controls = firstControl < 0 ? [] : parts.slice(firstControl);
+  return (
+    <Component className="field [&_[aria-invalid=true]]:border-[#b55645] [&_[aria-invalid=true]]:bg-[#fff8f5] mb-5 flex flex-col gap-2 text-sm font-semibold text-navy [&_input]:min-h-12 [&_input]:rounded-lg [&_input]:border [&_input]:border-[#d8d6df] [&_input]:bg-white [&_input]:px-3.5 [&_input]:py-3 [&_input]:font-normal [&_textarea]:rounded-lg [&_textarea]:border [&_textarea]:border-[#d8d6df] [&_textarea]:bg-white [&_textarea]:p-3.5 [&_textarea]:font-normal [&_select]:min-h-12 [&_select]:rounded-lg [&_select]:border [&_select]:border-[#d8d6df] [&_select]:bg-white [&_select]:px-3.5 [&_select]:font-normal max-md:[&_input]:text-base max-md:[&_textarea]:text-base max-md:[&_select]:text-base">
+      {heading.length > 0 && (
+        <span className="flex flex-wrap items-baseline gap-x-1">{heading}</span>
+      )}
+      {controls}
+    </Component>
+  );
+}
+
+export const panelSurface = 'panel overflow-hidden rounded-xl border';
+
+export function Panel({
+  children,
+  className = '',
+  as: Component = 'section',
+  ...props
+}: React.HTMLAttributes<HTMLElement> & { as?: 'section' | 'div' }) {
+  return (
+    <Component
+      className={`${panelSurface} border-[#e0ddd8] bg-white ${className}`}
+      {...props}
+    >
+      {children}
+    </Component>
   );
 }

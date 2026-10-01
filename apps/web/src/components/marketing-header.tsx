@@ -1,0 +1,137 @@
+'use client';
+import Link from 'next/link';
+import { useEffect, useRef, useState } from 'react';
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
+import { ArrowUpRight, Menu, X } from 'lucide-react';
+import { Logo } from './shared';
+import { Button } from './ui/button';
+const links = [
+  ['Features', '#features'],
+  ['How it works', '#how-it-works'],
+  ['Pricing', '#pricing'],
+] as const;
+export function MarketingHeader() {
+  const [open, setOpen] = useState(false),
+    [scrolled, setScrolled] = useState(false),
+    [active, setActive] = useState('');
+  const trigger = useRef<HTMLButtonElement>(null),
+    nav = useRef<HTMLElement>(null);
+  const reduced = useReducedMotion();
+  useEffect(() => {
+    const scroll = () => setScrolled(window.scrollY > 12);
+    scroll();
+    window.addEventListener('scroll', scroll, { passive: true });
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries)
+          if (entry.isIntersecting) setActive(`#${entry.target.id}`);
+      },
+      { rootMargin: '-90px 0px -55% 0px' },
+    );
+    links.forEach(([, href]) => {
+      const target = document.querySelector(href);
+      if (target) observer.observe(target);
+    });
+    return () => {
+      window.removeEventListener('scroll', scroll);
+      observer.disconnect();
+    };
+  }, []);
+  useEffect(() => {
+    if (!open) return;
+    nav.current?.querySelector<HTMLAnchorElement>('a')?.focus();
+    const close = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setOpen(false);
+        trigger.current?.focus();
+      }
+    };
+    const media = window.matchMedia('(min-width: 768px)');
+    const resize = () => {
+      if (media.matches) setOpen(false);
+    };
+    document.addEventListener('keydown', close);
+    media.addEventListener('change', resize);
+    return () => {
+      document.removeEventListener('keydown', close);
+      media.removeEventListener('change', resize);
+    };
+  }, [open]);
+  return (
+    <header
+      className={`sticky top-0 z-50 border-b transition-[background-color,border-color,box-shadow] duration-200 ${scrolled || open ? 'border-[#e4e1da] bg-ivory/95 shadow-[0_4px_18px_#20243c06] backdrop-blur-sm' : 'border-transparent bg-ivory'}`}
+    >
+      <div className="mx-auto flex h-[76px] max-w-[1320px] items-center justify-between gap-3 px-4 md:gap-5 md:px-8 xl:px-10 [&_.logo]:text-[22px] md:[&_.logo]:text-[26px] [&_.logo-mark]:size-7 md:[&_.logo-mark]:size-8">
+        <Logo />
+        <nav
+          aria-label="Main navigation"
+          className="hidden items-center gap-7 md:flex"
+        >
+          {links.map(([label, href]) => (
+            <a
+              key={href}
+              href={href}
+              aria-current={active === href ? 'location' : undefined}
+              className={`rounded-md py-2 text-[15px] font-medium transition-colors hover:text-violet ${active === href ? 'text-violet' : 'text-[#535768]'}`}
+            >
+              {label}
+            </a>
+          ))}
+        </nav>
+        <div className="flex items-center gap-4 max-md:gap-2">
+          <Link
+            href="/login"
+            className="hidden rounded-md py-2 text-sm font-medium hover:text-violet md:inline-flex"
+          >
+            Log in
+          </Link>
+          <Button asChild size="small">
+            <Link href="/dashboard">
+              Try the demo <ArrowUpRight />
+            </Link>
+          </Button>
+          <button
+            ref={trigger}
+            className="mobile-toggle flex size-11 items-center justify-center rounded-lg transition-colors hover:bg-[#eeeaf8] md:hidden"
+            onClick={() => setOpen(!open)}
+            aria-label="Toggle navigation"
+            aria-expanded={open}
+            aria-controls="marketing-mobile-menu"
+          >
+            {open ? <X size={21} /> : <Menu size={21} />}
+          </button>
+        </div>
+      </div>
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.nav
+            ref={nav}
+            id="marketing-mobile-menu"
+            aria-label="Mobile navigation"
+            initial={{ height: reduced ? 'auto' : 0, opacity: reduced ? 1 : 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: reduced ? 'auto' : 0, opacity: reduced ? 1 : 0 }}
+            transition={{ duration: reduced ? 0 : 0.2 }}
+            className="overflow-hidden border-t border-[#e4e1da] md:hidden"
+          >
+            <div className="flex flex-col gap-1 p-4">
+              {[...links, ['Log in', '/login']].map(([label, href]) => (
+                <Link
+                  key={href}
+                  href={href}
+                  onClick={() => {
+                    setOpen(false);
+                    trigger.current?.focus();
+                  }}
+                  className="rounded-lg px-3 py-3 text-base font-medium hover:bg-[#eeeaf8]"
+                >
+                  {label}
+                </Link>
+              ))}
+            </div>
+          </motion.nav>
+        )}
+      </AnimatePresence>
+    </header>
+  );
+}

@@ -273,12 +273,11 @@ const base = process.env.PROTOTYPE_URL || 'http://localhost:3000';
     .getByRole('link', { name: 'Explore the product', exact: true })
     .click();
   await expect(page).toHaveURL(base + '/#features');
-  await page.locator('.faq-list summary').first().focus();
+  await page.locator('.faq-list button[aria-controls]').first().focus();
   await page.keyboard.press('Enter');
-  await expect(page.locator('.faq-list details').first()).toHaveAttribute(
-    'open',
-    '',
-  );
+  await expect(
+    page.locator('.faq-list button[aria-controls]').first(),
+  ).toHaveAttribute('aria-expanded', 'true');
   await page.goto(base + '/login');
   for (const input of await page.locator('.auth-form input').all()) {
     expect(
@@ -295,7 +294,7 @@ const base = process.env.PROTOTYPE_URL || 'http://localhost:3000';
   await page.goto(base + '/');
   await page.getByRole('button', { name: 'Toggle navigation' }).click();
   await page
-    .locator('.site-nav')
+    .locator('#marketing-mobile-menu')
     .getByRole('link', { name: 'Pricing', exact: true })
     .click();
   await expect(page).toHaveURL(base + '/#pricing');
@@ -317,6 +316,7 @@ const base = process.env.PROTOTYPE_URL || 'http://localhost:3000';
     'Demo checklist complete',
   );
   expect(errors).toEqual([]);
+  await require('./check-motion.cjs')(browser, base);
   await browser.close();
   console.log(
     'PASS: 27 responsive route checks; product tabs, SVG download, inbox, consent, dialogs, review drafts, feedback, demo login, mobile navigation, detail focus, keyboard navigation, focus restoration, demo signup and reduced motion. Chart tooltips, validation feedback, mobile input sizing and direct demo access also pass. No browser-console errors.',

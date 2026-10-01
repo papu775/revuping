@@ -1,4 +1,5 @@
 'use client';
+import { Field } from './shared';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -112,12 +113,12 @@ export function Auth({ signup = false }: { signup?: boolean }) {
             }}
           >
             {signup && (
-              <label className="field">
+              <Field>
                 Your name
                 <input required autoComplete="off" placeholder="Sample owner" />
-              </label>
+              </Field>
             )}
-            <label className="field">
+            <Field>
               Email address
               <input
                 type="email"
@@ -125,8 +126,8 @@ export function Auth({ signup = false }: { signup?: boolean }) {
                 autoComplete="off"
                 placeholder="demo@example.com"
               />
-            </label>
-            <label className="field">
+            </Field>
+            <Field>
               Password
               <div className="password-field">
                 <input
@@ -152,7 +153,7 @@ export function Auth({ signup = false }: { signup?: boolean }) {
                   {show ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
-            </label>
+            </Field>
             {error && (
               <p className="error-note" role="alert" id="auth-error">
                 {error}

@@ -1,5 +1,6 @@
 import './global.css';
-import './refinements.css';
+import './template.css';
+import { TemplateMotion } from '../components/template-motion';
 export const metadata = {
   title: 'RevuPing — Review requests, feedback & replies',
   description:
@@ -12,7 +13,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <TemplateMotion>{children}</TemplateMotion>
+      </body>
     </html>
   );
 }
