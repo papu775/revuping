@@ -60,8 +60,7 @@ export default function Landing() {
         <section className="hero wrap">
           <div className="hero-copy">
             <span className="eyebrow">
-              <span className="small-line" /> REVIEW REQUESTS & CUSTOMER
-              FEEDBACK
+              <span className="small-line" /> Reviews, feedback & replies
             </span>
             <h1>
               Reviews &amp; feedback.
@@ -81,8 +80,8 @@ export default function Landing() {
                   Try the demo <ArrowRight size={18} />
                 </Link>
               </Button>
-              <a href="#how-it-works" className="how-link">
-                <span className="play-circle">▶</span> See how it works
+              <a href="#features" className="how-link">
+                Explore the product <ArrowRight size={17} />
               </a>
             </div>
             <div className="hero-footnote">
@@ -94,23 +93,21 @@ export default function Landing() {
             <div className="orbit orbit-one" />
             <div className="orbit orbit-two" />
             <span className="composition-label">
-              YOUR CUSTOMER EXPERIENCE, CONNECTED
+              An illustrative customer journey
             </span>
             <div className="salon-qr">
               <div className="salon-emblem">
                 <Leaf size={27} />
               </div>
               <span className="salon-wordmark">bloom & co.</span>
-              <span className="salon-sub">
-                HAIR • BEAUTY • A LITTLE YOU TIME
-              </span>
+              <span className="salon-sub">Salon & beauty</span>
               <div className="hero-qr">
-                <QrCode />
+                <QrCode decorative />
               </div>
               <h3>How was your visit?</h3>
               <p>We’d love to hear about it.</p>
               <div className="qr-card-footer">
-                SCAN. SHARE. MAKE OUR DAY. <ArrowUpRight size={13} />
+                Illustrative card · Demo preview <ArrowUpRight size={13} />
               </div>
             </div>
             <motion.div
@@ -153,7 +150,7 @@ export default function Landing() {
               </span>
               <div>
                 <strong>Review request ready</strong>
-                <p>Your review request is ready.</p>
+                <p>Olivia Martin · Sample request</p>
                 <Badge mint>
                   <Check size={11} /> Consent confirmed
                 </Badge>
@@ -237,9 +234,9 @@ export default function Landing() {
         <section id="how-it-works" className="section wrap">
           <Reveal>
             <SectionTitle
-              eyebrow="A SIMPLE WORKFLOW"
+              eyebrow="A simple workflow"
               title="From a visit to a useful conversation."
-              text="No complicated workflows. Just three simple ways to stay close to your customers."
+              text="Create your QR, request with consent, and follow up from one workspace."
             />
           </Reveal>
           <div className="steps">
@@ -288,8 +285,8 @@ export default function Landing() {
               </div>
               <h3>Manage feedback and replies</h3>
               <p>
-                Bring feedback and review drafts together. Spot patterns and
-                make your next visit even better.
+                Save internal notes, resolve private feedback, and prepare a
+                considered response to each review.
               </p>
             </Reveal>
           </div>
@@ -298,7 +295,7 @@ export default function Landing() {
           <div className="wrap companion-layout">
             <div>
               <span className="eyebrow">
-                ALONGSIDE GOOGLE. AROUND YOUR CUSTOMERS.
+                Alongside Google. Around your customers.
               </span>
               <h2>
                 Google holds the reviews.
@@ -352,7 +349,7 @@ export default function Landing() {
         </section>
         <section id="pricing" className="section wrap pricing-coming">
           <div className="pricing-intro">
-            <span className="eyebrow">PLANS ARE STILL TAKING SHAPE</span>
+            <span className="eyebrow">Plans are still taking shape</span>
             <h2>Pricing coming soon.</h2>
             <p>
               Start by exploring the experience. Prices, plan features and
@@ -366,7 +363,7 @@ export default function Landing() {
             </Button>
           </div>
           <div className="pricing-outline">
-            <span className="eyebrow">WHAT YOU CAN EXPLORE TODAY</span>
+            <span className="eyebrow">What you can explore today</span>
             <h3>One connected workflow.</h3>
             <ul>
               <li>
@@ -391,12 +388,8 @@ export default function Landing() {
         </section>
         <section className="faq-section wrap">
           <div>
-            <span className="eyebrow">A FEW THINGS YOU MIGHT BE WONDERING</span>
-            <h2>
-              Questions?
-              <br />
-              Here are the details.
-            </h2>
+            <span className="eyebrow">Common questions</span>
+            <h2>Before you explore.</h2>
             <p>What to expect from this frontend demo.</p>
           </div>
           <div className="faq-list">
@@ -435,7 +428,7 @@ export default function Landing() {
         <section className="final-cta wrap">
           <span className="cta-spark ping-mark" aria-hidden="true" />
           <div>
-            <span className="eyebrow">GOOD CONVERSATIONS START HERE</span>
+            <span className="eyebrow">Good conversations start here</span>
             <h2>See how RevuPing fits your business.</h2>
             <p>
               Explore the dashboard, customise a QR card, and try the customer

@@ -47,7 +47,7 @@ export function ProductShowcase() {
       <div className="wrap">
         <Reveal className="showcase-intro">
           <div>
-            <span className="eyebrow">ONE WORKSPACE. A CLEAR NEXT STEP.</span>
+            <span className="eyebrow">One workspace. A clear next step.</span>
             <h2>
               Know what customers think.
               <br />
@@ -175,7 +175,7 @@ export function ProductShowcase() {
                     ))}
                   </div>
                   <div className="showcase-detail">
-                    <span className="eyebrow">SELECTED FEEDBACK</span>
+                    <span className="eyebrow">Selected feedback</span>
                     <h4>{demo.selected.name}</h4>
                     <Stars rating={demo.selected.rating} />
                     <p>“{demo.selected.text}”</p>

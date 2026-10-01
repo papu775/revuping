@@ -61,13 +61,13 @@ export function Overview() {
   return (
     <>
       <PageHeading
-        eyebrow="BLOOM & CO. · DEMO WORKSPACE"
+        eyebrow="Bloom & Co. · Demo workspace"
         title="Business overview"
         text="Track customer activity, follow up on feedback, and manage review requests."
       >
-        <Button asChild>
-          <Link href="/dashboard/feedback">
-            <MessageSquare size={17} /> Review feedback
+        <Button asChild variant="secondary">
+          <Link href="/dashboard/requests?add=true">
+            <Plus size={17} /> Add customer
           </Link>
         </Button>
       </PageHeading>
@@ -79,7 +79,7 @@ export function Overview() {
           <div>
             <strong>3 feedback responses need attention</strong>
             <p>
-              Start with unresolved feedback. Add a note, then mark it resolved.
+              Follow up on unresolved visits before starting the next request.
             </p>
           </div>
         </div>
@@ -110,7 +110,7 @@ export function Overview() {
           <div className="panel-heading">
             <div>
               <h2>Customer activity</h2>
-              <p>Customer activity · sample last 7 days</p>
+              <p>Fictional activity · Last 7 days</p>
             </div>
             <Badge>This week</Badge>
           </div>
@@ -124,8 +124,8 @@ export function Overview() {
           </div>
           <div
             className="trend-chart"
-            role="img"
-            aria-label="Sample QR scans from Saturday to Friday: 18, 22, 15, 28, 32, 27, 42. Feedback: 3, 5, 2, 6, 8, 5, 9."
+            role="group"
+            aria-label="Fictional activity chart: QR scans and private feedback by day"
           >
             <div className="chart-axis">
               <span>50</span>
@@ -134,13 +134,27 @@ export function Overview() {
             </div>
             <div className="chart-bars">
               {sampleTrend.scans.map((n, i) => (
-                <div key={i} className="bar-group">
+                <button
+                  type="button"
+                  key={i}
+                  className="bar-group"
+                  aria-label={`${sampleTrend.days[i]}: ${n} QR scans, ${sampleTrend.feedback[i]} private feedback responses. Fictional data.`}
+                >
+                  <span className="chart-tooltip">
+                    <strong>{sampleTrend.days[i]} · Sample</strong>
+                    <span>
+                      QR scans <b>{n}</b>
+                    </span>
+                    <span>
+                      Private feedback <b>{sampleTrend.feedback[i]}</b>
+                    </span>
+                  </span>
                   <div className="bar-pair">
                     <i style={{ height: `${n * 2}%` }} />
                     <i style={{ height: `${sampleTrend.feedback[i] * 2}%` }} />
                   </div>
                   <span>{sampleTrend.days[i]}</span>
-                </div>
+                </button>
               ))}
             </div>
           </div>
@@ -317,7 +331,7 @@ export function QrStudio() {
   return (
     <>
       <PageHeading
-        eyebrow="BRANDED CUSTOMER EXPERIENCE"
+        eyebrow="Branded customer experience"
         title="QR code studio"
         text="Customise your salon’s QR card and download a print-ready SVG."
       />
@@ -482,11 +496,16 @@ export function FeedbackInbox({
   return (
     <>
       <PageHeading
-        eyebrow="PRIVATE CUSTOMER FEEDBACK"
+        eyebrow="Private customer feedback"
         title="Feedback inbox"
         text="Search customer feedback, add internal notes, and track resolution."
       >
-        <Button variant="secondary" onClick={refresh}>
+        <Button
+          variant="secondary"
+          onClick={refresh}
+          disabled={loading}
+          aria-busy={loading}
+        >
           <Clock3 size={16} /> Refresh demo
         </Button>
       </PageHeading>
@@ -525,6 +544,7 @@ export function FeedbackInbox({
               <button
                 className={`feedback-row ${detail?.id === f.id ? 'selected' : ''}`}
                 key={f.id}
+                aria-pressed={detail?.id === f.id}
                 onClick={() => {
                   setSelected(f.id);
                   setSaved(false);
@@ -671,7 +691,7 @@ export function Requests({ initialAdd = false }: { initialAdd?: boolean }) {
   return (
     <>
       <PageHeading
-        eyebrow="CONSENT-BASED CUSTOMER OUTREACH"
+        eyebrow="Consent-based customer outreach"
         title="Review requests"
         text="Add customers, confirm consent, and preview requests or reminders."
       >
@@ -932,7 +952,7 @@ export function Reviews() {
   return (
     <>
       <PageHeading
-        eyebrow="SIMULATED GOOGLE CONNECTION"
+        eyebrow="Simulated Google connection"
         title="Google reviews & replies"
         text="Read sample Google reviews and edit a reply draft before approving."
       />
@@ -968,6 +988,7 @@ export function Reviews() {
               <button
                 className={`panel review-card ${active?.id === r.id ? 'selected' : ''}`}
                 key={r.id}
+                aria-pressed={active?.id === r.id}
                 onClick={() => {
                   setSelected(r.id);
                   focusWorkspacePanel('reply-editor');

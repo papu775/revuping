@@ -158,8 +158,10 @@ export default function DashboardLayout({
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
               >
-                <option>Bloom & Co. · Notting Hill</option>
-                <option>Bloom & Co. · Richmond (sample)</option>
+                <option value="Bloom & Co. · Notting Hill">Notting Hill</option>
+                <option value="Bloom & Co. · Richmond (sample)">
+                  Richmond (sample)
+                </option>
               </select>
               <ChevronDown size={12} />
             </label>

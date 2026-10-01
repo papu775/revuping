@@ -78,6 +78,15 @@ const base = process.env.PROTOTYPE_URL || 'http://localhost:3000';
     page.getByRole('button', { name: 'Approve preview draft' }),
   ).toBeEnabled();
   await page.goto(base + '/dashboard');
+  const sampleDay = page.getByRole('button', {
+    name: 'Sat: 18 QR scans, 3 private feedback responses. Fictional data.',
+    exact: true,
+  });
+  await sampleDay.focus();
+  await expect(sampleDay.locator('.chart-tooltip')).toBeVisible();
+  await expect(sampleDay.locator('.chart-tooltip')).toContainText('QR scans');
+  await sampleDay.hover();
+  await expect(sampleDay.locator('.chart-tooltip')).toBeVisible();
   await page.getByRole('link', { name: 'Review unresolved feedback' }).click();
   await expect(page.getByLabel('Feedback status')).toHaveValue(
     'Needs attention',
@@ -165,6 +174,15 @@ const base = process.env.PROTOTYPE_URL || 'http://localhost:3000';
   ).toBe(false);
   await page.getByLabel('Who looked after you?').selectOption('Alex');
   await page.getByRole('button', { name: '1 star', exact: true }).click();
+  await expect(page.locator('#rating-status')).toContainText(
+    '1 out of 5 selected',
+  );
+  await page.getByRole('button', { name: 'Share private feedback' }).click();
+  await expect(page.locator('#feedback-error')).toBeVisible();
+  await expect(page.getByLabel('Anything you’d like to share?')).toBeFocused();
+  await expect(
+    page.getByLabel('Anything you’d like to share?'),
+  ).toHaveAttribute('aria-invalid', 'true');
   await expect(
     page.getByRole('button', { name: 'Leave a Google review' }),
   ).toBeVisible();
@@ -173,6 +191,7 @@ const base = process.env.PROTOTYPE_URL || 'http://localhost:3000';
     .fill('The appointment started late.');
   await page.getByRole('button', { name: 'Share private feedback' }).click();
   await expect(page.getByText('Thank you for your feedback.')).toBeVisible();
+  await expect(page.locator('.customer-success')).toBeFocused();
   await page
     .getByRole('button', { name: 'Leave an honest Google review' })
     .click();
@@ -247,6 +266,33 @@ const base = process.env.PROTOTYPE_URL || 'http://localhost:3000';
   await expect(page.getByRole('dialog')).toBeVisible();
   await page.keyboard.press('Escape');
   await page.goto(base + '/');
+  await expect(
+    page.getByRole('link', { name: 'Explore the product', exact: true }),
+  ).toHaveAttribute('href', '#features');
+  await page
+    .getByRole('link', { name: 'Explore the product', exact: true })
+    .click();
+  await expect(page).toHaveURL(base + '/#features');
+  await page.locator('.faq-list summary').first().focus();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('.faq-list details').first()).toHaveAttribute(
+    'open',
+    '',
+  );
+  await page.goto(base + '/login');
+  for (const input of await page.locator('.auth-form input').all()) {
+    expect(
+      await input.evaluate((element) =>
+        parseFloat(getComputedStyle(element).fontSize),
+      ),
+    ).toBeGreaterThanOrEqual(16);
+  }
+  await expect(
+    page.getByRole('link', { name: 'Continue with demo access' }),
+  ).toHaveClass(/button-primary/);
+  await page.getByRole('link', { name: 'Continue with demo access' }).click();
+  await expect(page).toHaveURL(base + '/dashboard');
+  await page.goto(base + '/');
   await page.getByRole('button', { name: 'Toggle navigation' }).click();
   await page
     .locator('.site-nav')
@@ -273,7 +319,7 @@ const base = process.env.PROTOTYPE_URL || 'http://localhost:3000';
   expect(errors).toEqual([]);
   await browser.close();
   console.log(
-    'PASS: 27 responsive route checks; product tabs, SVG download, inbox, consent, dialogs, review drafts, feedback, demo login, mobile navigation, detail focus, keyboard navigation, focus restoration, demo signup and reduced motion. No browser-console errors.',
+    'PASS: 27 responsive route checks; product tabs, SVG download, inbox, consent, dialogs, review drafts, feedback, demo login, mobile navigation, detail focus, keyboard navigation, focus restoration, demo signup and reduced motion. Chart tooltips, validation feedback, mobile input sizing and direct demo access also pass. No browser-console errors.',
   );
 })().catch((error) => {
   console.error(error);

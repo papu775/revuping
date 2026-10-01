@@ -33,8 +33,8 @@ p {
   padding-inline: 40px;
 }
 .eyebrow {
-  font-size: 11px;
-  letter-spacing: 1.5px;
+  font-size: 12px;
+  letter-spacing: 0.8px;
   line-height: 1.6;
   font-weight: 700;
 }
@@ -187,7 +187,7 @@ p {
   padding-bottom: 68px;
 }
 .hero-copy .eyebrow {
-  font-size: 11px;
+  font-size: 12px;
   margin-bottom: 25px;
 }
 .hero h1 {
@@ -228,8 +228,8 @@ p {
   height: 535px;
 }
 .composition-label {
-  font-size: 10px;
-  letter-spacing: 1.2px;
+  font-size: 12px;
+  letter-spacing: 0.7px;
   left: 75px;
 }
 .salon-qr {
@@ -243,7 +243,7 @@ p {
   font-size: 30px;
 }
 .salon-sub {
-  font-size: 8px;
+  font-size: 12px;
 }
 .hero-qr {
   width: 165px;
@@ -256,7 +256,7 @@ p {
   font-size: 12px;
 }
 .qr-card-footer {
-  font-size: 8px;
+  font-size: 12px;
   letter-spacing: 0.7px;
 }
 .feedback-float {
@@ -266,7 +266,7 @@ p {
   padding: 19px 17px;
 }
 .feedback-float small {
-  font-size: 9px;
+  font-size: 12px;
   letter-spacing: 0.9px;
 }
 .feedback-float p {
@@ -274,7 +274,7 @@ p {
   line-height: 1.6;
 }
 .feedback-float .muted {
-  font-size: 11px;
+  font-size: 12px;
 }
 .feedback-float .stars svg {
   width: 12px;
@@ -292,7 +292,7 @@ p {
   font-size: 12px;
 }
 .request-float .badge {
-  font-size: 10px;
+  font-size: 12px;
   padding: 4px 7px;
 }
 .reply-float {
@@ -309,7 +309,7 @@ p {
   line-height: 1.7;
 }
 .reply-bottom {
-  font-size: 10px;
+  font-size: 12px;
 }
 .mini-journey {
   font-size: 12px;
@@ -319,7 +319,7 @@ p {
 .mini-journey i {
   width: 22px;
   height: 22px;
-  font-size: 10px;
+  font-size: 12px;
 }
 .value-strip > .wrap {
   padding-block: 25px;
@@ -371,7 +371,7 @@ p {
   font-size: 12px;
 }
 .mini-insight > span:last-child {
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.6px;
 }
 .steps h3 {
@@ -408,8 +408,8 @@ p {
   border: 1px solid #e5ded5;
 }
 .request-preview-top {
-  font-size: 11px;
-  letter-spacing: 1px;
+  font-size: 12px;
+  letter-spacing: 0.6px;
   margin-bottom: 24px;
 }
 .message-paper {
@@ -478,8 +478,8 @@ p {
   letter-spacing: 0.8px;
 }
 .plan-label {
-  font-size: 10px;
-  letter-spacing: 1px;
+  font-size: 12px;
+  letter-spacing: 0.6px;
   padding: 7px 12px;
 }
 .price {
@@ -561,7 +561,7 @@ p {
   font-size: 13px;
 }
 .footer-bottom {
-  font-size: 11px;
+  font-size: 12px;
   gap: 25px;
   line-height: 1.7;
 }
@@ -684,7 +684,7 @@ p {
   background: #f0eafa;
 }
 .showcase-demo-label {
-  font-size: 10px;
+  font-size: 12px;
   line-height: 1.9;
   color: #6b6174;
   padding: 25px 10px 0;
@@ -780,11 +780,11 @@ p {
   gap: 8px;
   justify-content: space-between;
   align-items: center;
-  font-size: 11px;
+  font-size: 12px;
   color: #67616e;
 }
 .showcase-row-meta .badge {
-  font-size: 10px;
+  font-size: 12px;
   padding: 4px 6px;
 }
 .showcase-detail {
@@ -793,7 +793,7 @@ p {
   border-left: 1px solid #e8e0f0;
 }
 .showcase-detail .eyebrow {
-  font-size: 10px;
+  font-size: 12px;
 }
 .showcase-detail h4 {
   font-size: 22px;
@@ -816,7 +816,7 @@ p {
   margin-top: 22px;
 }
 .showcase-note > span {
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.8px;
   color: #665873;
@@ -887,7 +887,7 @@ p {
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 11px;
+  font-size: 12px;
   color: #3d684a;
   margin-left: auto;
 }
@@ -903,7 +903,7 @@ p {
 }
 .showcase-message > .eyebrow {
   color: #55684c;
-  font-size: 10px;
+  font-size: 12px;
 }
 .showcase-message h4 {
   font-family: Georgia, serif;
@@ -929,7 +929,7 @@ p {
   margin: 25px 0 14px;
 }
 .showcase-message > small {
-  font-size: 11px;
+  font-size: 12px;
   color: #55654d;
 }
 .showcase-review {
@@ -974,7 +974,7 @@ p {
   display: flex;
   gap: 8px;
   align-items: center;
-  font-size: 10px;
+  font-size: 12px;
 }
 .showcase-draft > p {
   background: white;
@@ -994,7 +994,7 @@ p {
   color: #6b489a;
 }
 .showcase-draft small {
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.7;
   color: #645270;
   display: block;
@@ -1029,7 +1029,7 @@ p {
   height: 40px;
 }
 .sidebar-label {
-  font-size: 10px;
+  font-size: 12px;
   letter-spacing: 1.3px;
   margin-bottom: 14px;
   color: #636272;
@@ -1055,7 +1055,7 @@ p {
   color: #5f4095;
 }
 .nav-count {
-  font-size: 11px;
+  font-size: 12px;
   padding: 2px 6px;
 }
 .sidebar-bottom {
@@ -1093,7 +1093,7 @@ p {
   font-size: 13px;
 }
 .profile small {
-  font-size: 11px;
+  font-size: 12px;
 }
 .dashboard-main {
   margin-left: 248px;
@@ -1117,9 +1117,9 @@ p {
   gap: 20px;
 }
 .demo-label {
-  font-size: 10px;
+  font-size: 12px;
   color: #654e7c;
-  letter-spacing: 1.1px;
+  letter-spacing: 0.6px;
 }
 .location-select {
   font-size: 12px;
@@ -1140,8 +1140,8 @@ p {
   margin-bottom: 28px;
 }
 .page-heading .eyebrow {
-  font-size: 10px;
-  letter-spacing: 1.2px;
+  font-size: 12px;
+  letter-spacing: 0.7px;
   color: #68527f;
 }
 .page-heading h1 {
@@ -1275,7 +1275,7 @@ p {
 }
 .chart-axis {
   height: 172px;
-  font-size: 11px;
+  font-size: 12px;
   color: #61586d;
 }
 .chart-bars {
@@ -1300,12 +1300,12 @@ p {
   background: #97b99b;
 }
 .bar-group > span {
-  font-size: 11px;
+  font-size: 12px;
   margin-top: 12px;
   color: #5b5365;
 }
 .chart-note {
-  font-size: 11px;
+  font-size: 12px;
   padding: 17px 24px 21px;
   line-height: 1.7;
   gap: 8px;
@@ -1392,7 +1392,7 @@ p {
   width: 18px;
 }
 .dashboard-footer {
-  font-size: 11px;
+  font-size: 12px;
   padding: 20px 32px;
   color: #625c6c;
 }
@@ -1446,8 +1446,8 @@ p {
   justify-content: flex-start;
 }
 .canvas-label {
-  font-size: 11px;
-  letter-spacing: 1.1px;
+  font-size: 12px;
+  letter-spacing: 0.6px;
   color: #625b50;
   padding-bottom: 10px;
 }
@@ -1462,7 +1462,7 @@ p {
   font-size: 33px;
 }
 .qr-print-card .salon-sub {
-  font-size: 9px;
+  font-size: 12px;
 }
 .qr-print-card .qr-code {
   width: 206px;
@@ -1476,7 +1476,7 @@ p {
   color: #5a6053;
 }
 .powered-by {
-  font-size: 10px;
+  font-size: 12px;
   color: #696151;
 }
 .canvas-footnote {
@@ -1542,7 +1542,7 @@ p {
   color: #5f536c;
 }
 .feedback-row-bottom .badge {
-  font-size: 11px;
+  font-size: 12px;
 }
 .status-dot {
   width: 8px;
@@ -1556,7 +1556,7 @@ p {
   color: #6a5c77;
 }
 .detail-top .badge {
-  font-size: 10px;
+  font-size: 12px;
 }
 .detail-person {
   margin: 27px 0 22px;
@@ -1754,7 +1754,7 @@ td {
 }
 /* Customer review options keep equal visual and functional access. */
 .customer-demo {
-  font-size: 10px;
+  font-size: 12px;
   color: #55614f;
 }
 .customer-card {
@@ -1762,11 +1762,11 @@ td {
   padding: 35px 30px 25px;
 }
 .customer-brand p {
-  font-size: 9px;
-  letter-spacing: 1.1px;
+  font-size: 12px;
+  letter-spacing: 0.6px;
 }
 .customer-greeting {
-  font-size: 10px;
+  font-size: 12px;
   margin-top: 32px;
 }
 .customer-card h2 {
@@ -1804,7 +1804,7 @@ td {
   color: #606552;
 }
 .customer-powered {
-  font-size: 11px;
+  font-size: 12px;
   padding-top: 21px;
 }
 .customer-powered a {
@@ -1837,7 +1837,7 @@ td {
   padding: 42px 55px 30px;
 }
 .auth-story .eyebrow {
-  font-size: 11px;
+  font-size: 12px;
 }
 .auth-story h2 {
   font-size: 51px;
@@ -1858,7 +1858,7 @@ td {
   max-width: 410px;
 }
 .auth-form > .eyebrow {
-  font-size: 10px;
+  font-size: 12px;
 }
 .auth-form h1 {
   font-size: 36px;
@@ -1914,7 +1914,7 @@ td {
     width: 500px;
   }
   .hero-footnote {
-    font-size: 11px;
+    font-size: 12px;
     flex-wrap: wrap;
   }
   .hero-actions {
@@ -2038,7 +2038,7 @@ td {
     font-size: 12px;
   }
   .location-select select {
-    font-size: 11px;
+    font-size: 12px;
     max-width: 190px;
   }
   .page-heading {
@@ -2104,8 +2104,8 @@ td {
     letter-spacing: -1.5px;
   }
   .hero-copy .eyebrow {
-    font-size: 10px;
-    letter-spacing: 1px;
+    font-size: 12px;
+    letter-spacing: 0.6px;
   }
   .hero-copy > p {
     font-size: 15px;
@@ -2130,7 +2130,7 @@ td {
     font-size: 12px;
   }
   .value-strip .wrap > div {
-    font-size: 11px;
+    font-size: 12px;
     gap: 7px;
   }
   .section {
@@ -2154,7 +2154,7 @@ td {
     font-size: 12px;
   }
   .mini-message span {
-    font-size: 10px;
+    font-size: 12px;
   }
   .steps h3 {
     font-size: 18px;
@@ -2191,10 +2191,10 @@ td {
     font-size: 12px;
   }
   .request-preview-top {
-    font-size: 9px;
+    font-size: 12px;
   }
   .request-caption {
-    font-size: 11px;
+    font-size: 12px;
   }
   .beyond-section {
     padding: 35px;
@@ -2237,10 +2237,10 @@ td {
     margin-top: 3px;
   }
   .pricing-card > small {
-    font-size: 11px;
+    font-size: 12px;
   }
   .plan-label {
-    font-size: 9px;
+    font-size: 12px;
   }
   .faq-section {
     gap: 40px;
@@ -2304,7 +2304,7 @@ td {
     font-size: 24px;
   }
   .showcase-bottom p {
-    font-size: 11px;
+    font-size: 12px;
     max-width: 240px;
   }
   .showcase-reply-layout {
@@ -2342,7 +2342,7 @@ td {
     font-size: 14px;
   }
   .business-switch small {
-    font-size: 11px;
+    font-size: 12px;
   }
   .demo-sidebar {
     padding: 15px 12px;
@@ -2352,7 +2352,7 @@ td {
   }
   .demo-sidebar p,
   .demo-sidebar a {
-    font-size: 11px;
+    font-size: 12px;
   }
   .dashboard-main {
     margin-left: 208px;
@@ -2365,10 +2365,10 @@ td {
     height: 72px;
   }
   .dashboard-topbar > div:first-child {
-    font-size: 11px;
+    font-size: 12px;
   }
   .location-select select {
-    font-size: 10px;
+    font-size: 12px;
     max-width: 165px;
   }
   .location-select svg {
@@ -2415,7 +2415,7 @@ td {
   }
   .metric > small,
   .metric > span {
-    font-size: 11px;
+    font-size: 12px;
   }
   .panel-heading {
     padding: 22px;
@@ -2538,8 +2538,8 @@ td {
     padding-bottom: 24px;
   }
   .hero-copy .eyebrow {
-    font-size: 10px;
-    letter-spacing: 1px;
+    font-size: 12px;
+    letter-spacing: 0.6px;
     margin-bottom: 20px;
   }
   .hero h1 {
@@ -2568,7 +2568,7 @@ td {
     gap: 8px;
   }
   .hero-footnote {
-    font-size: 11px;
+    font-size: 12px;
     max-width: 100%;
     gap: 7px;
     margin-top: 20px;
@@ -2627,7 +2627,7 @@ td {
     line-height: 1.8;
   }
   .section-title .eyebrow {
-    font-size: 10px;
+    font-size: 12px;
   }
   .steps {
     gap: 32px;
@@ -2647,7 +2647,7 @@ td {
     font-size: 14px;
   }
   .mini-message span {
-    font-size: 11px;
+    font-size: 12px;
   }
   .steps h3 {
     font-size: 19px;
@@ -2680,7 +2680,7 @@ td {
     padding: 23px;
   }
   .request-preview-top {
-    font-size: 10px;
+    font-size: 12px;
     letter-spacing: 0.8px;
   }
   .message-paper {
@@ -2703,7 +2703,7 @@ td {
     padding: 34px 27px;
   }
   .beyond-section .eyebrow {
-    font-size: 10px;
+    font-size: 12px;
   }
   .beyond-section h2 {
     font-size: 30px;
@@ -2752,7 +2752,7 @@ td {
     font-size: 12px;
   }
   .plan-label {
-    font-size: 10px;
+    font-size: 12px;
   }
   .faq-section {
     grid-template-columns: 1fr;
@@ -2764,7 +2764,7 @@ td {
     font-size: 31px;
   }
   .faq-section .eyebrow {
-    font-size: 10px;
+    font-size: 12px;
   }
   .faq-section > div > p {
     font-size: 14px;
@@ -2785,7 +2785,7 @@ td {
     gap: 22px;
   }
   .final-cta .eyebrow {
-    font-size: 10px;
+    font-size: 12px;
   }
   .final-cta h2 {
     font-size: 29px;
@@ -2803,7 +2803,7 @@ td {
     gap: 19px;
   }
   .footer-bottom {
-    font-size: 11px;
+    font-size: 12px;
     gap: 11px;
   }
   .product-showcase {
@@ -2814,7 +2814,7 @@ td {
     margin-bottom: 22px;
   }
   .showcase-intro .eyebrow {
-    font-size: 10px;
+    font-size: 12px;
   }
   .showcase-intro h2 {
     font-size: 31px;
@@ -2829,7 +2829,7 @@ td {
   }
   .showcase-tab-list button {
     flex: 1;
-    font-size: 11px;
+    font-size: 12px;
     padding: 11px 6px;
     gap: 6px;
     flex-direction: column;
@@ -2841,10 +2841,10 @@ td {
   }
   .showcase-topline {
     padding: 15px 17px;
-    font-size: 11px;
+    font-size: 12px;
   }
   .showcase-topline .badge {
-    font-size: 10px;
+    font-size: 12px;
     padding: 4px 6px;
   }
   .showcase-screen {
@@ -2864,7 +2864,7 @@ td {
     font-size: 13px;
   }
   .showcase-screen-heading .badge {
-    font-size: 10px;
+    font-size: 12px;
   }
   .showcase-feedback-layout {
     grid-template-columns: 1fr;
@@ -2875,7 +2875,7 @@ td {
   .showcase-feedback-row .avatar {
     width: 32px;
     height: 32px;
-    font-size: 11px;
+    font-size: 12px;
   }
   .showcase-person-heading {
     flex-direction: row;
@@ -2892,7 +2892,7 @@ td {
     font-size: 13px;
   }
   .showcase-row-meta {
-    font-size: 11px;
+    font-size: 12px;
   }
   .showcase-detail {
     border-left: 0;
@@ -2946,7 +2946,7 @@ td {
     font-size: 13px;
   }
   .showcase-customer-row > span:last-child {
-    font-size: 10px;
+    font-size: 12px;
   }
   .showcase-inline-note {
     padding-inline: 4px;
@@ -2982,7 +2982,7 @@ td {
     font-size: 12px;
   }
   .sidebar-label {
-    font-size: 10px;
+    font-size: 12px;
   }
   .demo-sidebar {
     padding: 16px 14px;
@@ -3003,7 +3003,7 @@ td {
     gap: 9px;
   }
   .dashboard-topbar > div:first-child {
-    font-size: 11px;
+    font-size: 12px;
     gap: 5px;
   }
   .dashboard-topbar > div:first-child > .icon-button {
@@ -3020,7 +3020,7 @@ td {
     font-size: 12px;
   }
   .location-select select {
-    font-size: 11px;
+    font-size: 12px;
     max-width: 145px;
   }
   .dashboard-content {
@@ -3035,7 +3035,7 @@ td {
     letter-spacing: -0.9px;
   }
   .page-heading .eyebrow {
-    font-size: 10px;
+    font-size: 12px;
   }
   .page-heading p {
     font-size: 14px;
@@ -3082,11 +3082,11 @@ td {
     margin-top: 10px;
   }
   .metric > span {
-    font-size: 11px;
+    font-size: 12px;
     min-height: 34px;
   }
   .metric > small {
-    font-size: 11px;
+    font-size: 12px;
     min-height: 34px;
   }
   .dashboard-two-col {
@@ -3108,11 +3108,11 @@ td {
     white-space: nowrap;
   }
   .panel-heading .badge {
-    font-size: 11px;
+    font-size: 12px;
   }
   .chart-legend {
     padding: 3px 20px 11px;
-    font-size: 11px;
+    font-size: 12px;
     gap: 19px;
   }
   .trend-chart {
@@ -3122,7 +3122,7 @@ td {
   }
   .chart-axis {
     height: 162px;
-    font-size: 10px;
+    font-size: 12px;
   }
   .bar-pair {
     gap: 4px;
@@ -3131,11 +3131,11 @@ td {
     width: 12px;
   }
   .bar-group > span {
-    font-size: 10px;
+    font-size: 12px;
   }
   .chart-note {
     padding: 17px 20px 21px;
-    font-size: 11px;
+    font-size: 12px;
     align-items: flex-start;
   }
   .chart-note > svg {
@@ -3170,7 +3170,7 @@ td {
   .activity-item .avatar {
     width: 33px;
     height: 33px;
-    font-size: 11px;
+    font-size: 12px;
   }
   .activity-item > svg {
     display: none;
@@ -3179,7 +3179,7 @@ td {
     font-size: 14px;
   }
   .activity-item small {
-    font-size: 11px;
+    font-size: 12px;
   }
   .shortcut strong {
     font-size: 14px;
@@ -3193,7 +3193,7 @@ td {
   }
   .dashboard-footer {
     padding-inline: 18px;
-    font-size: 11px;
+    font-size: 12px;
     gap: 8px;
   }
   .qr-controls {
@@ -3237,11 +3237,11 @@ td {
     font-size: 12px;
   }
   .canvas-label {
-    font-size: 10px;
+    font-size: 12px;
     padding-bottom: 7px;
   }
   .canvas-footnote {
-    font-size: 11px;
+    font-size: 12px;
   }
   .inbox-toolbar {
     gap: 12px;
@@ -3259,7 +3259,7 @@ td {
     font-size: 14px;
   }
   .feedback-row-top small {
-    font-size: 11px;
+    font-size: 12px;
   }
   .feedback-row > p {
     font-size: 14px;
@@ -3271,11 +3271,11 @@ td {
     padding: 24px;
   }
   .detail-top {
-    font-size: 11px;
+    font-size: 12px;
     align-items: flex-start;
   }
   .detail-top .badge {
-    font-size: 9px;
+    font-size: 12px;
   }
   .detail-person h2 {
     font-size: 25px;
@@ -3317,7 +3317,7 @@ td {
     font-size: 30px;
   }
   .request-stats span {
-    font-size: 11px;
+    font-size: 12px;
     max-width: none;
   }
   .reviews-toolbar {
@@ -3344,7 +3344,7 @@ td {
     font-size: 15px;
   }
   .review-card small {
-    font-size: 11px;
+    font-size: 12px;
   }
   .reply-editor {
     padding: 0 23px 24px;
@@ -3359,18 +3359,18 @@ td {
     padding: 23px 14px 30px;
   }
   .customer-demo {
-    font-size: 9px;
-    letter-spacing: 1px;
+    font-size: 12px;
+    letter-spacing: 0.6px;
     margin-bottom: 21px;
   }
   .customer-card {
     padding: 32px 24px 24px;
   }
   .customer-brand p {
-    font-size: 8px;
+    font-size: 12px;
   }
   .customer-greeting {
-    font-size: 9px;
+    font-size: 12px;
   }
   .customer-card h2 {
     font-size: 33px;
@@ -3387,13 +3387,13 @@ td {
     font-size: 13px;
   }
   .customer-options small {
-    font-size: 11px;
+    font-size: 12px;
   }
   .customer-policy {
-    font-size: 11px;
+    font-size: 12px;
   }
   .customer-powered {
-    font-size: 10px;
+    font-size: 12px;
   }
   .customer-back {
     font-size: 12px;
@@ -3414,7 +3414,7 @@ td {
     font-size: 25px;
   }
   .auth-back {
-    font-size: 10px;
+    font-size: 12px;
     right: 26px;
   }
   .auth-form {
@@ -3489,7 +3489,7 @@ td {
   .table-scroll td:nth-child(3)::before {
     content: attr(data-label);
     display: block;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 600;
     color: #675775;
     margin-bottom: 9px;
@@ -3507,7 +3507,7 @@ td {
     min-height: 44px;
   }
   .table-scroll .badge {
-    font-size: 11px;
+    font-size: 12px;
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -3555,7 +3555,7 @@ body {
 }
 .eyebrow {
   font-size: 12px;
-  letter-spacing: 1.2px;
+  letter-spacing: 0.7px;
 }
 .button {
   font-size: 15px;
@@ -4541,7 +4541,7 @@ body {
     font-size: 24px;
   }
   .hero-composition .salon-sub {
-    font-size: 9px;
+    font-size: 12px;
   }
   .hero-composition .hero-qr {
     width: 145px;
@@ -4552,7 +4552,7 @@ body {
   .hero-composition .composition-label {
     left: 0;
     top: 12px;
-    font-size: 11px;
+    font-size: 12px;
   }
   .hero-composition .feedback-float {
     top: 60px;
@@ -4615,7 +4615,7 @@ body {
     font-size: 25px;
   }
   .hero-composition .salon-sub {
-    font-size: 9px;
+    font-size: 12px;
   }
   .hero-composition .hero-qr {
     width: 155px;
@@ -4659,7 +4659,7 @@ body {
   .hero-composition .composition-label {
     top: 0;
     left: 0;
-    font-size: 11px;
+    font-size: 12px;
   }
   .hero-composition .composition-star {
     top: 40px;
@@ -4734,8 +4734,10 @@ body {
   color: #615a6b;
   font-weight: 600;
 }
-.table-scroll td {
-  padding-block: 23px;
+@media (min-width: 1101px) {
+  .table-scroll td {
+    padding-block: 23px;
+  }
 }
 .setup-complete {
   display: flex;
@@ -4773,5 +4775,720 @@ body {
 @media (max-width: 1100px) {
   .qr-canvas {
     order: -1;
+  }
+}
+
+/* Final polish: readable captions, quiet surfaces, and clear action priorities. */
+:root {
+  --muted: #535768;
+  --type-caption: 13px;
+}
+.eyebrow {
+  text-transform: none;
+  letter-spacing: 0.6px;
+}
+.hero-copy .eyebrow,
+.page-heading .eyebrow,
+.showcase-detail .eyebrow {
+  font-size: 12px;
+  letter-spacing: 0.6px;
+}
+.hero-copy > p {
+  color: #505667;
+}
+.hero-actions .how-link {
+  font-size: 15px;
+  gap: 10px;
+  padding-block: 12px;
+}
+.hero-actions {
+  flex-wrap: wrap;
+}
+.composition-label {
+  text-transform: none;
+  letter-spacing: 0.4px;
+}
+.hero-composition .composition-label {
+  font-size: 12px;
+}
+.hero-composition .salon-sub,
+.qr-print-card .salon-sub {
+  font-size: 12px;
+  text-transform: none;
+  letter-spacing: 0.4px;
+}
+.qr-card-footer {
+  font-size: 12px;
+  text-transform: none;
+  letter-spacing: 0;
+  padding: 12px 0;
+}
+.feedback-float small {
+  color: #575769;
+}
+.feedback-float .muted,
+.request-float p,
+.reply-bottom {
+  color: #545b6b;
+}
+.reply-float p {
+  color: #4d5265;
+}
+.floating-card {
+  border-color: #dedad3;
+}
+.hero-composition .mini-journey i {
+  font-size: 12px;
+  width: 25px;
+  height: 25px;
+}
+.showcase-topline,
+.showcase-business small,
+.showcase-demo-label {
+  color: #545866;
+}
+.showcase-demo-label {
+  text-transform: none;
+  letter-spacing: 0;
+}
+.showcase-feedback-row.selected,
+.showcase-customer-row.selected {
+  border-left-color: #7554b1;
+  background: #f6f3ed;
+}
+.showcase-count {
+  color: #6d4e9a;
+}
+.showcase-person-heading strong {
+  font-size: 15px;
+}
+.showcase-row-meta {
+  color: #535768;
+}
+.showcase-feedback-row .badge {
+  font-size: 12px;
+}
+.showcase-note {
+  margin-bottom: 20px;
+  border-color: #ddd7cc;
+}
+.showcase-screen-heading h3 {
+  line-height: 1.25;
+}
+.showcase-tab-list button {
+  border-radius: 7px;
+  font-size: 15px;
+}
+.showcase-tab-list button[data-state='active'] {
+  border-color: #bcaad7;
+  color: #553994;
+  box-shadow: inset 0 -2px 0 #7554b1;
+}
+.showcase-feedback-list {
+  align-self: start;
+}
+.showcase-screen-heading p,
+.showcase-bottom p {
+  color: #535768;
+}
+.showcase-draft small {
+  display: block;
+  margin-top: 18px;
+  color: #565768;
+}
+.showcase-detail,
+.showcase-message,
+.showcase-draft {
+  border-color: #ddd7cc;
+}
+.showcase-review p {
+  color: #535768;
+}
+.product-showcase {
+  padding-block: 80px;
+}
+#how-it-works {
+  padding-block: 64px;
+}
+.google-companion {
+  padding-block: 72px;
+}
+.pricing-coming {
+  padding-block: 80px;
+}
+.faq-section {
+  padding-block: 62px;
+  border-top: 1px solid var(--border);
+}
+.faq-list summary {
+  font-size: 17px;
+  line-height: 1.5;
+  padding: 23px 0;
+  min-height: 68px;
+  gap: 22px;
+}
+.faq-list summary svg {
+  flex-shrink: 0;
+  transition: transform 0.18s;
+}
+.faq-list details[open] summary svg {
+  transform: rotate(180deg);
+}
+.faq-list details > p {
+  font-size: 16px;
+  line-height: 1.75;
+  color: #505667;
+  padding-bottom: 24px;
+}
+.faq-list details {
+  border-color: #d9d5cc;
+}
+.site-nav a,
+.login-link {
+  font-size: 15px;
+}
+.site-footer > div:nth-child(2) {
+  gap: 26px;
+}
+.site-footer a {
+  font-size: 15px;
+}
+.footer-bottom {
+  color: #565a66;
+}
+.button {
+  transition:
+    background 0.16s,
+    border-color 0.16s,
+    box-shadow 0.16s,
+    transform 0.16s;
+}
+.button:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: inset 0 1px 3px #20243c18;
+}
+.button:disabled {
+  opacity: 1;
+  color: #787583;
+  background: #eeebf0;
+  border: 1px solid #d8d3dd;
+  box-shadow: none;
+}
+.button svg {
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+}
+.field input,
+.field textarea,
+.field select {
+  color: #292d43;
+  background: #fff;
+}
+.field input::placeholder,
+.field textarea::placeholder,
+.search-field input::placeholder {
+  color: #656977;
+  opacity: 1;
+}
+.field input:hover,
+.field textarea:hover,
+.field select:hover {
+  border-color: #afa4be;
+}
+.field :is(input, textarea)[aria-invalid='true'] {
+  border: 2px solid #ae4e45;
+  background: #fff9f6;
+}
+.error-note {
+  color: #8d342d;
+  background: #fff1eb;
+  border: 1px solid #dcb1a5;
+  border-radius: 7px;
+  padding: 12px 14px;
+}
+.page-heading {
+  align-items: center;
+}
+.page-heading > div {
+  min-width: 0;
+}
+.page-heading > .button {
+  flex-shrink: 0;
+}
+.page-heading h1 {
+  line-height: 1.2;
+}
+.page-heading p {
+  font-size: 15px;
+  color: #535768;
+}
+.sidebar nav a {
+  color: #4d5263;
+}
+.sidebar nav a.active {
+  color: #583693;
+  background: #eae4f4;
+  font-weight: 650;
+}
+.sidebar-label {
+  color: #626172;
+  letter-spacing: 0.8px;
+}
+.nav-count {
+  font-size: 12px;
+  min-width: 21px;
+}
+.demo-sidebar p,
+.profile small,
+.business-switch small {
+  color: #575b68;
+}
+.location-select {
+  min-height: 44px;
+  padding: 6px 12px;
+}
+.location-select select {
+  min-height: 30px;
+  padding-right: 18px;
+  color: #45495c;
+}
+.location-select > svg:last-child {
+  display: block;
+}
+.overview-welcome {
+  background: #fffdf9;
+}
+.overview-welcome .welcome-icon {
+  background: #f0eaf7;
+}
+.overview-welcome .text-link {
+  min-height: 46px;
+  font-size: 14px;
+}
+.metric > div {
+  color: #4d5264;
+  min-height: 24px;
+}
+.metric > strong {
+  font-variant-numeric: tabular-nums;
+}
+.metric small {
+  color: #575b68;
+  line-height: 1.65;
+}
+.chart-legend {
+  font-size: 13px;
+  gap: 22px;
+  color: #515567;
+}
+.chart-axis,
+.chart-bars .bar-group > span {
+  font-size: 13px;
+  color: #575b68;
+}
+.chart-bars .bar-group {
+  position: relative;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  min-width: 0;
+  cursor: default;
+}
+.chart-bars .bar-group:hover .bar-pair,
+.chart-bars .bar-group:focus-visible .bar-pair {
+  background: #f2eef8;
+  border-radius: 5px 5px 0 0;
+}
+.chart-bars .bar-group > .chart-tooltip {
+  display: none;
+  position: absolute;
+  z-index: 5;
+  bottom: 76%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 180px;
+  background: #272b42;
+  color: #fff;
+  border-radius: 7px;
+  padding: 12px 14px;
+  text-align: left;
+  box-shadow: 0 5px 15px #20243c20;
+  font-size: 13px;
+  line-height: 1.6;
+  pointer-events: none;
+}
+.chart-tooltip strong {
+  font-size: 13px;
+  font-weight: 600;
+  display: block;
+  padding-bottom: 5px;
+}
+.chart-tooltip > span {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  color: #f0edf6;
+}
+.chart-bars .bar-group:is(:hover, :focus-visible) > .chart-tooltip {
+  display: block;
+}
+.chart-bars .bar-group:first-child > .chart-tooltip {
+  left: 0;
+  transform: none;
+}
+.chart-bars .bar-group:last-child > .chart-tooltip {
+  left: auto;
+  right: 0;
+  transform: none;
+}
+.chart-note {
+  color: #535768;
+}
+.table-person strong {
+  font-size: 15px;
+}
+.table-person small {
+  font-size: 13px;
+  color: #5a5c6b;
+}
+.table-scroll .button {
+  font-size: 13px;
+  min-height: 44px;
+}
+.table-scroll th {
+  font-size: 13px;
+  background: #f5f2ed;
+  color: #555769;
+}
+.badge {
+  font-size: 12px;
+  letter-spacing: 0;
+}
+.detail-meta span,
+.detail-top {
+  font-size: 13px;
+  color: #575b68;
+}
+.feedback-row-top small,
+.feedback-row-bottom,
+.review-card small {
+  color: #575b68;
+}
+.feedback-detail .field textarea,
+.reply-editor .field textarea {
+  background: #fcfbf8;
+  line-height: 1.75;
+}
+.feedback-detail .field textarea:focus,
+.reply-editor .field textarea:focus {
+  background: #fff;
+}
+.detail-actions .button {
+  font-size: 14px;
+}
+.feedback-row.selected,
+.review-card.selected {
+  border-color: #b5a2cf;
+}
+.feedback-row[aria-pressed='true'] .feedback-row-top strong,
+.review-card[aria-pressed='true'] strong {
+  color: #353042;
+}
+.dashboard-footer {
+  color: #575b68;
+  font-size: 12px;
+}
+.auth-form {
+  width: 100%;
+  max-width: 420px;
+}
+.auth-form > .button.auth-demo-entry {
+  margin-top: 24px;
+  min-height: 50px;
+}
+.auth-divider {
+  margin: 25px 0;
+}
+.auth-divider span {
+  color: #60616f;
+  font-size: 13px;
+}
+.auth-demo-note {
+  line-height: 1.6;
+}
+.auth-product-composition {
+  margin-top: 32px;
+}
+.auth-product-card {
+  padding: 24px;
+}
+.auth-request-card {
+  margin-left: 24px;
+  margin-top: 18px;
+}
+.auth-card-note {
+  line-height: 1.6;
+}
+.auth-card-person {
+  flex-wrap: nowrap;
+}
+.auth-story-copy {
+  padding-block: 35px;
+}
+.auth-story-foot {
+  font-size: 13px;
+}
+.customer-brand p {
+  font-size: 12px;
+  text-transform: none;
+  letter-spacing: 0.4px;
+}
+.customer-greeting {
+  letter-spacing: 0.5px;
+  text-transform: none;
+}
+.customer-policy {
+  font-size: 12px;
+  line-height: 1.75;
+  color: #58634f;
+}
+.customer-form .field {
+  margin-top: 24px;
+}
+.rating-input {
+  gap: 8px;
+}
+.rating-input button {
+  border: 1px solid transparent;
+  min-height: 50px;
+  min-width: 50px;
+  color: #8a692e;
+}
+.rating-input button[aria-pressed='true'] {
+  background: #efe0b9;
+  border: 2px solid #806023;
+  outline: none;
+}
+.rating-input button:hover {
+  background: #f7efdd;
+}
+.rating-input button:focus-visible {
+  outline: 3px solid #8063c4;
+  outline-offset: 3px;
+}
+.rating-status {
+  font-size: 13px;
+  color: #6d5324;
+  line-height: 1.6;
+  margin-top: 12px;
+  font-weight: 500;
+}
+.customer-success:focus {
+  outline: none;
+}
+.customer-success h2 {
+  margin-top: 20px;
+}
+.customer-form .error-note {
+  margin-top: 12px;
+}
+.dialog-content {
+  border-color: #d4cddc;
+}
+.dialog-content > h2 {
+  font-size: 26px;
+  line-height: 1.3;
+  padding-right: 40px;
+}
+.dialog-content > p {
+  font-size: 15px;
+  line-height: 1.7;
+}
+@media (max-width: 1100px) {
+  .auth-card-person {
+    flex-wrap: wrap;
+  }
+  .auth-request-card {
+    margin-left: 15px;
+  }
+}
+@media (max-width: 600px) {
+  .hero-actions .how-link {
+    font-size: 14px;
+  }
+  .hero-actions {
+    gap: 17px;
+  }
+  .hero-composition .salon-sub {
+    font-size: 12px;
+  }
+  .hero-composition .salon-qr {
+    top: 130px;
+  }
+  .hero-composition .request-float {
+    top: 460px;
+  }
+  .hero-composition .reply-float {
+    top: 575px;
+  }
+  .hero-composition .mini-journey {
+    top: 730px;
+  }
+  .hero-composition {
+    height: 710px;
+  }
+  .value-strip small {
+    line-height: 1.65;
+  }
+  .product-showcase {
+    padding-block: 54px;
+  }
+  .showcase-tab-list button {
+    font-size: 14px;
+    padding: 12px 9px;
+  }
+  .showcase-feedback-row {
+    padding-block: 17px;
+  }
+  .showcase-feedback-row p {
+    -webkit-line-clamp: 1;
+  }
+  .showcase-person-heading {
+    flex-wrap: wrap;
+    gap: 7px;
+  }
+  .showcase-feedback-row .avatar {
+    font-size: 12px;
+  }
+  .showcase-topline .badge {
+    font-size: 12px;
+  }
+  .showcase-note {
+    margin-bottom: 18px;
+  }
+  #how-it-works,
+  .google-companion {
+    padding-block: 54px;
+  }
+  .mini-message span,
+  .mini-message b {
+    font-size: 13px;
+  }
+  .pricing-coming {
+    padding-block: 56px;
+  }
+  .faq-section {
+    padding-block: 48px;
+  }
+  .faq-list summary {
+    font-size: 16px;
+    padding-block: 21px;
+  }
+  .faq-list details > p {
+    font-size: 16px;
+  }
+  .final-cta {
+    margin-bottom: 35px;
+  }
+  .site-footer {
+    padding-top: 35px;
+  }
+  .site-footer > div:nth-child(2) {
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  .page-heading {
+    align-items: flex-start;
+  }
+  .page-heading p {
+    font-size: 15px;
+  }
+  .location-select {
+    padding: 4px 8px;
+    max-width: 170px;
+  }
+  .location-select select {
+    font-size: 16px;
+    text-overflow: ellipsis;
+  }
+  .metric {
+    padding: 19px 16px;
+  }
+  .metric > div {
+    min-height: 44px;
+    font-size: 14px;
+  }
+  .metric small,
+  .metric > span {
+    font-size: 12px;
+  }
+  .overview-welcome strong {
+    font-size: 18px;
+    line-height: 1.5;
+  }
+  .request-stats span {
+    font-size: 12px;
+  }
+  .detail-top {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .table-scroll .badge {
+    font-size: 12px;
+  }
+  .field input,
+  .field textarea,
+  .field select,
+  .search-field input,
+  .filter-select select,
+  .reviews-toolbar select {
+    font-size: 16px;
+  }
+  .auth-back {
+    font-size: 12px;
+  }
+  .auth-form > .button.auth-demo-entry {
+    font-size: 15px;
+  }
+  .customer-options small {
+    font-size: 13px;
+  }
+  .customer-demo {
+    letter-spacing: 0.4px;
+    font-size: 12px;
+  }
+  .dialog-content {
+    padding: 25px 22px;
+  }
+  .dialog-content > h2 {
+    font-size: 23px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .button,
+  .faq-list summary svg {
+    transition: none;
+  }
+}
+
+@media (max-width: 600px) {
+  .location-select > svg:first-child {
+    display: none;
+  }
+  .location-select {
+    max-width: 166px;
+  }
+}
+
+@media (max-width: 1100px) {
+  .page-heading {
+    align-items: flex-start;
+  }
+  .table-scroll .table-person strong {
+    font-size: 15px;
+  }
+  .table-scroll .table-person small {
+    font-size: 13px;
   }
 }

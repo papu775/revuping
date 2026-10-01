@@ -22,7 +22,7 @@ export function Auth({ signup = false }: { signup?: boolean }) {
       <section className="auth-story">
         <Logo light />
         <div className="auth-story-copy">
-          <span className="eyebrow">THE WORK BEHIND A GOOD REVIEW</span>
+          <span className="eyebrow">The work behind a good review</span>
           <h2>
             Less chasing.
             <br />
@@ -78,9 +78,9 @@ export function Auth({ signup = false }: { signup?: boolean }) {
         </Link>
         <div className="auth-form">
           <span className="eyebrow">
-            {signup ? 'EXPLORE THE PRODUCT' : 'WELCOME TO REVUPING'}
+            {signup ? 'Explore the product' : 'Welcome to RevuPing'}
           </span>
-          <h1>{signup ? 'Explore demo signup.' : 'Log in to the demo.'}</h1>
+          <h1>{signup ? 'Explore demo signup.' : 'Explore your workspace.'}</h1>
           <p>
             {signup
               ? 'Try a fictional workspace. No real credentials needed.'
@@ -88,7 +88,18 @@ export function Auth({ signup = false }: { signup?: boolean }) {
           </p>
           <div className="auth-demo-note">
             <Check size={16} />
-            <span>Use sample details only. No real account is created.</span>
+            <span>
+              No credentials needed for demo access. Use sample details in the
+              form.
+            </span>
+          </div>
+          <Button asChild className="auth-demo-entry">
+            <Link href="/dashboard">
+              Continue with demo access <ArrowRight size={17} />
+            </Link>
+          </Button>
+          <div className="auth-divider">
+            <span>or test the mock {signup ? 'signup' : 'login'} form</span>
           </div>
           <form
             onSubmit={(e) => {
@@ -103,11 +114,7 @@ export function Auth({ signup = false }: { signup?: boolean }) {
             {signup && (
               <label className="field">
                 Your name
-                <input
-                  required
-                  autoComplete="name"
-                  placeholder="Jamie Carter"
-                />
+                <input required autoComplete="off" placeholder="Sample owner" />
               </label>
             )}
             <label className="field">
@@ -151,19 +158,11 @@ export function Auth({ signup = false }: { signup?: boolean }) {
                 {error}
               </p>
             )}
-            <Button type="submit">
+            <Button type="submit" variant="secondary">
               {signup ? 'Create demo workspace' : 'Enter demo workspace'}
               <ArrowRight size={17} />
             </Button>
           </form>
-          <div className="auth-divider">
-            <span>or explore without filling in the form</span>
-          </div>
-          <Button variant="secondary" asChild>
-            <Link href="/dashboard">
-              Continue with demo access <ArrowRight size={16} />
-            </Link>
-          </Button>
           <p className="auth-switch">
             {signup ? 'Already looking around?' : 'New to RevuPing?'}{' '}
             <Link href={signup ? '/login' : '/signup'}>
