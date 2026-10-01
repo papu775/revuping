@@ -3,16 +3,16 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 const variants = cva(
-  'button whitespace-nowrap inline-flex min-h-12 items-center justify-center gap-2.5 rounded-lg border px-5 py-3 text-sm font-semibold leading-5 transition-[background-color,border-color,box-shadow,transform] duration-200 hover:-translate-y-px active:translate-y-0 active:shadow-inner focus-visible:outline-3 focus-visible:outline-offset-4 focus-visible:outline-violet/60 disabled:translate-y-0 disabled:cursor-not-allowed disabled:border-[#deddd8] disabled:bg-[#eeede9] disabled:text-[#777981] disabled:opacity-100 disabled:shadow-none motion-reduce:transform-none motion-reduce:transition-none [&_svg]:size-[17px] [&_svg]:shrink-0',
+  'button whitespace-nowrap inline-flex min-h-12 items-center justify-center gap-2.5 rounded-lg border px-5 py-3 text-sm font-semibold leading-5 transition-[background-color,border-color,box-shadow,transform] duration-200 hover:-translate-y-px active:translate-y-0 active:shadow-inner focus-visible:outline-3 focus-visible:outline-offset-4 focus-visible:outline-violet/60 disabled:translate-y-0 disabled:cursor-not-allowed disabled:border-line disabled:bg-soft disabled:text-muted disabled:opacity-100 disabled:shadow-none motion-reduce:transform-none motion-reduce:transition-none [&_svg]:size-[17px] [&_svg]:shrink-0',
   {
     variants: {
       variant: {
         default:
-          'button-primary border-transparent bg-violet text-white shadow-[0_3px_8px_#6b52b921] hover:bg-[#574098]',
+          'button-primary border-transparent bg-action text-white shadow-[0_8px_24px_var(--shadow-color)] hover:bg-action-hover',
         secondary:
-          'button-secondary border-[#d8d5df] bg-white text-navy hover:border-violet/40 hover:bg-[#f5f2fb]',
+          'button-secondary border-line bg-surface text-navy hover:border-violet/40 hover:bg-canvas',
         ghost:
-          'button-ghost border-transparent bg-transparent text-violet hover:bg-[#eeeaf8]',
+          'button-ghost border-transparent bg-transparent text-violet hover:bg-canvas',
       },
       size: {
         default: '',

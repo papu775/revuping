@@ -1,4 +1,5 @@
 'use client';
+import { Avatar } from './ui/avatar';
 import { Panel, Field, panelSurface } from './shared';
 import Link from 'next/link';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
@@ -22,6 +23,7 @@ import {
   SlidersHorizontal,
 } from 'lucide-react';
 import * as Tabs from '@radix-ui/react-tabs';
+import { Select } from './ui/select';
 import { Button } from './ui/button';
 import { Dialog } from './ui/dialog';
 import { Badge, Stars, TextLink } from './shared';
@@ -69,7 +71,7 @@ export function PageHeading({
         <h1 className="mt-2 text-[30px] font-semibold leading-tight tracking-[-1px] max-md:text-[28px]">
           {title}
         </h1>
-        <p className="mt-2 max-w-[620px] text-[15px] leading-7 text-[#535768]">
+        <p className="mt-2 max-w-[620px] text-[15px] leading-7 text-muted">
           {text}
         </p>
       </div>
@@ -238,7 +240,7 @@ export function Overview() {
               href="/dashboard/feedback"
               key={f.id}
             >
-              <span className="avatar lavender">{f.initials}</span>
+              <Avatar initials={f.initials} tone="lavender" />
               <div>
                 <div className="activity-title">
                   <strong>{f.name}</strong>
@@ -536,18 +538,16 @@ export function FeedbackInbox({
             onChange={(e) => setQuery(e.target.value)}
           />
         </label>
-        <label className="filter-select">
-          <SlidersHorizontal size={16} />
-          <select
-            aria-label="Feedback status"
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-          >
-            {['All feedback', 'Needs attention', 'Resolved'].map((v) => (
-              <option key={v}>{v}</option>
-            ))}
-          </select>
-        </label>
+        <Select
+          label="Feedback status"
+          value={filter}
+          onValueChange={setFilter}
+          icon={<SlidersHorizontal size={16} />}
+          options={['All feedback', 'Needs attention', 'Resolved'].map((v) => ({
+            value: v,
+            label: v,
+          }))}
+        />
       </div>
       <div className="inbox-layout">
         <Panel className="inbox-list" aria-label="Feedback list">
@@ -569,7 +569,7 @@ export function FeedbackInbox({
                 }}
               >
                 <div className="feedback-row-top">
-                  <span className="avatar lavender">{f.initials}</span>
+                  <Avatar initials={f.initials} tone="lavender" />
                   <div>
                     <strong>{f.name}</strong>
                     <small>{f.date}</small>
@@ -621,7 +621,7 @@ export function FeedbackInbox({
                 <span>{detail.date}</span>
               </div>
               <div className="detail-person">
-                <span className="avatar peach large">{detail.initials}</span>
+                <Avatar initials={detail.initials} tone="peach" size="large" />
                 <div>
                   <h2>{detail.name}</h2>
                   <span>Visited with {detail.staff}</span>
@@ -765,13 +765,14 @@ export function Requests({ initialAdd = false }: { initialAdd?: boolean }) {
                 <tr key={c.id}>
                   <td data-label="Customer">
                     <div className="table-person">
-                      <span className="avatar lavender">
-                        {c.name
+                      <Avatar
+                        initials={c.name
                           .split(' ')
                           .map((s) => s[0])
                           .join('')
                           .slice(0, 2)}
-                      </span>
+                        tone="lavender"
+                      />
                       <div>
                         <strong>{c.name}</strong>
                         <small>{c.email}</small>
@@ -984,24 +985,22 @@ export function Reviews() {
           <Star size={21} fill="currentColor" /> <strong>4.8</strong> Sample
           overall rating
         </span>
-        <select
-          aria-label="Filter reviews by rating"
+        <Select
+          label="Filter reviews by rating"
           value={rating}
-          onChange={(e) => setRating(e.target.value)}
-        >
-          {['All ratings', '5', '4', '3', '2', '1'].map((v) => (
-            <option key={v} value={v}>
-              {v === 'All ratings' ? v : `${v} stars`}
-            </option>
-          ))}
-        </select>
+          onValueChange={setRating}
+          options={['All ratings', '5', '4', '3', '2', '1'].map((v) => ({
+            value: v,
+            label: v === 'All ratings' ? v : `${v} ${v === '1' ? 'star' : 'stars'}`,
+          }))}
+        />
       </div>
       <div className="dashboard-two-col">
         <section className="review-list">
           {visible.length ? (
             visible.map((r) => (
               <button
-                className={`${panelSurface} review-card ${active?.id === r.id ? 'selected border-[#b5a2cf] bg-[#f7f5ef]' : 'border-[#e0ddd8] bg-white hover:border-[#b5a2cf] hover:bg-[#faf8f3]'}`}
+                className={`${panelSurface} review-card ${active?.id === r.id ? 'selected border-accent-line bg-canvas' : 'border-line bg-surface hover:border-accent-line hover:bg-canvas'}`}
                 key={r.id}
                 aria-pressed={active?.id === r.id}
                 onClick={() => {
@@ -1010,7 +1009,7 @@ export function Reviews() {
                 }}
               >
                 <div>
-                  <span className="avatar sage">{r.name[0]}</span>
+                  <Avatar name={r.name} tone="sage" />
                   <div>
                     <strong>{r.name}</strong>
                     <small>{r.date} · Simulated Google review</small>

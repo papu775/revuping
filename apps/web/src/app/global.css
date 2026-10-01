@@ -1,20 +1,105 @@
 @import 'tailwindcss';
-@theme {
-  --color-ivory: #faf9f6;
-  --color-navy: #24263c;
-  --color-violet: #6b52b9;
-  --color-mint: #e5f0e8;
+@custom-variant dark (&:where(.dark, .dark *));
+@theme inline {
+  --color-ivory: var(--surface-canvas);
+  --color-navy: var(--ink);
+  --color-violet: var(--violet);
+  --color-mint: var(--mint);
+  --color-canvas: var(--surface-canvas);
+  --color-surface: var(--surface-work);
+  --color-soft: var(--surface-soft);
+  --color-selected: var(--surface-selected);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-accent: var(--violet);
+  --color-action: var(--action-bg);
+  --color-action-hover: var(--action-hover);
+  --color-on-dark: var(--on-dark);
+  --color-hero-bg: var(--hero-bg);
+  --color-line: var(--border);
+  --color-accent-line: var(--accent-line);
+  --color-positive: var(--mint);
+  --color-positive-ink: var(--positive-ink);
+  --color-positive-line: var(--positive-line);
+  --color-warm: var(--warm);
+  --color-warm-ink: var(--warm-ink);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
 }
 @layer base {
   :root {
-    --bg: #faf9f6;
+    color-scheme: light;
+    --surface-canvas: #faf8f3;
+    --surface-work: #ffffff;
+    --surface-soft: #f1efe8;
+    --surface-selected: #f0ebf8;
+    --ink: #20243c;
+    --muted: #535768;
+    --page-ink: #20243c;
+    --page-muted: #535768;
+    --border: #dddcd6;
+    --accent-line: #c9b9e6;
     --violet: #6b52b9;
     --violet-dark: #574098;
-    --lavender: #eeeaf8;
+    --action-bg: #6b52b9;
+    --action-hover: #574098;
+    --overlay: #171a28a8;
+    --on-dark: #f8f6fc;
+    --hero-bg: #24263c;
     --mint: #e5f0e8;
+    --positive-ink: #3e644e;
+    --positive-line: #c7dbcc;
+    --warm: #f5eadd;
+    --warm-ink: #816334;
+    --danger: #a43743;
+    --danger-soft: #fff0f0;
+    --chart-sage: #719579;
+    --accent-rgb: 107 82 185;
+    --shadow-rgb: 32 36 60;
+    --shadow-color: #20243c14;
+    --bg: var(--surface-canvas);
+    --lavender: var(--surface-selected);
     --white: #fff;
+    --shadow: 0 14px 36px var(--shadow-color);
     --radius: 16px;
+    --type-caption: 13px;
+    --type-label: 15px;
+    --type-body: 15px;
+    --type-heading: 22px;
+    --space-unit: 8px;
   }
+  .dark {
+    color-scheme: dark;
+    --surface-canvas: #141723;
+    --surface-work: #1e2231;
+    --surface-soft: #272b3a;
+    --surface-selected: #332b47;
+    --ink: #f0edf6;
+    --muted: #b9bac9;
+    --page-ink: #f0edf6;
+    --page-muted: #b9bac9;
+    --border: #3a3d4e;
+    --accent-line: #6c548f;
+    --violet: #c4a9f5;
+    --violet-dark: #ae8de6;
+    --action-bg: #7851c1;
+    --action-hover: #8961d1;
+    --overlay: #05070ec0;
+    --on-dark: #faf7ff;
+    --hero-bg: #10131d;
+    --mint: #263c34;
+    --positive-ink: #acd5bb;
+    --positive-line: #476957;
+    --warm: #403529;
+    --warm-ink: #e5bd79;
+    --danger: #f5a5ad;
+    --danger-soft: #422a32;
+    --chart-sage: #8db89b;
+    --accent-rgb: 196 169 245;
+    --shadow-rgb: 0 0 0;
+    --shadow-color: #0000004d;
+  }
+
   * {
     box-sizing: border-box;
   }
@@ -65,18 +150,13 @@
     white-space: nowrap;
   }
   th {
-    border-top: 1px solid #f0edf4;
-    border-bottom: 1px solid #f0edf4;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
   }
   td {
-    border-bottom: 1px solid #f0edf4;
+    border-bottom: 1px solid var(--border);
   }
-  :root {
-    --ink: #20243c;
-    --border: #e1dfd9;
-    --shadow: 0 14px 36px rgb(32 36 60 / 6%);
-    --type-heading: 22px;
-  }
+
   body {
     font-family:
       'Inter',
@@ -100,29 +180,18 @@
     font-size: 13px;
     padding: 16px 24px;
     font-weight: 600;
-    color: #5c4c69;
-    background: #f6f3f9;
+    color: var(--violet);
+    background: var(--surface-canvas);
   }
   td {
     font-size: 14px;
     padding: 22px 24px;
   }
-  :root {
-    --surface-canvas: #faf8f3;
-    --surface-work: #fff;
-    --surface-soft: #f1efe8;
-    --surface-selected: #f4f1fa;
-    --type-label: 15px;
-    --type-body: 15px;
-    --space-unit: 8px;
-  }
+
   body {
     background: var(--surface-canvas);
   }
-  :root {
-    --muted: #535768;
-    --type-caption: 13px;
-  }
+
   html {
     scroll-padding-top: 100px;
   }

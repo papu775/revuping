@@ -4,7 +4,12 @@ const fs = require('node:fs/promises');
 const base = process.env.PROTOTYPE_URL || 'http://localhost:3000';
 (async () => {
   const browser = await chromium.launch({ headless: true });
-  const page = await browser.newPage();
+  const context = await browser.newContext();
+  await context.addInitScript(
+    (theme) => localStorage.setItem('revuping-theme', theme),
+    process.env.PROTOTYPE_THEME || 'light',
+  );
+  const page = await context.newPage();
   const errors = [];
   page.on('console', (message) => {
     if (message.type() === 'error') errors.push(message.text());
@@ -88,9 +93,9 @@ const base = process.env.PROTOTYPE_URL || 'http://localhost:3000';
   await sampleDay.hover();
   await expect(sampleDay.locator('.chart-tooltip')).toBeVisible();
   await page.getByRole('link', { name: 'Review unresolved feedback' }).click();
-  await expect(page.getByLabel('Feedback status')).toHaveValue(
-    'Needs attention',
-  );
+  await expect(
+    page.getByRole('combobox', { name: 'Feedback status' }),
+  ).toHaveText('Needs attention');
   await expect(page.locator('.feedback-row')).toHaveCount(3);
   await page.goto(base + '/dashboard/qr');
   await page.getByLabel('Display text').fill('Tell us about your visit');
@@ -160,7 +165,10 @@ const base = process.env.PROTOTYPE_URL || 'http://localhost:3000';
     .fill('Thank you for visiting our salon!');
   await page.getByRole('button', { name: 'Approve demo draft' }).click();
   await expect(page.getByRole('status')).toContainText('not been published');
-  await page.getByLabel('Filter reviews by rating').selectOption('1');
+  await page
+    .getByRole('combobox', { name: 'Filter reviews by rating' })
+    .click();
+  await page.getByRole('option', { name: '1 star', exact: true }).click();
   await expect(page.getByText('No matching sample reviews')).toBeVisible();
   await page.goto(base + '/r/demo-salon');
   await page.getByRole('button', { name: 'Send private feedback' }).click();
@@ -172,7 +180,10 @@ const base = process.env.PROTOTYPE_URL || 'http://localhost:3000';
       .getByLabel('Anything you’d like to share?')
       .evaluate((element) => element.checkValidity()),
   ).toBe(false);
-  await page.getByLabel('Who looked after you?').selectOption('Alex');
+  await page
+    .getByRole('combobox', { name: 'Who looked after you? (optional)' })
+    .click();
+  await page.getByRole('option', { name: 'Alex', exact: true }).click();
   await page.getByRole('button', { name: '1 star', exact: true }).click();
   await expect(page.locator('#rating-status')).toContainText(
     '1 out of 5 selected',
@@ -196,7 +207,7 @@ const base = process.env.PROTOTYPE_URL || 'http://localhost:3000';
     .getByRole('button', { name: 'Leave an honest Google review' })
     .click();
   await expect(page.getByRole('dialog')).toContainText(
-    'no real Google review listing',
+    'so no Google review page is linked',
   );
   await page.goto(base + '/login');
   await page.getByLabel('Email address').fill('demo@example.com');
@@ -212,9 +223,8 @@ const base = process.env.PROTOTYPE_URL || 'http://localhost:3000';
   await expect(page).toHaveURL(base + '/dashboard/qr');
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto(base + '/dashboard');
-  await page
-    .getByLabel('Business location')
-    .selectOption('Bloom & Co. · Richmond (sample)');
+  await page.getByRole('combobox', { name: 'Business location' }).click();
+  await page.getByRole('option', { name: /Richmond/ }).click();
   await expect(
     page.getByText('Richmond location preview selected.', { exact: false }),
   ).toBeVisible();

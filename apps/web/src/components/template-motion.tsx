@@ -95,7 +95,7 @@ export function FaqItem({
   const [open, setOpen] = useState(false);
   const reduced = useReducedMotion();
   return (
-    <div className="border-b border-[#dedcd5] first:border-t">
+    <div className="border-b border-line first:border-t">
       <h3>
         <button
           id={`faq-question-${index}`}
@@ -126,7 +126,7 @@ export function FaqItem({
             transition={{ duration: reduced ? 0 : 0.24 }}
             className="overflow-hidden"
           >
-            <p className="pb-5 pr-7 text-base leading-7 text-[#535768]">
+            <p className="pb-5 pr-7 text-base leading-7 text-muted">
               {answer}
             </p>
           </motion.div>

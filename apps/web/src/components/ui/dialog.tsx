@@ -9,12 +9,14 @@ export function Dialog({
   title,
   description,
   children,
+  compact = false,
 }: {
   open: boolean;
   onOpenChange: (value: boolean) => void;
   title: string;
   description: string;
   children: React.ReactNode;
+  compact?: boolean;
 }) {
   const reduced = useReducedMotion();
   const returnFocus = useRef<HTMLElement | null>(null);
@@ -49,7 +51,7 @@ export function Dialog({
               }}
             >
               <motion.div
-                className="dialog-content"
+                className={`dialog-content ${compact ? '!max-w-[440px] !p-6 [&>h2]:!text-[23px] [&>h2]:!leading-tight' : ''}`}
                 style={{ x: '-50%', y: '-50%' }}
                 initial={{
                   opacity: reduced ? 1 : 0,

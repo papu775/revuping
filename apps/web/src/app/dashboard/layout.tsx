@@ -1,4 +1,5 @@
 'use client';
+import { Avatar } from '../../components/ui/avatar';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect, useRef } from 'react';
@@ -13,8 +14,9 @@ import {
   X,
   ArrowUpRight,
   Leaf,
-  ChevronDown,
 } from 'lucide-react';
+import { ThemeControl } from '../../components/theme';
+import { Select } from '../../components/ui/select';
 import { Logo } from '../../components/shared';
 import { navItems } from '../../lib/mock-data';
 const icons = [LayoutDashboard, QrCode, MessageSquare, Send, Star];
@@ -72,7 +74,7 @@ export default function DashboardLayout({
   }, [open]);
   const [location, setLocation] = useState('Bloom & Co. · Notting Hill');
   return (
-    <div className="dashboard-shell flex min-h-screen bg-[#f8f7f4]">
+    <div className="dashboard-shell flex min-h-screen bg-canvas">
       <AnimatePresence initial={false}>
         {(!mobile || open) && (
           <motion.aside
@@ -139,7 +141,7 @@ export default function DashboardLayout({
                 ← Back to RevuPing
               </Link>
               <div className="profile">
-                <span className="avatar lavender">DO</span>
+                <Avatar initials={'DO'} tone="lavender" />
                 <div>
                   <strong>Demo Owner</strong>
                   <small>Demo salon owner</small>
@@ -163,7 +165,7 @@ export default function DashboardLayout({
         )}
       </AnimatePresence>
       <div className="dashboard-main min-w-0 flex-1 ml-[248px] max-[1100px]:ml-[226px] max-[800px]:ml-[208px] max-[600px]:ml-0">
-        <header className="dashboard-topbar flex h-[77px] items-center justify-between gap-4 border-b border-[#e1dfd9] bg-[#fffcf7] px-8 max-[1100px]:px-6 max-[800px]:h-[72px] max-[800px]:px-5 max-[600px]:gap-2 max-[600px]:px-4">
+        <header className="dashboard-topbar sticky top-0 z-40 flex h-[77px] items-center justify-between gap-4 border-b border-line bg-canvas px-8 max-[1100px]:px-6 max-[800px]:h-[72px] max-[800px]:px-5 max-[600px]:gap-2 max-[600px]:px-4">
           <div>
             <button
               className="icon-button mobile-toggle"
@@ -181,23 +183,24 @@ export default function DashboardLayout({
               </strong>
             </span>
           </div>
-          <div className="topbar-right">
+          <div className="topbar-right !gap-2">
             <span className="demo-label">Demo workspace</span>
-            <label className="location-select">
-              <Leaf size={14} />
-              <select
-                className="min-w-0 flex-1"
-                aria-label="Business location"
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-              >
-                <option value="Bloom & Co. · Notting Hill">Notting Hill</option>
-                <option value="Bloom & Co. · Richmond (sample)">
-                  Richmond (sample)
-                </option>
-              </select>
-              <ChevronDown size={12} />
-            </label>
+            <ThemeControl />
+            <Select
+              label="Business location"
+              value={location}
+              onValueChange={setLocation}
+              className="w-[210px] max-[800px]:w-[180px] max-[600px]:w-[140px]"
+              icon={<Leaf size={15} className="max-[600px]:hidden" />}
+              options={[
+                { value: 'Bloom & Co. · Notting Hill', label: 'Notting Hill' },
+                {
+                  value: 'Bloom & Co. · Richmond (sample)',
+                  label: 'Richmond (sample)',
+                  description: 'Same illustrative dataset',
+                },
+              ]}
+            />
           </div>
         </header>
         <main className="dashboard-content mx-auto max-w-[1500px] p-8 max-[1100px]:px-6 max-[1100px]:py-7 max-[800px]:px-5 max-[600px]:px-[18px] max-[600px]:pb-9 max-[600px]:pt-6">
@@ -211,7 +214,7 @@ export default function DashboardLayout({
           )}
           {children}
         </main>
-        <footer className="dashboard-footer flex flex-wrap justify-between gap-2 px-8 py-5 text-xs text-[#575b68] max-[600px]:px-[18px]">
+        <footer className="dashboard-footer flex flex-wrap justify-between gap-2 px-8 py-5 text-xs text-muted max-[600px]:px-[18px]">
           Bloom & Co. · Fictional salon{' '}
           <span>RevuPing prototype · No live integrations</span>
         </footer>

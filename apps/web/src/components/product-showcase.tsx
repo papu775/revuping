@@ -1,4 +1,5 @@
 'use client';
+import { Avatar } from './ui/avatar';
 import { Field } from './shared';
 import { AnimatedHeight } from './template-motion';
 import Link from 'next/link';
@@ -174,11 +175,10 @@ export function ProductShowcase() {
                             aria-pressed={demo.selected.id === f.id}
                             onClick={() => demo.select(f.id)}
                           >
-                            <span
-                              className={`avatar ${f.id === 1 ? 'peach' : 'lavender'}`}
-                            >
-                              {f.initials}
-                            </span>
+                            <Avatar
+                              initials={f.initials}
+                              tone={f.id === 1 ? 'peach' : 'lavender'}
+                            />
                             <div>
                               <div className="showcase-person-heading">
                                 <strong>{f.name}</strong>
@@ -266,7 +266,7 @@ export function ProductShowcase() {
                             aria-pressed={demo.customer.id === c.id}
                             onClick={() => demo.selectCustomer(c.id)}
                           >
-                            <span className="avatar lavender">{c.name[0]}</span>
+                            <Avatar name={c.name} tone="lavender" />
                             <div>
                               <strong>{c.name}</strong>
                               <small>{c.status}</small>
@@ -341,7 +341,7 @@ export function ProductShowcase() {
                     <div className="showcase-reply-layout">
                       <div className="showcase-review">
                         <div>
-                          <span className="avatar sage">A</span>
+                          <Avatar initials={'A'} tone="sage" />
                           <div>
                             <strong>{reviews[0].name}</strong>
                             <small>Simulated Google review</small>

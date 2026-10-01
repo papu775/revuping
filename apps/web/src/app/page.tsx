@@ -1,4 +1,5 @@
 'use client';
+import { SectionLink } from '../components/ui/section-link';
 import Link from 'next/link';
 import {
   ArrowRight,
@@ -44,9 +45,9 @@ export default function Landing() {
                   Try the demo <ArrowRight size={18} />
                 </Link>
               </Button>
-              <a href="#features" className="how-link">
+              <SectionLink href="#features" className="how-link">
                 Explore the product <ArrowRight size={17} />
-              </a>
+              </SectionLink>
             </div>
             <div className="hero-footnote">
               <Check size={14} /> No credit card <span>·</span> No setup needed{' '}
@@ -314,7 +315,7 @@ export default function Landing() {
             <p>Frontend demo · No purchase available</p>
           </div>
         </section>
-        <section className="faq-section wrap">
+        <section className="faq-section wrap !max-w-[960px] !grid-cols-1 !gap-7 !py-16 max-md:!py-12">
           <div>
             <span className="eyebrow">Common questions</span>
             <h2>Before you explore.</h2>
@@ -370,8 +371,8 @@ export default function Landing() {
           <p>Review requests, feedback and replies.</p>
         </div>
         <div>
-          <a href="#features">Features</a>
-          <a href="#pricing">Pricing coming soon</a>
+          <SectionLink href="#features">Features</SectionLink>
+          <SectionLink href="#pricing">Pricing coming soon</SectionLink>
           <Link href="/r/demo-salon">
             Customer experience <ArrowUpRight size={13} />
           </Link>

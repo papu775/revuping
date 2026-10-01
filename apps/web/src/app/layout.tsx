@@ -1,5 +1,6 @@
 import './global.css';
 import './template.css';
+import { ThemeProvider } from '../components/theme';
 import { TemplateMotion } from '../components/template-motion';
 export const metadata = {
   title: 'RevuPing — Review requests, feedback & replies',
@@ -12,9 +13,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body>
-        <TemplateMotion>{children}</TemplateMotion>
+        <ThemeProvider>
+          <TemplateMotion>{children}</TemplateMotion>
+        </ThemeProvider>
       </body>
     </html>
   );

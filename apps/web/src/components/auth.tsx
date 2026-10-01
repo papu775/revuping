@@ -1,4 +1,5 @@
 'use client';
+import { Avatar } from './ui/avatar';
 import { Field } from './shared';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -39,7 +40,7 @@ export function Auth({ signup = false }: { signup?: boolean }) {
                 <MessageSquare size={17} /> PRIVATE FEEDBACK · DEMO
               </span>
               <div className="auth-card-person">
-                <span className="avatar peach">JW</span>
+                <Avatar initials={'JW'} tone="peach" />
                 <div>
                   <strong>James Wilson</strong>
                   <small>Today, 9:18 am · Alex</small>

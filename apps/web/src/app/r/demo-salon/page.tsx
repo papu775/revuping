@@ -1,4 +1,5 @@
 'use client';
+import { Select } from '../../../components/ui/select';
 import { Field } from '../../../components/shared';
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
@@ -188,15 +189,21 @@ export default function CustomerPage() {
                 <Field>
                   Who looked after you?{' '}
                   <span className="optional">(optional)</span>
-                  <select
-                    value={staff}
-                    onChange={(e) => setStaff(e.target.value)}
-                  >
-                    <option value="">Choose a team member</option>
-                    {['Sophie', 'Alex', 'Mia'].map((s) => (
-                      <option key={s}>{s}</option>
-                    ))}
-                  </select>
+                  <Select
+                    label="Who looked after you? (optional)"
+                    value={staff || 'none'}
+                    onValueChange={(value) =>
+                      setStaff(value === 'none' ? '' : value)
+                    }
+                    placeholder="Choose a team member"
+                    options={[
+                      { value: 'none', label: 'No preference' },
+                      ...['Sophie', 'Alex', 'Mia'].map((value) => ({
+                        value,
+                        label: value,
+                      })),
+                    ]}
+                  />
                 </Field>
                 <Button type="submit" disabled={!rating}>
                   Share private feedback <Heart size={16} />
@@ -224,18 +231,17 @@ export default function CustomerPage() {
       <Dialog
         open={google}
         onOpenChange={setGoogle}
-        title="Your honest review is welcome."
-        description="This salon is fictional, so there is no real Google review listing to open."
+        title="Google reviews are simulated in this demo"
+        description="Bloom & Co. is a sample business, so no Google review page is linked."
+        compact
       >
-        <div className="empty-state">
-          <Star size={36} />
-          <p>
-            In the real product, this option would open your salon’s Google
-            review page. It remains available to every customer, regardless of
-            rating.
-          </p>
-          <Button onClick={() => setGoogle(false)}>Got it</Button>
-        </div>
+        <p className="mt-4 text-sm leading-6 text-muted">
+          For a connected business, this action would open its Google review
+          page.
+        </p>
+        <Button className="mt-6" onClick={() => setGoogle(false)}>
+          Back to demo
+        </Button>
       </Dialog>
     </main>
   );
