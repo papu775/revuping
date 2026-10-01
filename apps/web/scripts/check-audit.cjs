@@ -123,6 +123,9 @@ const base = process.env.PROTOTYPE_URL || 'http://localhost:3000';
         .click();
       await expect(staff).toHaveText('No preference');
       await p.goto(base + '/');
+      // Wait for initial page loading before clicking: SSR markup is visible
+      // while Next is still hydrating and restoring the document scroll position.
+      await p.waitForLoadState('networkidle');
       for (const href of ['#features', '#how-it-works', '#pricing']) {
         if (width < 768)
           await p.getByRole('button', { name: 'Toggle navigation' }).click();

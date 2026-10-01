@@ -52,7 +52,7 @@ export function Select({
             : undefined
         }
         className={twMerge(
-          'inline-flex min-h-12 min-w-0 items-center justify-between gap-2 rounded-lg border border-line bg-surface px-3.5 text-sm font-medium text-ink shadow-sm transition-colors hover:border-accent/60 focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-accent/60 disabled:cursor-not-allowed disabled:opacity-50 max-md:text-base [&>span]:truncate',
+          'inline-flex min-h-12 min-w-0 items-center justify-between gap-2 rounded-lg border border-control bg-input px-3.5 text-sm font-medium text-ink shadow-sm transition-colors hover:border-accent/60 focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-accent/60 disabled:cursor-not-allowed disabled:opacity-50 max-md:text-base [&>span]:truncate',
           compact && 'size-11 min-h-11 justify-center px-0',
           className,
         )}

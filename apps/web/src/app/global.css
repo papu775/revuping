@@ -25,12 +25,24 @@
   --color-warm-ink: var(--warm-ink);
   --color-danger: var(--danger);
   --color-danger-soft: var(--danger-soft);
+  --color-input: var(--surface-input);
+  --color-section: var(--surface-section);
+  --color-control: var(--control-border);
+  --color-disabled: var(--disabled-bg);
+  --color-disabled-ink: var(--disabled-ink);
+  --color-disabled-line: var(--disabled-line);
 }
 @layer base {
   :root {
     color-scheme: light;
     --surface-canvas: #faf8f3;
     --surface-work: #ffffff;
+    --surface-input: #ffffff;
+    --surface-section: #f1efe8;
+    --control-border: #b8bbca;
+    --disabled-bg: #eeece6;
+    --disabled-ink: #8b8991;
+    --disabled-line: #dddcd6;
     --surface-soft: #f1efe8;
     --surface-selected: #f0ebf8;
     --ink: #20243c;
@@ -70,15 +82,21 @@
   }
   .dark {
     color-scheme: dark;
-    --surface-canvas: #141723;
-    --surface-work: #1e2231;
-    --surface-soft: #272b3a;
-    --surface-selected: #332b47;
+    --surface-canvas: #121521;
+    --surface-work: #222739;
+    --surface-input: #181d2a;
+    --surface-section: #1a1f2e;
+    --control-border: #707b91;
+    --disabled-bg: #202433;
+    --disabled-ink: #7b8397;
+    --disabled-line: #363c4d;
+    --surface-soft: #2b3142;
+    --surface-selected: #392f50;
     --ink: #f0edf6;
-    --muted: #b9bac9;
+    --muted: #c0c3d2;
     --page-ink: #f0edf6;
-    --page-muted: #b9bac9;
-    --border: #3a3d4e;
+    --page-muted: #c0c3d2;
+    --border: #485064;
     --accent-line: #6c548f;
     --violet: #c4a9f5;
     --violet-dark: #ae8de6;

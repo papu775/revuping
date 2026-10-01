@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import QRCode from 'qrcode';
+import { printPalette, printableColor } from '../lib/print-palette';
 export function QrCode({
   color = '#22213e',
   onReady,
@@ -11,6 +12,7 @@ export function QrCode({
   decorative?: boolean;
 }) {
   const [svg, setSvg] = useState('');
+  const foreground = printableColor(color);
   useEffect(() => {
     let active = true;
     QRCode.toString(
@@ -19,9 +21,9 @@ export function QrCode({
         : `${window.location.origin}/r/demo-salon`,
       {
         type: 'svg',
-        margin: 1,
+        margin: 4,
         width: 220,
-        color: { dark: color, light: '#ffffff' },
+        color: { dark: foreground, light: printPalette.paper },
         errorCorrectionLevel: 'M',
       },
     ).then((value) => {
@@ -33,7 +35,7 @@ export function QrCode({
     return () => {
       active = false;
     };
-  }, [color, onReady, decorative]);
+  }, [foreground, onReady, decorative]);
   return (
     <div
       className="qr-code"

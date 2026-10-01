@@ -23,6 +23,8 @@
     --violet: #6b52b9;
     --warm-ink: #816334;
     --positive-ink: #3e644e;
+    color: var(--ink);
+    color-scheme: light;
   }
 
   button:disabled {
@@ -481,7 +483,6 @@
     border: 1px solid var(--border);
     display: block;
     font-weight: 400;
-    margin-top: 9px;
     transition: border 0.2s;
     width: 100%;
   }
@@ -926,7 +927,7 @@
     letter-spacing: 0;
   }
   .qr-print-card {
-    background: var(--surface-canvas);
+    background: var(--surface-work);
     border-radius: 12px;
     border-top: 4px solid var(--violet);
     box-shadow: 0 15px 30px rgb(var(--shadow-rgb) / 0.082);
@@ -990,8 +991,8 @@
   }
   .search-field {
     align-items: center;
-    background: var(--surface-work);
-    border: 1px solid var(--border);
+    background: var(--surface-input);
+    border: 1px solid var(--control-border);
     border-radius: 8px;
     color: var(--muted);
     flex: 1;
@@ -1389,17 +1390,7 @@
     flex-direction: column;
     overflow: hidden;
     position: relative;
-  }
-  .auth-story:after {
-    border: 1px solid rgb(var(--shadow-rgb) / 0.035);
-    border-radius: 50%;
-    bottom: -190px;
-    content: '';
-    height: 600px;
-    pointer-events: none;
-    position: absolute;
-    right: -200px;
-    width: 600px;
+    isolation: isolate;
   }
   .auth-story-copy {
     position: relative;
@@ -1445,18 +1436,6 @@
   .auth-form > .button {
     margin-top: 25px;
     width: 100%;
-  }
-  .password-field {
-    position: relative;
-  }
-  .password-field input {
-    padding-right: 45px;
-  }
-  .password-field .icon-button {
-    color: var(--muted);
-    position: absolute;
-    right: 4px;
-    top: 2px;
   }
   .auth-divider {
     border-top: 1px solid var(--border);
@@ -4620,7 +4599,7 @@
     width: 100%;
   }
   .showcase-feedback-row.selected {
-    background: var(--surface-soft);
+    background: var(--surface-selected);
     border-left-color: var(--violet);
   }
   .showcase-feedback-row:hover {
@@ -4677,7 +4656,7 @@
     width: 100%;
   }
   .showcase-customer-row.selected {
-    background: var(--surface-soft);
+    background: var(--surface-selected);
     border-left-color: var(--violet);
   }
   .showcase-customer-row strong {
@@ -4724,9 +4703,6 @@
   }
   #how-it-works {
     border-top: 1px solid var(--border);
-  }
-  #how-it-works .section-title {
-    max-width: 800px;
   }
   .steps {
     gap: 40px;
@@ -4943,7 +4919,7 @@
     font-size: 13px;
   }
   .feedback-row.selected {
-    background: var(--surface-soft);
+    background: var(--surface-selected);
     box-shadow: inset 3px 0 0 var(--violet);
   }
   .feedback-row-bottom,
@@ -5005,10 +4981,11 @@
     max-width: 460px;
   }
   .auth-product-card {
-    background: var(--surface-canvas);
+    background: var(--surface-work);
     border: 1px solid var(--border);
     border-radius: 10px;
     color: var(--ink);
+    box-shadow: 0 18px 45px rgb(0 0 0 / 0.18);
   }
   .auth-card-label {
     color: var(--muted);
@@ -5556,7 +5533,7 @@
     font-size: 13px;
   }
   .template-tabs button[data-state='active'] {
-    background: var(--surface-canvas);
+    background: var(--surface-selected);
     border-color: var(--accent-line);
   }
   .feedback-detail > blockquote {
@@ -5644,7 +5621,7 @@
   }
   .showcase-customer-row.selected,
   .showcase-feedback-row.selected {
-    background: var(--surface-soft);
+    background: var(--surface-selected);
     border-left-color: var(--accent-line);
   }
   .showcase-count {
@@ -5950,10 +5927,6 @@
   .auth-product-card {
     padding: 24px;
   }
-  .auth-request-card {
-    margin-left: 24px;
-    margin-top: 18px;
-  }
   .auth-card-note {
     line-height: 1.6;
   }
@@ -6035,9 +6008,6 @@
   @media (max-width: 1100px) {
     .auth-card-person {
       flex-wrap: wrap;
-    }
-    .auth-request-card {
-      margin-left: 15px;
     }
   }
   @media (max-width: 600px) {

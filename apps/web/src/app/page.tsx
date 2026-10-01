@@ -161,8 +161,9 @@ export default function Landing() {
         </section>
         <ProductShowcase />
         <section id="how-it-works" className="section wrap">
-          <Reveal>
+          <Reveal className="w-full">
             <SectionTitle
+              className="mx-auto w-full max-w-[800px]"
               eyebrow="A simple workflow"
               title="From a visit to a useful conversation."
               text="Create your QR, request with consent, and follow up from one workspace."

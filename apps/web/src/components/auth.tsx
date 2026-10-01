@@ -1,4 +1,6 @@
 'use client';
+import { PasswordField } from './ui/password-field';
+import { FloatingSample } from './template-motion';
 import { Avatar } from './ui/avatar';
 import { Field } from './shared';
 import Link from 'next/link';
@@ -9,21 +11,25 @@ import {
   Send,
   MessageSquare,
   Check,
-  Eye,
-  EyeOff,
+  AudioLines,
 } from 'lucide-react';
 import { Logo, Stars } from './shared';
 import { Button } from './ui/button';
 export function Auth({ signup = false }: { signup?: boolean }) {
   const router = useRouter();
   const [error, setError] = useState('');
-  const [show, setShow] = useState(false);
   const [password, setPassword] = useState('');
   return (
     <main className="auth-page">
       <section className="auth-story">
+        <AudioLines
+          aria-hidden="true"
+          focusable="false"
+          strokeWidth={0.8}
+          className="pointer-events-none absolute -right-24 top-[18%] size-[560px] text-violet opacity-[0.07]"
+        />
         <Logo light />
-        <div className="auth-story-copy">
+        <div className="auth-story-copy mx-auto w-full max-w-[520px]">
           <span className="eyebrow">The work behind a good review</span>
           <h2>
             Less chasing.
@@ -34,8 +40,15 @@ export function Auth({ signup = false }: { signup?: boolean }) {
             Requests, private feedback and thoughtful replies. One place to take
             the next step.
           </p>
-          <div className="auth-product-composition">
-            <div className="auth-product-card">
+          <div
+            className="auth-product-composition grid gap-6 py-2"
+            aria-hidden="true"
+          >
+            <FloatingSample
+              className="auth-product-card mr-7 -rotate-1"
+              amplitude={5}
+              duration={7}
+            >
               <span className="auth-card-label">
                 <MessageSquare size={17} /> PRIVATE FEEDBACK · DEMO
               </span>
@@ -54,8 +67,12 @@ export function Auth({ signup = false }: { signup?: boolean }) {
               <div className="auth-card-note">
                 <Check size={17} /> Next step: follow up with James
               </div>
-            </div>
-            <div className="auth-product-card auth-request-card">
+            </FloatingSample>
+            <FloatingSample
+              className="auth-product-card auth-request-card ml-7 rotate-1"
+              amplitude={4}
+              duration={8.5}
+            >
               <span className="auth-card-label">
                 <Send size={17} /> REQUEST PREVIEW
               </span>
@@ -64,7 +81,7 @@ export function Auth({ signup = false }: { signup?: boolean }) {
               <span className="auth-card-note">
                 <Check size={17} /> Consent recorded · Nothing sent
               </span>
-            </div>
+            </FloatingSample>
           </div>
         </div>
         <span className="auth-story-foot">
@@ -82,7 +99,7 @@ export function Auth({ signup = false }: { signup?: boolean }) {
           <span className="eyebrow">
             {signup ? 'Explore the product' : 'Welcome to RevuPing'}
           </span>
-          <h1>{signup ? 'Explore demo signup.' : 'Explore your workspace.'}</h1>
+          <h1>{signup ? 'Demo signup' : 'Demo login'}</h1>
           <p>
             {signup
               ? 'Try a fictional workspace. No real credentials needed.'
@@ -130,30 +147,18 @@ export function Auth({ signup = false }: { signup?: boolean }) {
             </Field>
             <Field>
               Password
-              <div className="password-field">
-                <input
-                  aria-label="Password"
-                  type={show ? 'text' : 'password'}
-                  required
-                  value={password}
-                  onChange={(e) => {
-                    setPassword(e.target.value);
-                    setError('');
-                  }}
-                  autoComplete="off"
-                  placeholder="At least 8 characters"
-                  aria-invalid={!!error}
-                  aria-describedby={error ? 'auth-error' : undefined}
-                />
-                <button
-                  type="button"
-                  className="icon-button"
-                  aria-label={show ? 'Hide password' : 'Show password'}
-                  onClick={() => setShow(!show)}
-                >
-                  {show ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
-              </div>
+              <PasswordField
+                required
+                value={password}
+                onChange={(event) => {
+                  setPassword(event.target.value);
+                  setError('');
+                }}
+                autoComplete="off"
+                placeholder="At least 8 characters"
+                aria-invalid={!!error}
+                aria-describedby={error ? 'auth-error' : undefined}
+              />
             </Field>
             {error && (
               <p className="error-note" role="alert" id="auth-error">

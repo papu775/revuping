@@ -126,9 +126,7 @@ export function FaqItem({
             transition={{ duration: reduced ? 0 : 0.24 }}
             className="overflow-hidden"
           >
-            <p className="pb-5 pr-7 text-base leading-7 text-muted">
-              {answer}
-            </p>
+            <p className="pb-5 pr-7 text-base leading-7 text-muted">{answer}</p>
           </motion.div>
         )}
       </AnimatePresence>
@@ -176,6 +174,47 @@ export function HeroIntro({ children }: { children: React.ReactNode }) {
       initial={{ opacity: 1 }}
       animate={{ opacity: reduced ? 1 : [0.8, 1] }}
       transition={{ duration: reduced ? 0 : 0.3 }}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+/** Slow decorative movement; form controls never inherit this transform. */
+export function FloatingSample({
+  children,
+  className,
+  amplitude = 5,
+  duration = 7,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  amplitude?: number;
+  duration?: number;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { amount: 0.2 });
+  const reduced = useReducedMotion();
+  const [visible, setVisible] = useState(true);
+  useEffect(() => {
+    const update = () => setVisible(!document.hidden);
+    update();
+    document.addEventListener('visibilitychange', update);
+    return () => document.removeEventListener('visibilitychange', update);
+  }, []);
+  const running = inView && visible && !reduced;
+  return (
+    <motion.div
+      ref={ref}
+      className={className}
+      data-floating={running ? 'running' : 'paused'}
+      initial={false}
+      animate={{ y: running ? [0, -amplitude, 0] : 0 }}
+      transition={
+        running
+          ? { duration, repeat: Infinity, ease: 'easeInOut' }
+          : { duration: 0 }
+      }
     >
       {children}
     </motion.div>

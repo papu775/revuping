@@ -23,6 +23,12 @@
         "options": {
           "command": "node apps/web/scripts/check-audit.cjs"
         }
+      },
+      "refinement-check": {
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "node apps/web/scripts/check-refinements.cjs"
+        }
       }
     }
   },

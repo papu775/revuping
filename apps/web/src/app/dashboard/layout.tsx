@@ -84,7 +84,7 @@ export default function DashboardLayout({
             transition={{ duration: reduced ? 0 : 0.22 }}
             ref={sidebarRef}
             id="workspace-navigation"
-            className={`sidebar ${open ? 'sidebar-open' : ''}`}
+            className={`sidebar bg-section ${open ? 'sidebar-open' : ''}`}
           >
             <div className="sidebar-brand">
               <Logo />

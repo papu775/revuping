@@ -27,6 +27,11 @@ import { Select } from './ui/select';
 import { Button } from './ui/button';
 import { Dialog } from './ui/dialog';
 import { Badge, Stars, TextLink } from './shared';
+import {
+  printPalette,
+  printableColor,
+  printTextLines,
+} from '../lib/print-palette';
 import { QrCode } from './qr-code';
 import { focusWorkspacePanel } from '../lib/workspace-focus';
 import {
@@ -305,6 +310,7 @@ export function QrStudio() {
   const [template, setTemplate] = useState('Counter card');
   const [svg, setSvg] = useState('');
   const [preview, setPreview] = useState(false);
+  const printColor = printableColor(color);
   const [message, setMessage] = useState('');
   const ready = useCallback((s: string) => setSvg(s), []);
   function download() {
@@ -321,8 +327,18 @@ export function QrStudio() {
             "'": '&apos;',
           })[c] || c,
       );
+    const nameLines = printTextLines(name, 32, 'Georgia');
+    const displayLines = printTextLines(text, 20, 'Arial');
+    const label = (lines: string[], centerY: number, lineHeight: number) =>
+      lines
+        .map(
+          (line, index) =>
+            `<tspan x="210" y="${centerY + (index - (lines.length - 1) / 2) * lineHeight}">${safe(line)}</tspan>`,
+        )
+        .join('');
+    const supportY = 450 + (displayLines.length - 1) * 12;
     const qrViewBox = svg.match(/viewBox="([^"]+)"/)?.[1] || '0 0 33 33';
-    const file = `<svg xmlns="http://www.w3.org/2000/svg" width="420" height="560" viewBox="0 0 420 560"><rect width="420" height="560" rx="24" fill="#faf8f2"/><text x="210" y="75" text-anchor="middle" font-family="Georgia" font-size="32" fill="${color}">${safe(name)}</text><svg x="90" y="120" width="240" height="240" viewBox="${qrViewBox}">${svg.replace(/^.*?<svg[^>]*>/s, '').replace(/<\/svg>\s*$/, '')}</svg><text x="210" y="410" text-anchor="middle" font-family="Arial" font-size="20" fill="#22213e">${safe(text)}</text><text x="210" y="450" text-anchor="middle" font-family="Arial" font-size="14" fill="#666">Scan to share your honest experience.</text><text x="210" y="515" text-anchor="middle" font-family="Arial" font-size="11" fill="#666">RevuPing demo · /r/demo-salon</text></svg>`;
+    const file = `<svg xmlns="http://www.w3.org/2000/svg" width="420" height="560" viewBox="0 0 420 560"><rect width="420" height="560" rx="24" fill="${printPalette.paper}"/><text x="210" y="75" text-anchor="middle" font-family="Georgia" font-size="32" fill="${printColor}">${label(nameLines, 75, 32)}</text><svg x="90" y="120" width="240" height="240" viewBox="${qrViewBox}">${svg.replace(/^.*?<svg[^>]*>/s, '').replace(/<\/svg>\s*$/, '')}</svg><text x="210" y="410" text-anchor="middle" font-family="Arial" font-size="20" fill="${printPalette.ink}">${label(displayLines, 410, 22)}</text><text x="210" y="${supportY}" text-anchor="middle" font-family="Arial" font-size="14" fill="${printPalette.muted}">Scan to share your honest experience.</text><text x="210" y="515" text-anchor="middle" font-family="Arial" font-size="11" fill="${printPalette.muted}">RevuPing demo · /r/demo-salon</text></svg>`;
     const url = URL.createObjectURL(
       new Blob([file], { type: 'image/svg+xml' }),
     );
@@ -336,12 +352,12 @@ export function QrStudio() {
   const card = (
     <div
       className={`qr-print-card ${template === 'Minimal poster' ? 'poster' : ''}`}
-      style={{ borderTopColor: color }}
+      style={{ borderTopColor: printColor }}
     >
-      <Leaf size={33} style={{ color }} />
-      <h2 style={{ color }}>{name || 'Your salon'}</h2>
+      <Leaf size={33} style={{ color: printColor }} />
+      <h2 style={{ color: printColor }}>{name || 'Your salon'}</h2>
       <span className="salon-sub">A LITTLE TIME FOR YOU</span>
-      <QrCode color={color} onReady={ready} />
+      <QrCode color={printColor} onReady={ready} />
       <h3>{text || 'Share your experience'}</h3>
       <p>
         Scan to share an honest review
@@ -400,6 +416,12 @@ export function QrStudio() {
               />
             </div>
           </Field>
+          {printColor !== color && (
+            <p className="mb-5 text-sm leading-6 text-muted" role="status">
+              Light brand colors use navy on the printable card to keep text and
+              the QR readable.
+            </p>
+          )}
           <Field as="div">
             Choose a layout
             <Tabs.Root value={template} onValueChange={setTemplate}>
@@ -453,7 +475,7 @@ export function QrStudio() {
           </Button>
           {message && <SessionNotice>{message}</SessionNotice>}
         </Panel>
-        <section className="qr-canvas">
+        <section className="qr-canvas bg-section">
           <div className="canvas-label">
             <span>LIVE PREVIEW</span>
             <span>{template}</span>
@@ -991,7 +1013,8 @@ export function Reviews() {
           onValueChange={setRating}
           options={['All ratings', '5', '4', '3', '2', '1'].map((v) => ({
             value: v,
-            label: v === 'All ratings' ? v : `${v} ${v === '1' ? 'star' : 'stars'}`,
+            label:
+              v === 'All ratings' ? v : `${v} ${v === '1' ? 'star' : 'stars'}`,
           }))}
         />
       </div>
@@ -1000,7 +1023,7 @@ export function Reviews() {
           {visible.length ? (
             visible.map((r) => (
               <button
-                className={`${panelSurface} review-card ${active?.id === r.id ? 'selected border-accent-line bg-canvas' : 'border-line bg-surface hover:border-accent-line hover:bg-canvas'}`}
+                className={`${panelSurface} review-card ${active?.id === r.id ? 'selected border-accent-line bg-selected' : 'border-line bg-surface hover:border-accent-line hover:bg-canvas'}`}
                 key={r.id}
                 aria-pressed={active?.id === r.id}
                 onClick={() => {

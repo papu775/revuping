@@ -62,7 +62,7 @@ export function Badge({
 }) {
   return (
     <span
-      className={`badge inline-flex items-center gap-1.5 whitespace-nowrap rounded-[5px] border px-2 py-1 text-xs font-semibold leading-4 ${mint ? 'mint border-positive-line bg-soft text-positive-ink' : 'border-accent-line bg-canvas text-accent'}`}
+      className={`badge inline-flex items-center gap-1.5 whitespace-nowrap rounded-[5px] border px-2 py-1 text-xs font-semibold leading-4 ${mint ? 'mint border-positive-line bg-positive text-positive-ink' : 'border-accent-line bg-canvas text-accent'}`}
     >
       {children}
     </span>
@@ -72,13 +72,15 @@ export function SectionTitle({
   eyebrow,
   title,
   text,
+  className = '',
 }: {
   eyebrow: string;
   title: string;
   text?: string;
+  className?: string;
 }) {
   return (
-    <div className="section-title">
+    <div className={`section-title ${className}`}>
       <span className="eyebrow">{eyebrow}</span>
       <h2>{title}</h2>
       {text && <p>{text}</p>}
@@ -124,7 +126,7 @@ export function Field({
   const heading = firstControl < 0 ? parts : parts.slice(0, firstControl);
   const controls = firstControl < 0 ? [] : parts.slice(firstControl);
   return (
-    <Component className="field [&_[aria-invalid=true]]:border-danger [&_[aria-invalid=true]]:bg-danger-soft mb-5 flex flex-col gap-2 text-sm font-semibold text-navy [&_input]:min-h-12 [&_input]:rounded-lg [&_input]:border [&_input]:border-line [&_input]:bg-surface [&_input]:px-3.5 [&_input]:py-3 [&_input]:font-normal [&_textarea]:rounded-lg [&_textarea]:border [&_textarea]:border-line [&_textarea]:bg-surface [&_textarea]:p-3.5 [&_textarea]:font-normal [&_select]:min-h-12 [&_select]:rounded-lg [&_select]:border [&_select]:border-line [&_select]:bg-surface [&_select]:px-3.5 [&_select]:font-normal max-md:[&_input]:text-base max-md:[&_textarea]:text-base max-md:[&_select]:text-base">
+    <Component className="field [&_[aria-invalid=true]]:border-danger [&_[aria-invalid=true]]:bg-danger-soft mb-5 flex flex-col gap-2 text-sm font-semibold text-navy [&_input]:min-h-12 [&_input]:rounded-lg [&_input]:border [&_input]:border-control [&_input]:bg-input [&_input]:px-3.5 [&_input]:py-3 [&_input]:font-normal [&_textarea]:rounded-lg [&_textarea]:border [&_textarea]:border-control [&_textarea]:bg-input [&_textarea]:p-3.5 [&_textarea]:font-normal [&_select]:min-h-12 [&_select]:rounded-lg [&_select]:border [&_select]:border-line [&_select]:bg-input [&_select]:px-3.5 [&_select]:font-normal max-md:[&_input]:text-base max-md:[&_textarea]:text-base max-md:[&_select]:text-base">
       {heading.length > 0 && (
         <span className="flex flex-wrap items-baseline gap-x-1">{heading}</span>
       )}
