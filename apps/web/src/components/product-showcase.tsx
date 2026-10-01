@@ -14,12 +14,13 @@ import {
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Badge, Stars, Reveal } from './shared';
-import { feedback, customers, reviews } from '../lib/mock-data';
+import { customers, reviews } from '../lib/mock-data';
+import { usePreviewDemo } from '../lib/use-preview-demo';
 
 const views = [
   {
     id: 'feedback',
-    label: 'Private feedback',
+    label: 'Feedback inbox',
     icon: MessageSquare,
     href: '/dashboard/feedback',
   },
@@ -31,7 +32,7 @@ const views = [
   },
   {
     id: 'replies',
-    label: 'Review replies',
+    label: 'Reply drafts',
     icon: Sparkles,
     href: '/dashboard/reviews',
   },
@@ -39,6 +40,7 @@ const views = [
 
 export function ProductShowcase() {
   const [view, setView] = useState('feedback');
+  const demo = usePreviewDemo();
   const active = views.find((item) => item.id === view) || views[0];
   return (
     <section id="features" className="product-showcase">
@@ -135,12 +137,20 @@ export function ProductShowcase() {
                     <h3>Feedback inbox</h3>
                     <p>Recent experiences, with a clear follow-up status.</p>
                   </div>
-                  <span className="showcase-count">3 need attention</span>
+                  <span className="showcase-count">
+                    {demo.items.filter((item) => !item.resolved).length} need
+                    attention
+                  </span>
                 </div>
                 <div className="showcase-feedback-layout">
                   <div className="showcase-feedback-list">
-                    {feedback.slice(0, 3).map((f) => (
-                      <div className="showcase-feedback-row" key={f.id}>
+                    {demo.items.map((f) => (
+                      <button
+                        className={`showcase-feedback-row ${demo.selected.id === f.id ? 'selected' : ''}`}
+                        key={f.id}
+                        aria-pressed={demo.selected.id === f.id}
+                        onClick={() => demo.select(f.id)}
+                      >
                         <span
                           className={`avatar ${f.id === 1 ? 'peach' : 'lavender'}`}
                         >
@@ -161,29 +171,35 @@ export function ProductShowcase() {
                             </Badge>
                           </div>
                         </div>
-                      </div>
+                      </button>
                     ))}
                   </div>
                   <div className="showcase-detail">
-                    <span className="eyebrow">A CLEAR FOLLOW-UP</span>
-                    <h4>
-                      Keep the context.
-                      <br /> Close the loop.
-                    </h4>
-                    <p>
-                      “I waited about 25 minutes past my appointment. A little
-                      heads-up would have helped.”
-                    </p>
+                    <span className="eyebrow">SELECTED FEEDBACK</span>
+                    <h4>{demo.selected.name}</h4>
+                    <Stars rating={demo.selected.rating} />
+                    <p>“{demo.selected.text}”</p>
                     <div className="showcase-note">
                       <span>INTERNAL NOTE · SAMPLE</span>
                       <p>
-                        Review appointment timings with the team before the next
-                        visit.
+                        Follow up with the customer and review the appointment
+                        with the team.
                       </p>
                     </div>
-                    <span className="showcase-demo-action">
-                      <Check size={15} /> Track resolution in your inbox
-                    </span>
+                    <Button
+                      onClick={demo.toggleResolved}
+                      variant={demo.selected.resolved ? 'secondary' : 'default'}
+                    >
+                      <Check size={16} />
+                      {demo.selected.resolved
+                        ? 'Reopen preview feedback'
+                        : 'Resolve preview feedback'}
+                    </Button>
+                    <p className="preview-state" role="status">
+                      {demo.selected.resolved
+                        ? 'Resolved in this preview.'
+                        : 'Needs attention · Demo only'}
+                    </p>
                   </div>
                 </div>
               </Tabs.Content>
@@ -208,18 +224,23 @@ export function ProductShowcase() {
                       <span>Customer</span>
                       <span>Consent</span>
                     </div>
-                    {customers.slice(0, 3).map((c) => (
-                      <div className="showcase-customer-row" key={c.id}>
+                    {customers.map((c) => (
+                      <button
+                        className={`showcase-customer-row ${demo.customer.id === c.id ? 'selected' : ''}`}
+                        key={c.id}
+                        aria-pressed={demo.customer.id === c.id}
+                        onClick={() => demo.selectCustomer(c.id)}
+                      >
                         <span className="avatar lavender">{c.name[0]}</span>
                         <div>
                           <strong>{c.name}</strong>
                           <small>{c.status}</small>
                         </div>
                         <span>
-                          <Check size={14} />
-                          Recorded
+                          {c.consent && <Check size={14} />}
+                          {c.consent ? 'Recorded' : 'No consent'}
                         </span>
-                      </div>
+                      </button>
                     ))}
                     <p className="showcase-inline-note">
                       Preview requests and reminders before simulating a send.
@@ -230,16 +251,28 @@ export function ProductShowcase() {
                     <h4>
                       Thanks for visiting,
                       <br />
-                      Olivia.
+                      {demo.customer.name.split(' ')[0]}.
                     </h4>
                     <p>
                       It was lovely having you at Bloom & Co. If you have a
                       moment, we’d love to hear about your visit.
                     </p>
-                    <div>
-                      Share your experience <ArrowRight size={16} />
-                    </div>
-                    <small>Fictional message · Nothing is sent</small>
+                    <Button
+                      disabled={!demo.customer.consent || demo.sent}
+                      onClick={demo.simulateSend}
+                    >
+                      <Send size={16} />
+                      {demo.sent
+                        ? 'Request simulated'
+                        : 'Simulate preview request'}
+                    </Button>
+                    <small role="status">
+                      {!demo.customer.consent
+                        ? 'Consent is required before a request.'
+                        : demo.sent
+                          ? 'Complete in this preview. No message was sent.'
+                          : 'Fictional message · Nothing is sent'}
+                    </small>
                   </div>
                 </div>
               </Tabs.Content>
@@ -278,10 +311,29 @@ export function ProductShowcase() {
                     <span className="eyebrow">
                       <Sparkles size={14} /> SAMPLE REPLY DRAFT
                     </span>
-                    <p>{reviews[0].draft}</p>
-                    <div>
-                      <Check size={16} /> Yours to edit and approve.
-                    </div>
+                    <label className="field">
+                      Edit this reply
+                      <textarea
+                        rows={5}
+                        value={demo.draft}
+                        onChange={(e) => demo.editDraft(e.target.value)}
+                      />
+                    </label>
+                    <Button
+                      disabled={!demo.draft.trim() || demo.approved}
+                      onClick={demo.approve}
+                    >
+                      <Check size={16} />
+                      {demo.approved
+                        ? 'Approved in preview'
+                        : 'Approve preview draft'}
+                    </Button>
+                    {demo.approved && (
+                      <p className="preview-state" role="status">
+                        Approved for this preview. Nothing is published to
+                        Google.
+                      </p>
+                    )}
                     <small>
                       No live AI call. Nothing is published to Google.
                     </small>

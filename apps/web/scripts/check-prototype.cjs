@@ -38,19 +38,62 @@ const base = process.env.PROTOTYPE_URL || 'http://localhost:3000';
   await page.goto(base + '/');
   await page.getByRole('tab', { name: 'Review requests', exact: true }).click();
   await expect(page.getByRole('tabpanel')).toContainText('Consent first');
-  await page.getByRole('tab', { name: 'Review replies', exact: true }).click();
+  await page.getByRole('tab', { name: 'Reply drafts', exact: true }).click();
   await expect(page.getByRole('tabpanel')).toContainText(
     'Nothing is published to Google',
   );
-  await page
-    .getByRole('tab', { name: 'Private feedback', exact: true })
-    .click();
+  await page.getByRole('tab', { name: 'Feedback inbox', exact: true }).click();
   await expect(page.getByRole('tabpanel')).toContainText('Feedback inbox');
-  await expect(page.locator('.pricing-grid')).not.toContainText('$');
-  await expect(page.locator('.pricing-grid')).toContainText(
-    'pricing to be confirmed',
+  await expect(page.locator('#pricing')).not.toContainText('$');
+  await expect(page.locator('#pricing')).toContainText('Pricing coming soon.');
+  await page.getByRole('button', { name: 'Resolve preview feedback' }).click();
+  await expect(page.getByRole('status')).toContainText(
+    'Resolved in this preview',
   );
+  await page.getByRole('button', { name: 'Reopen preview feedback' }).click();
+  await page.getByRole('tab', { name: 'Review requests', exact: true }).click();
+  await page
+    .locator('.showcase-customer-row')
+    .filter({ hasText: 'Daniel Lewis' })
+    .click();
+  await expect(
+    page.getByRole('button', { name: 'Simulate preview request' }),
+  ).toBeDisabled();
+  await page
+    .locator('.showcase-customer-row')
+    .filter({ hasText: 'Olivia Martin' })
+    .click();
+  await page.getByRole('button', { name: 'Simulate preview request' }).click();
+  await expect(page.getByRole('status')).toContainText('No message was sent');
+  await page.getByRole('tab', { name: 'Reply drafts', exact: true }).click();
+  await page.getByLabel('Edit this reply').fill('Thank you for your visit!');
+  await page.getByRole('button', { name: 'Approve preview draft' }).click();
+  await expect(page.getByRole('status')).toContainText(
+    'Nothing is published to Google',
+  );
+  await page
+    .getByLabel('Edit this reply')
+    .fill('Thanks for sharing your visit.');
+  await expect(
+    page.getByRole('button', { name: 'Approve preview draft' }),
+  ).toBeEnabled();
+  await page.goto(base + '/dashboard');
+  await page.getByRole('link', { name: 'Review unresolved feedback' }).click();
+  await expect(page.getByLabel('Feedback status')).toHaveValue(
+    'Needs attention',
+  );
+  await expect(page.locator('.feedback-row')).toHaveCount(3);
   await page.goto(base + '/dashboard/qr');
+  await page.getByLabel('Display text').fill('Tell us about your visit');
+  await expect(page.locator('.qr-print-card h3')).toHaveText(
+    'Tell us about your visit',
+  );
+  await page.getByRole('button', { name: 'Select colour #253c39' }).click();
+  await expect(
+    page.getByRole('button', { name: 'Select colour #253c39' }),
+  ).toHaveAttribute('aria-pressed', 'true');
+  await page.getByLabel('Custom brand colour').fill('#243650');
+  await page.getByRole('tab', { name: 'Counter card' }).click();
   await page.getByLabel('Business name').fill('The Test Salon');
   await expect(page.locator('.qr-print-card h2')).toHaveText('The Test Salon');
   await page.getByRole('tab', { name: 'Minimal poster' }).click();
@@ -67,6 +110,9 @@ const base = process.env.PROTOTYPE_URL || 'http://localhost:3000';
   await expect(page.getByRole('dialog')).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog')).not.toBeVisible();
+  await expect(
+    page.getByRole('button', { name: 'Preview customer experience' }),
+  ).toBeFocused();
   await page.goto(base + '/dashboard/feedback');
   await page.getByLabel('Search feedback').fill('no-match-123');
   await expect(page.getByText('No matching feedback')).toBeVisible();
@@ -109,6 +155,15 @@ const base = process.env.PROTOTYPE_URL || 'http://localhost:3000';
   await expect(page.getByText('No matching sample reviews')).toBeVisible();
   await page.goto(base + '/r/demo-salon');
   await page.getByRole('button', { name: 'Send private feedback' }).click();
+  await expect(
+    page.getByRole('button', { name: 'Share private feedback' }),
+  ).toBeDisabled();
+  expect(
+    await page
+      .getByLabel('Anything you’d like to share?')
+      .evaluate((element) => element.checkValidity()),
+  ).toBe(false);
+  await page.getByLabel('Who looked after you?').selectOption('Alex');
   await page.getByRole('button', { name: '1 star', exact: true }).click();
   await expect(
     page.getByRole('button', { name: 'Leave a Google review' }),
@@ -117,7 +172,7 @@ const base = process.env.PROTOTYPE_URL || 'http://localhost:3000';
     .getByLabel('Anything you’d like to share?')
     .fill('The appointment started late.');
   await page.getByRole('button', { name: 'Share private feedback' }).click();
-  await expect(page.getByText('A little feedback.')).toBeVisible();
+  await expect(page.getByText('Thank you for your feedback.')).toBeVisible();
   await page
     .getByRole('button', { name: 'Leave an honest Google review' })
     .click();
@@ -137,6 +192,39 @@ const base = process.env.PROTOTYPE_URL || 'http://localhost:3000';
   await page.getByRole('link', { name: 'QR code studio', exact: true }).click();
   await expect(page).toHaveURL(base + '/dashboard/qr');
   await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto(base + '/dashboard');
+  await page
+    .getByLabel('Business location')
+    .selectOption('Bloom & Co. · Richmond (sample)');
+  await expect(
+    page.getByText('Richmond location preview selected.', { exact: false }),
+  ).toBeVisible();
+  await page.getByRole('button', { name: 'Open navigation' }).click();
+  await expect(
+    page.locator('.sidebar nav a[aria-current="page"]'),
+  ).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(
+    page.getByRole('button', { name: 'Open navigation' }),
+  ).toBeFocused();
+  await page.goto(base + '/');
+  await page.getByRole('tab', { name: 'Feedback inbox', exact: true }).focus();
+  await page.keyboard.press('ArrowRight');
+  await expect(
+    page.getByRole('tab', { name: 'Review requests', exact: true }),
+  ).toBeFocused();
+  await expect(
+    page.getByRole('tab', { name: 'Review requests', exact: true }),
+  ).toHaveAttribute('aria-selected', 'true');
+  const previewTab = page.getByRole('tab', {
+    name: 'Review requests',
+    exact: true,
+  });
+  expect(
+    await previewTab.evaluate(
+      (element) => getComputedStyle(element).outlineStyle,
+    ),
+  ).toBe('solid');
   await page.goto(base + '/dashboard/feedback');
   await page
     .locator('.feedback-row')
@@ -165,10 +253,27 @@ const base = process.env.PROTOTYPE_URL || 'http://localhost:3000';
     .getByRole('link', { name: 'Pricing', exact: true })
     .click();
   await expect(page).toHaveURL(base + '/#pricing');
+  await page.goto(base + '/signup');
+  await page.getByLabel('Your name').fill('Demo Owner');
+  await page.getByLabel('Email address').fill('owner@example.com');
+  await page.getByLabel('Password', { exact: true }).fill('samplepassword');
+  await page.getByRole('button', { name: 'Show password' }).click();
+  await expect(page.getByLabel('Password', { exact: true })).toHaveAttribute(
+    'type',
+    'text',
+  );
+  await page.getByRole('button', { name: 'Hide password' }).click();
+  await page.getByRole('button', { name: 'Create demo workspace' }).click();
+  await expect(page).toHaveURL(base + '/dashboard');
+  for (const checkbox of await page.getByRole('checkbox').all())
+    await checkbox.check();
+  await expect(page.getByRole('status')).toContainText(
+    'Demo checklist complete',
+  );
   expect(errors).toEqual([]);
   await browser.close();
   console.log(
-    'PASS: 27 responsive route checks; product tabs, SVG download, inbox, consent, dialogs, review drafts, feedback, demo login, mobile navigation, detail focus and reduced motion. No browser-console errors.',
+    'PASS: 27 responsive route checks; product tabs, SVG download, inbox, consent, dialogs, review drafts, feedback, demo login, mobile navigation, detail focus, keyboard navigation, focus restoration, demo signup and reduced motion. No browser-console errors.',
   );
 })().catch((error) => {
   console.error(error);

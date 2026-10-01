@@ -2,8 +2,15 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { ArrowRight, Leaf, Check, Eye, EyeOff } from 'lucide-react';
-import { Logo } from './shared';
+import {
+  ArrowRight,
+  Send,
+  MessageSquare,
+  Check,
+  Eye,
+  EyeOff,
+} from 'lucide-react';
+import { Logo, Stars } from './shared';
 import { Button } from './ui/button';
 export function Auth({ signup = false }: { signup?: boolean }) {
   const router = useRouter();
@@ -15,29 +22,51 @@ export function Auth({ signup = false }: { signup?: boolean }) {
       <section className="auth-story">
         <Logo light />
         <div className="auth-story-copy">
-          <span className="eyebrow">A LITTLE CLOSER TO YOUR CUSTOMERS</span>
+          <span className="eyebrow">THE WORK BEHIND A GOOD REVIEW</span>
           <h2>
-            Your craft.
+            Less chasing.
             <br />
-            Their stories.
-            <br />
-            <em>A little connection.</em>
+            <em>More listening.</em>
           </h2>
           <p>
-            Make room for the conversations that help your business feel more
-            human.
+            Requests, private feedback and thoughtful replies. One place to take
+            the next step.
           </p>
-          <div className="auth-quote">
-            <Leaf size={31} />
-            <span>
-              Made for the people
-              <br />
-              behind local businesses.
-            </span>
+          <div className="auth-product-composition">
+            <div className="auth-product-card">
+              <span className="auth-card-label">
+                <MessageSquare size={17} /> PRIVATE FEEDBACK · DEMO
+              </span>
+              <div className="auth-card-person">
+                <span className="avatar peach">JW</span>
+                <div>
+                  <strong>James Wilson</strong>
+                  <small>Today, 9:18 am · Alex</small>
+                </div>
+                <Stars rating={3} />
+              </div>
+              <p>
+                “Happy with the haircut, but a little heads-up about the wait
+                would have helped.”
+              </p>
+              <div className="auth-card-note">
+                <Check size={17} /> Next step: follow up with James
+              </div>
+            </div>
+            <div className="auth-product-card auth-request-card">
+              <span className="auth-card-label">
+                <Send size={17} /> REQUEST PREVIEW
+              </span>
+              <strong>Thanks for visiting, Olivia.</strong>
+              <p>Have a moment to tell us how it went?</p>
+              <span className="auth-card-note">
+                <Check size={17} /> Consent recorded · Nothing sent
+              </span>
+            </div>
           </div>
         </div>
         <span className="auth-story-foot">
-          Less admin. More of what you love.
+          Fictional salon. Real workflows to explore.
         </span>
       </section>
       <section className="auth-form-side">
@@ -49,17 +78,17 @@ export function Auth({ signup = false }: { signup?: boolean }) {
         </Link>
         <div className="auth-form">
           <span className="eyebrow">
-            {signup ? 'YOUR NEXT CHAPTER STARTS HERE' : 'GOOD TO HAVE YOU HERE'}
+            {signup ? 'EXPLORE THE PRODUCT' : 'WELCOME TO REVUPING'}
           </span>
           <h1>{signup ? 'Explore demo signup.' : 'Log in to the demo.'}</h1>
           <p>
             {signup
-              ? 'Explore a calmer way to care for your customers.'
+              ? 'Try a fictional workspace. No real credentials needed.'
               : 'Explore your business workspace with fictional data.'}
           </p>
           <div className="auth-demo-note">
             <Check size={16} />
-            <span>Demo access only. No real account is created.</span>
+            <span>Use sample details only. No real account is created.</span>
           </div>
           <form
             onSubmit={(e) => {
@@ -86,8 +115,8 @@ export function Auth({ signup = false }: { signup?: boolean }) {
               <input
                 type="email"
                 required
-                autoComplete="email"
-                placeholder="you@yourbusiness.com"
+                autoComplete="off"
+                placeholder="demo@example.com"
               />
             </label>
             <label className="field">
@@ -102,7 +131,7 @@ export function Auth({ signup = false }: { signup?: boolean }) {
                     setPassword(e.target.value);
                     setError('');
                   }}
-                  autoComplete={signup ? 'new-password' : 'current-password'}
+                  autoComplete="off"
                   placeholder="At least 8 characters"
                   aria-invalid={!!error}
                   aria-describedby={error ? 'auth-error' : undefined}
@@ -128,7 +157,7 @@ export function Auth({ signup = false }: { signup?: boolean }) {
             </Button>
           </form>
           <div className="auth-divider">
-            <span>or take a little look around</span>
+            <span>or explore without filling in the form</span>
           </div>
           <Button variant="secondary" asChild>
             <Link href="/dashboard">

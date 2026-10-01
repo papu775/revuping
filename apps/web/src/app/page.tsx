@@ -1,6 +1,5 @@
 'use client';
 import Link from 'next/link';
-import { demoPlans } from '../lib/mock-data';
 import { useState } from 'react';
 import {
   ArrowRight,
@@ -10,7 +9,6 @@ import {
   Send,
   Sparkles,
   QrCode as QrIcon,
-  Clock3,
   Menu,
   X,
   Leaf,
@@ -18,15 +16,7 @@ import {
 } from 'lucide-react';
 import { motion, useReducedMotion } from 'motion/react';
 import { Button } from '../components/ui/button';
-import {
-  Logo,
-  Stars,
-  Reveal,
-  Badge,
-  SectionTitle,
-  CheckItem,
-  TextLink,
-} from '../components/shared';
+import { Logo, Stars, Reveal, Badge, SectionTitle } from '../components/shared';
 import { QrCode } from '../components/qr-code';
 import { ProductShowcase } from '../components/product-showcase';
 export default function Landing() {
@@ -149,7 +139,15 @@ export default function Landing() {
               </div>
               <span className="live-dot" />
             </motion.div>
-            <div className="floating-card request-float">
+            <motion.div
+              className="floating-card request-float"
+              initial={{ y: 0 }}
+              animate={{ y: reduce ? 0 : [12, 0] }}
+              transition={{
+                delay: reduce ? 0 : 0.25,
+                duration: reduce ? 0 : 0.35,
+              }}
+            >
               <span className="float-icon violet">
                 <Send size={17} />
               </span>
@@ -160,8 +158,16 @@ export default function Landing() {
                   <Check size={11} /> Consent confirmed
                 </Badge>
               </div>
-            </div>
-            <div className="floating-card reply-float">
+            </motion.div>
+            <motion.div
+              className="floating-card reply-float"
+              initial={{ y: 0 }}
+              animate={{ y: reduce ? 0 : [12, 0] }}
+              transition={{
+                delay: reduce ? 0 : 0.35,
+                duration: reduce ? 0 : 0.35,
+              }}
+            >
               <div className="reply-heading">
                 <Sparkles size={16} />
                 <strong>Editable reply draft</strong>
@@ -171,8 +177,8 @@ export default function Landing() {
                 <span>Review before approving</span>
                 <Check size={14} />
               </div>
-            </div>
-            <span className="composition-star">✧</span>
+            </motion.div>
+            <span className="composition-star ping-mark" aria-hidden="true" />
             <div
               className="mini-journey"
               aria-label="Product journey: scan, share feedback, prepare reply"
@@ -195,27 +201,39 @@ export default function Landing() {
             </div>
           </div>
         </section>
-        <section className="value-strip">
+        <section className="value-strip" aria-label="Product capabilities">
           <div className="wrap">
-            <span>
-              Made for businesses
-              <br />
-              <strong>built on people.</strong>
-            </span>
             <div>
-              <Leaf size={19} /> Salons & beauty
+              <QrIcon size={22} />
+              <span>
+                Branded QR pages
+                <small>A choice of public or private feedback</small>
+              </span>
             </div>
             <div>
-              <MessageSquare size={19} /> Everyday conversations
+              <Send size={22} />
+              <span>
+                Consent-based requests
+                <small>Preview requests and reminders</small>
+              </span>
             </div>
             <div>
-              <Clock3 size={19} /> A little more time back
+              <MessageSquare size={22} />
+              <span>
+                Feedback follow-up
+                <small>Notes and resolution in one inbox</small>
+              </span>
             </div>
-            <span className="strip-note">
-              Your craft. Our kind of business.
-            </span>
+            <div>
+              <Sparkles size={22} />
+              <span>
+                Editable reply drafts
+                <small>Review every response before approval</small>
+              </span>
+            </div>
           </div>
         </section>
+        <ProductShowcase />
         <section id="how-it-works" className="section wrap">
           <Reveal>
             <SectionTitle
@@ -259,13 +277,14 @@ export default function Landing() {
             </Reveal>
             <Reveal>
               <span className="step-number">03</span>
-              <div className="step-visual mini-insight">
-                <span className="mini-bars">
-                  {[30, 48, 37, 65, 55, 82, 96].map((h, i) => (
-                    <i key={i} style={{ height: h + '%' }} />
-                  ))}
+              <div className="step-visual workflow-complete">
+                <span className="ping-mark" aria-hidden="true" />
+                <Check size={24} />
+                <span>
+                  Feedback resolved.
+                  <br />
+                  <b>Reply ready for review.</b>
                 </span>
-                <span>Listen. Learn. Grow.</span>
               </div>
               <h3>Manage feedback and replies</h3>
               <p>
@@ -275,134 +294,99 @@ export default function Landing() {
             </Reveal>
           </div>
         </section>
-        <ProductShowcase />
-        <section className="section wrap feature-row reverse">
-          <Reveal className="request-preview">
-            <div className="request-preview-top">
-              <Send size={22} />
-              <span>REVIEW REQUEST PREVIEW · DEMO</span>
-            </div>
-            <div className="message-paper">
-              <span>To Olivia Martin</span>
-              <h3>
-                A little thank you
-                <br />
-                from Bloom & Co.
-              </h3>
-              <p>
-                Hi Olivia,
-                <br />
-                <br />
-                It was lovely having you in the salon. If you have a moment,
-                we’d love to hear about your visit.
-              </p>
-              <div className="mock-message-link">
-                Share your experience <ArrowUpRight size={15} />
-              </div>
-              <p className="signature">
-                With love,
-                <br />
-                The Bloom & Co. team
-              </p>
-            </div>
-            <div className="request-caption">
-              <Check size={16} /> Sample request · Consent required before
-              sending
-            </div>
-          </Reveal>
-          <Reveal className="feature-copy">
-            <span className="eyebrow">THOUGHTFUL, NEVER PUSHY</span>
-            <h2>
-              Make each request personal.
-              <br />
-              Keep the process simple.
-            </h2>
-            <p>
-              A friendly request, a considerate reminder, a helpful reply draft.
-              Keep your voice in every conversation, without starting from
-              scratch.
-            </p>
-            <CheckItem>Only contact customers who have consented</CheckItem>
-            <CheckItem>Preview each request before it goes out</CheckItem>
-            <CheckItem>Edit every reply draft before approving</CheckItem>
-            <TextLink href="/dashboard/requests">
-              Explore review requests
-            </TextLink>
-          </Reveal>
-        </section>
-        <section className="beyond-section wrap">
-          <span className="eyebrow">
-            MORE THAN ANOTHER PLACE TO CHECK REVIEWS
-          </span>
-          <h2>
-            Don’t just watch the stars.
-            <br />
-            Understand the experience.
-          </h2>
-          <div className="beyond-grid">
+        <section className="google-companion">
+          <div className="wrap companion-layout">
             <div>
-              <MessageSquare />
-              <h3>Hear the quieter voices.</h3>
+              <span className="eyebrow">
+                ALONGSIDE GOOGLE. AROUND YOUR CUSTOMERS.
+              </span>
+              <h2>
+                Google holds the reviews.
+                <br />
+                <em>You hold the conversation.</em>
+              </h2>
               <p>
-                A private place to share details that might never make it to a
-                public review.
+                RevuPing brings the work around a review together: asking with
+                permission, following up privately, and preparing a response in
+                your own voice.
               </p>
+              <Button asChild variant="secondary">
+                <Link href="/dashboard/reviews">
+                  Explore reply drafts <ArrowRight size={17} />
+                </Link>
+              </Button>
             </div>
-            <div>
-              <Clock3 />
-              <h3>Follow up while it matters.</h3>
-              <p>
-                See unresolved feedback and give every conversation the
-                attention it deserves.
-              </p>
-            </div>
-            <div>
-              <Sparkles />
-              <h3>Turn patterns into progress.</h3>
-              <p>
-                Notice repeat themes, recognise your team, and make informed
-                improvements.
-              </p>
-            </div>
+            <ol className="companion-workflow">
+              <li>
+                <span className="ping-mark" aria-hidden="true" />
+                <div>
+                  <strong>Ask, with permission.</strong>
+                  <p>
+                    Preview a request or reminder for a customer with recorded
+                    consent.
+                  </p>
+                </div>
+              </li>
+              <li>
+                <MessageSquare size={22} />
+                <div>
+                  <strong>Listen in the right place.</strong>
+                  <p>
+                    Google review or private feedback — the customer always
+                    chooses.
+                  </p>
+                </div>
+              </li>
+              <li>
+                <Check size={22} />
+                <div>
+                  <strong>Follow up with context.</strong>
+                  <p>
+                    Keep internal notes, resolve feedback, and edit a reply
+                    draft before approving.
+                  </p>
+                </div>
+              </li>
+            </ol>
           </div>
         </section>
-        <section id="pricing" className="section wrap">
-          <SectionTitle
-            eyebrow="PLACEHOLDER PLANS · NOT AVAILABLE TO PURCHASE"
-            title="A preview of how plans could work."
-            text="Plan names and features are illustrative. Prices and limits have not been approved; no subscriptions or payments are available."
-          />
-          <div className="pricing-grid">
-            {demoPlans.map((plan) => (
-              <Reveal
-                className={`pricing-card ${plan.featured ? 'featured' : ''}`}
-                key={plan.name}
-              >
-                {plan.featured && (
-                  <span className="plan-label">EXAMPLE TEAM PLAN</span>
-                )}
-                <span className="eyebrow">{plan.name}</span>
-                <div className="price">
-                  {plan.price}
-                  <span>pricing to be confirmed</span>
-                </div>
-                <p>{plan.desc}</p>
-                <Button
-                  variant={plan.featured ? 'default' : 'secondary'}
-                  asChild
-                >
-                  <Link href="/signup">
-                    Explore the demo <ArrowRight size={16} />
-                  </Link>
-                </Button>
-                <div className="plan-features">
-                  {plan.features.map((f) => (
-                    <CheckItem key={f}>{f}</CheckItem>
-                  ))}
-                </div>
-                <small>Placeholder plan · Price and limits not approved</small>
-              </Reveal>
-            ))}
+        <section id="pricing" className="section wrap pricing-coming">
+          <div className="pricing-intro">
+            <span className="eyebrow">PLANS ARE STILL TAKING SHAPE</span>
+            <h2>Pricing coming soon.</h2>
+            <p>
+              Start by exploring the experience. Prices, plan features and
+              limits are not approved, and this demo has no subscriptions or
+              payments.
+            </p>
+            <Button asChild>
+              <Link href="/dashboard">
+                Explore the free demo <ArrowRight size={17} />
+              </Link>
+            </Button>
+          </div>
+          <div className="pricing-outline">
+            <span className="eyebrow">WHAT YOU CAN EXPLORE TODAY</span>
+            <h3>One connected workflow.</h3>
+            <ul>
+              <li>
+                <QrIcon size={20} />
+                Customise and download a branded QR card
+              </li>
+              <li>
+                <Send size={20} />
+                Preview consent-based requests and reminders
+              </li>
+              <li>
+                <MessageSquare size={20} />
+                Save notes and resolve private feedback
+              </li>
+              <li>
+                <Sparkles size={20} />
+                Edit and approve fictional reply drafts
+              </li>
+            </ul>
+            <p>Frontend demo · No purchase available</p>
           </div>
         </section>
         <section className="faq-section wrap">
@@ -449,7 +433,7 @@ export default function Landing() {
           </div>
         </section>
         <section className="final-cta wrap">
-          <span className="cta-spark">✳</span>
+          <span className="cta-spark ping-mark" aria-hidden="true" />
           <div>
             <span className="eyebrow">GOOD CONVERSATIONS START HERE</span>
             <h2>See how RevuPing fits your business.</h2>
@@ -468,17 +452,17 @@ export default function Landing() {
       <footer className="site-footer wrap">
         <div>
           <Logo />
-          <p>A little closer to your customers.</p>
+          <p>Review requests, feedback and replies.</p>
         </div>
         <div>
           <a href="#features">Features</a>
-          <a href="#pricing">Demo pricing</a>
+          <a href="#pricing">Pricing coming soon</a>
           <Link href="/r/demo-salon">
             Customer experience <ArrowUpRight size={13} />
           </Link>
         </div>
         <div className="footer-bottom">
-          <span>© 2026 RevuPing. Made for meaningful connections.</span>
+          <span>© 2026 RevuPing. Built for local businesses.</span>
           <span>Frontend prototype · All product data is illustrative.</span>
         </div>
       </footer>

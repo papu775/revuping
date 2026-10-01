@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   LayoutDashboard,
   QrCode,
@@ -24,10 +24,42 @@ export default function DashboardLayout({
 }) {
   const path = usePathname();
   const [open, setOpen] = useState(false);
+  const sidebarRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const previous = document.activeElement as HTMLElement | null;
+    const sidebar = sidebarRef.current;
+    sidebar?.querySelector<HTMLElement>('nav a[aria-current="page"]')?.focus();
+    function handleKey(event: KeyboardEvent) {
+      if (event.key === 'Escape') setOpen(false);
+      if (event.key !== 'Tab' || !sidebar) return;
+      const focusable = [
+        ...sidebar.querySelectorAll<HTMLElement>('a, button'),
+      ].filter((element) => element.getClientRects().length);
+      const first = focusable[0],
+        last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last?.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first?.focus();
+      }
+    }
+    document.addEventListener('keydown', handleKey);
+    return () => {
+      document.removeEventListener('keydown', handleKey);
+      previous?.focus();
+    };
+  }, [open]);
   const [location, setLocation] = useState('Bloom & Co. · Notting Hill');
   return (
     <div className="dashboard-shell">
-      <aside className={`sidebar ${open ? 'sidebar-open' : ''}`}>
+      <aside
+        ref={sidebarRef}
+        id="workspace-navigation"
+        className={`sidebar ${open ? 'sidebar-open' : ''}`}
+      >
         <div className="sidebar-brand">
           <Logo />
           <button
@@ -105,6 +137,8 @@ export default function DashboardLayout({
               className="icon-button mobile-toggle"
               onClick={() => setOpen(true)}
               aria-label="Open navigation"
+              aria-expanded={open}
+              aria-controls="workspace-navigation"
             >
               <Menu />
             </button>

@@ -15,9 +15,15 @@ export default async function Page({
   searchParams,
 }: {
   params: Promise<{ section: string }>;
-  searchParams: Promise<{ add?: string }>;
+  searchParams: Promise<{ add?: string; status?: string }>;
 }) {
   const { section } = await params;
+  if (section === 'feedback')
+    return (
+      <FeedbackInbox
+        initialAttention={(await searchParams).status === 'attention'}
+      />
+    );
   if (section === 'requests')
     return <Requests initialAdd={(await searchParams).add === 'true'} />;
   const pages: Record<string, React.ComponentType> = {

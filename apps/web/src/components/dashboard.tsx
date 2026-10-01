@@ -66,8 +66,8 @@ export function Overview() {
         text="Track customer activity, follow up on feedback, and manage review requests."
       >
         <Button asChild>
-          <Link href="/dashboard/requests">
-            <Plus size={17} /> Send a request
+          <Link href="/dashboard/feedback">
+            <MessageSquare size={17} /> Review feedback
           </Link>
         </Button>
       </PageHeading>
@@ -78,10 +78,14 @@ export function Overview() {
           </span>
           <div>
             <strong>3 feedback responses need attention</strong>
-            <p>Review recent comments and decide what to follow up on.</p>
+            <p>
+              Start with unresolved feedback. Add a note, then mark it resolved.
+            </p>
           </div>
         </div>
-        <TextLink href="/dashboard/feedback">Open your inbox</TextLink>
+        <TextLink href="/dashboard/feedback?status=attention">
+          Review unresolved feedback
+        </TextLink>
       </div>
       <div className="metric-grid">
         {overviewMetrics.map((m) => (
@@ -175,6 +179,12 @@ export function Overview() {
               <span>{label}</span>
             </label>
           ))}
+          {checks.every(Boolean) && (
+            <p className="setup-complete" role="status">
+              <span className="ping-mark" aria-hidden="true" />
+              Demo checklist complete. Try your customer page.
+            </p>
+          )}
           <TextLink href="/dashboard/qr">Visit your QR studio</TextLink>
         </section>
       </div>
@@ -183,7 +193,7 @@ export function Overview() {
           <div className="panel-heading">
             <div>
               <h2>Recent private feedback</h2>
-              <p>Recent private feedback</p>
+              <p>Fictional responses · Follow up on unresolved visits</p>
             </div>
             <TextLink href="/dashboard/feedback">View all</TextLink>
           </div>
@@ -441,10 +451,16 @@ export function QrStudio() {
     </>
   );
 }
-export function FeedbackInbox() {
+export function FeedbackInbox({
+  initialAttention = false,
+}: {
+  initialAttention?: boolean;
+}) {
   const [items, setItems] = useState(initialFeedback);
   const [query, setQuery] = useState('');
-  const [filter, setFilter] = useState('All feedback');
+  const [filter, setFilter] = useState(
+    initialAttention ? 'Needs attention' : 'All feedback',
+  );
   const [selected, setSelected] = useState(1);
   const [notes, setNotes] = useState<Record<number, string>>({});
   const [saved, setSaved] = useState(false);
@@ -522,6 +538,7 @@ export function FeedbackInbox() {
                     <small>{f.date}</small>
                   </div>
                   <span
+                    aria-hidden="true"
                     className={`status-dot ${f.resolved ? 'resolved' : ''}`}
                   />
                 </div>
@@ -622,7 +639,7 @@ export function FeedbackInbox() {
               </div>
               {saved && (
                 <p className="success-note" role="status">
-                  Note saved in this demo session.
+                  <CheckCircle2 size={17} /> Note saved in this demo session.
                 </p>
               )}
             </>
@@ -1000,7 +1017,14 @@ export function Reviews() {
                   <h2>
                     <Sparkles size={19} /> Edit reply draft
                   </h2>
-                  <p>Sample AI-assisted reply to {active.name}</p>
+                  <p>Prewritten sample reply to {active.name}</p>
+                  <Badge mint={approved.includes(active.id)}>
+                    {approved.includes(active.id)
+                      ? 'Approved · demo only'
+                      : drafts[active.id] !== active.draft
+                        ? 'Edited draft'
+                        : 'Sample draft'}
+                  </Badge>
                 </div>
               </div>
               <label className="field">

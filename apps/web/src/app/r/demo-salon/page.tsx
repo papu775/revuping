@@ -33,12 +33,9 @@ export default function CustomerPage() {
           <p>HAIR • BEAUTY • A LITTLE YOU TIME</p>
         </div>
         {done ? (
-          <div className="customer-success">
+          <div className="customer-success" role="status">
             <CheckCircle2 size={48} />
-            <h2>
-              A little feedback.
-              <br />A lot of appreciation.
-            </h2>
+            <h2>Thank you for your feedback.</h2>
             <p>
               Thank you for taking a moment to share. Your feedback has been
               recorded in this demo only.
@@ -61,12 +58,8 @@ export default function CustomerPage() {
           </div>
         ) : (
           <>
-            <span className="customer-greeting">IT WAS LOVELY HAVING YOU.</span>
-            <h2>
-              How was your
-              <br />
-              little time with us?
-            </h2>
+            <span className="customer-greeting">THANK YOU FOR VISITING</span>
+            <h2>How was your visit?</h2>
             <p className="customer-intro">
               Your honest experience matters.
               <br />
@@ -93,7 +86,7 @@ export default function CustomerPage() {
                 </span>
                 <span>
                   <strong>Send private feedback</strong>
-                  <small>A conversation just with our team.</small>
+                  <small>Share your experience with our team.</small>
                 </span>
                 <ArrowUpRight size={19} />
               </button>
@@ -107,7 +100,7 @@ export default function CustomerPage() {
                 }}
               >
                 <fieldset>
-                  <legend>How did your visit feel?</legend>
+                  <legend>Rate your visit</legend>
                   <div className="rating-input">
                     {[1, 2, 3, 4, 5].map((n) => (
                       <button
@@ -131,7 +124,7 @@ export default function CustomerPage() {
                     required
                     minLength={3}
                     rows={4}
-                    placeholder="The lovely things, the little things, or what we could do better…"
+                    placeholder="Tell us what went well or what we could improve…"
                     value={text}
                     onChange={(e) => setText(e.target.value)}
                   />
@@ -166,7 +159,7 @@ export default function CustomerPage() {
           </>
         )}
         <div className="customer-powered">
-          A little closer, with <Link href="/">revuping.</Link>
+          Powered by <Link href="/">revuping.</Link>
         </div>
       </div>
       <Link className="customer-back" href="/dashboard">
