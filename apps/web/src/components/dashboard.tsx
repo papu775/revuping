@@ -1,4 +1,5 @@
 'use client';
+import { useDemoWorkspace } from './demo-workspace';
 import { Avatar } from './ui/avatar';
 import { Panel, Field, panelSurface } from './shared';
 import Link from 'next/link';
@@ -14,6 +15,7 @@ import {
   Send,
   Star,
   Download,
+  Copy,
   Search,
   Sparkles,
   Leaf,
@@ -27,16 +29,11 @@ import { Select } from './ui/select';
 import { Button } from './ui/button';
 import { Dialog } from './ui/dialog';
 import { Badge, Stars, TextLink } from './shared';
-import {
-  printPalette,
-  printableColor,
-  printTextLines,
-} from '../lib/print-palette';
+import { printableColor } from '../lib/print-palette';
+import { qrCardSvg } from '../lib/qr-card-export';
 import { QrCode } from './qr-code';
 import { focusWorkspacePanel } from '../lib/workspace-focus';
 import {
-  feedback as initialFeedback,
-  customers as initialCustomers,
   reviews,
   type Customer,
   overviewMetrics,
@@ -85,6 +82,8 @@ export function PageHeading({
   );
 }
 export function Overview() {
+  const { feedbackItems, addedFeedbackCount } = useDemoWorkspace();
+  const attention = feedbackItems.filter((item) => !item.resolved).length;
   const [checks, setChecks] = useState([true, true, false, false]);
   return (
     <>
@@ -105,7 +104,10 @@ export function Overview() {
             <Sparkles size={23} />
           </span>
           <div>
-            <strong>3 feedback responses need attention</strong>
+            <strong>
+              {attention} feedback{' '}
+              {attention === 1 ? 'response needs' : 'responses need'} attention
+            </strong>
             <p>
               Follow up on unresolved visits before starting the next request.
             </p>
@@ -127,8 +129,16 @@ export function Overview() {
                 return <Icon size={18} />;
               })()}
             </div>
-            <strong>{m.value}</strong>
-            <span>{m.change}</span>
+            <strong>
+              {m.label === 'Private feedback'
+                ? Number(m.value) + addedFeedbackCount
+                : m.value}
+            </strong>
+            <span>
+              {m.label === 'Private feedback'
+                ? `${attention} need your attention`
+                : m.change}
+            </span>
             <small>{m.desc}</small>
           </div>
         ))}
@@ -239,7 +249,7 @@ export function Overview() {
             </div>
             <TextLink href="/dashboard/feedback">View all</TextLink>
           </div>
-          {initialFeedback.slice(0, 3).map((f) => (
+          {feedbackItems.slice(0, 3).map((f) => (
             <Link
               className="activity-item"
               href="/dashboard/feedback"
@@ -251,7 +261,7 @@ export function Overview() {
                   <strong>{f.name}</strong>
                   <Stars rating={f.rating} />
                 </div>
-                <p>{f.text}</p>
+                <p className="[overflow-wrap:anywhere]">{f.text}</p>
                 <small>
                   {f.date} · {f.staff}
                 </small>
@@ -312,43 +322,66 @@ export function QrStudio() {
   const [preview, setPreview] = useState(false);
   const printColor = printableColor(color);
   const [message, setMessage] = useState('');
+  const [exporting, setExporting] = useState(false);
+  const qrReady = svg.includes(`stroke="${printColor}"`);
   const ready = useCallback((s: string) => setSvg(s), []);
-  function download() {
-    if (!svg) return;
-    const safe = (v: string) =>
-      v.replace(
-        /[<>&"']/g,
-        (c) =>
-          ({
-            '<': '&lt;',
-            '>': '&gt;',
-            '&': '&amp;',
-            '"': '&quot;',
-            "'": '&apos;',
-          })[c] || c,
+  async function download(format: 'svg' | 'png' = 'svg') {
+    if (!qrReady || !name.trim() || !text.trim()) return;
+    setExporting(true);
+    try {
+      const file = qrCardSvg({
+        name: name.trim(),
+        text: text.trim(),
+        color: printColor,
+        template,
+        qr: svg,
+      });
+      const vector = new Blob([file], { type: 'image/svg+xml' });
+      let asset: Blob = vector;
+      if (format === 'png') {
+        const source = URL.createObjectURL(vector);
+        const image = new Image();
+        try {
+          await new Promise<void>((resolve, reject) => {
+            image.onload = () => resolve();
+            image.onerror = () => reject(new Error('Image export unavailable'));
+            image.src = source;
+          });
+          const canvas = document.createElement('canvas');
+          canvas.width = image.naturalWidth * 2;
+          canvas.height = image.naturalHeight * 2;
+          const context = canvas.getContext('2d');
+          if (!context) throw new Error('Image export unavailable');
+          context.drawImage(image, 0, 0, canvas.width, canvas.height);
+          asset = await new Promise<Blob>((resolve, reject) =>
+            canvas.toBlob(
+              (blob) =>
+                blob
+                  ? resolve(blob)
+                  : reject(new Error('Image export unavailable')),
+              'image/png',
+            ),
+          );
+        } finally {
+          URL.revokeObjectURL(source);
+        }
+      }
+      const url = URL.createObjectURL(asset);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `revuping-salon-qr.${format}`;
+      a.click();
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+      setMessage(`${template} ${format.toUpperCase()} download started.`);
+    } catch {
+      setMessage(
+        'The download could not be prepared. Please try the SVG option.',
       );
-    const nameLines = printTextLines(name, 32, 'Georgia');
-    const displayLines = printTextLines(text, 20, 'Arial');
-    const label = (lines: string[], centerY: number, lineHeight: number) =>
-      lines
-        .map(
-          (line, index) =>
-            `<tspan x="210" y="${centerY + (index - (lines.length - 1) / 2) * lineHeight}">${safe(line)}</tspan>`,
-        )
-        .join('');
-    const supportY = 450 + (displayLines.length - 1) * 12;
-    const qrViewBox = svg.match(/viewBox="([^"]+)"/)?.[1] || '0 0 33 33';
-    const file = `<svg xmlns="http://www.w3.org/2000/svg" width="420" height="560" viewBox="0 0 420 560"><rect width="420" height="560" rx="24" fill="${printPalette.paper}"/><text x="210" y="75" text-anchor="middle" font-family="Georgia" font-size="32" fill="${printColor}">${label(nameLines, 75, 32)}</text><svg x="90" y="120" width="240" height="240" viewBox="${qrViewBox}">${svg.replace(/^.*?<svg[^>]*>/s, '').replace(/<\/svg>\s*$/, '')}</svg><text x="210" y="410" text-anchor="middle" font-family="Arial" font-size="20" fill="${printPalette.ink}">${label(displayLines, 410, 22)}</text><text x="210" y="${supportY}" text-anchor="middle" font-family="Arial" font-size="14" fill="${printPalette.muted}">Scan to share your honest experience.</text><text x="210" y="515" text-anchor="middle" font-family="Arial" font-size="11" fill="${printPalette.muted}">RevuPing demo · /r/demo-salon</text></svg>`;
-    const url = URL.createObjectURL(
-      new Blob([file], { type: 'image/svg+xml' }),
-    );
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'revuping-salon-qr.svg';
-    a.click();
-    URL.revokeObjectURL(url);
-    setMessage('Your QR card SVG has been downloaded.');
+    } finally {
+      setExporting(false);
+    }
   }
+
   const card = (
     <div
       className={`qr-print-card ${template === 'Minimal poster' ? 'poster' : ''}`}
@@ -372,7 +405,7 @@ export function QrStudio() {
       <PageHeading
         eyebrow="Branded customer experience"
         title="QR code studio"
-        text="Customise your salon’s QR card and download a print-ready SVG."
+        text="Customise your salon’s QR card and download a print-ready SVG or PNG."
       />
       <div className="qr-editor">
         <Panel className="qr-controls">
@@ -465,10 +498,35 @@ export function QrStudio() {
             </p>
           </div>
           <Button
-            onClick={download}
-            disabled={!svg || !name.trim() || !text.trim()}
+            onClick={() => void download('svg')}
+            disabled={!qrReady || !name.trim() || !text.trim() || exporting}
           >
             <Download size={17} /> Download SVG card
+          </Button>
+          <Button
+            variant="secondary"
+            disabled={!qrReady || !name.trim() || !text.trim() || exporting}
+            onClick={() => void download('png')}
+            aria-busy={exporting}
+          >
+            <Download size={17} /> Download PNG card
+          </Button>
+          <Button
+            variant="ghost"
+            onClick={async () => {
+              try {
+                await navigator.clipboard.writeText(
+                  `${window.location.origin}/r/demo-salon`,
+                );
+                setMessage('Customer link copied.');
+              } catch {
+                setMessage(
+                  'Clipboard access is unavailable. Open the customer preview to use the link.',
+                );
+              }
+            }}
+          >
+            <Copy size={17} /> Copy customer link
           </Button>
           <Button variant="secondary" onClick={() => setPreview(true)}>
             Preview customer experience <ArrowUpRight size={16} />
@@ -482,7 +540,7 @@ export function QrStudio() {
           </div>
           {card}
           <span className="canvas-footnote">
-            SVG download · Links to your demo customer page
+            SVG or PNG download · Links to your demo customer page
           </span>
         </section>
       </div>
@@ -511,14 +569,18 @@ export function FeedbackInbox({
 }: {
   initialAttention?: boolean;
 }) {
-  const [items, setItems] = useState(initialFeedback);
+  const {
+    feedbackItems: items,
+    setFeedbackItems: setItems,
+    notes,
+    setNotes,
+  } = useDemoWorkspace();
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState(
     initialAttention ? 'Needs attention' : 'All feedback',
   );
   const [selected, setSelected] = useState(1);
-  const [notes, setNotes] = useState<Record<number, string>>({});
-  const [saved, setSaved] = useState(false);
+  const [saved, setSaved] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const visible = items.filter(
     (f) =>
@@ -586,7 +648,7 @@ export function FeedbackInbox({
                 aria-pressed={detail?.id === f.id}
                 onClick={() => {
                   setSelected(f.id);
-                  setSaved(false);
+                  setSaved(null);
                   focusWorkspacePanel('feedback-detail');
                 }}
               >
@@ -602,9 +664,9 @@ export function FeedbackInbox({
                   />
                 </div>
                 <Stars rating={f.rating} />
-                <p>{f.text}</p>
+                <p className="[overflow-wrap:anywhere]">{f.text}</p>
                 <div className="feedback-row-bottom">
-                  <span>{f.staff}</span>
+                  <span>{f.staff || 'Not specified'}</span>
                   <Badge mint={f.resolved}>
                     {f.resolved ? 'Resolved' : 'Needs attention'}
                   </Badge>
@@ -646,14 +708,20 @@ export function FeedbackInbox({
                 <Avatar initials={detail.initials} tone="peach" size="large" />
                 <div>
                   <h2>{detail.name}</h2>
-                  <span>Visited with {detail.staff}</span>
+                  <span>
+                    {detail.staff
+                      ? `Visited with ${detail.staff}`
+                      : 'Team member not specified'}
+                  </span>
                 </div>
               </div>
               <Stars rating={detail.rating} />
-              <blockquote>“{detail.text}”</blockquote>
+              <blockquote className="[overflow-wrap:anywhere]">
+                “{detail.text}”
+              </blockquote>
               <div className="detail-meta">
                 <span>
-                  Team member <strong>{detail.staff}</strong>
+                  Team member <strong>{detail.staff || 'Not specified'}</strong>
                 </span>
                 <span>
                   Status{' '}
@@ -670,7 +738,7 @@ export function FeedbackInbox({
                   value={notes[detail.id] || ''}
                   onChange={(e) => {
                     setNotes({ ...notes, [detail.id]: e.target.value });
-                    setSaved(false);
+                    setSaved(null);
                   }}
                 />
               </Field>
@@ -692,12 +760,16 @@ export function FeedbackInbox({
                   <Check size={16} />
                   {detail.resolved ? 'Reopen feedback' : 'Mark as resolved'}
                 </Button>
-                <Button variant="secondary" onClick={() => setSaved(true)}>
+                <Button
+                  variant="secondary"
+                  disabled={!notes[detail.id]?.trim()}
+                  onClick={() => setSaved(detail.id)}
+                >
                   Save note
                 </Button>
               </div>
               <AnimatePresence initial={false}>
-                {saved && (
+                {saved === detail.id && (
                   <SessionNotice>
                     <CheckCircle2 size={17} /> Note saved in this demo session.
                   </SessionNotice>
@@ -719,8 +791,15 @@ export function FeedbackInbox({
     </>
   );
 }
+function hasSentRequest(status: string) {
+  return (
+    /^(Request|Reminder) sent(?: \(demo\))?$/.test(status) ||
+    status === 'Link clicked'
+  );
+}
 export function Requests({ initialAdd = false }: { initialAdd?: boolean }) {
-  const [items, setItems] = useState(initialCustomers);
+  const { customerItems: items, setCustomerItems: setItems } =
+    useDemoWorkspace();
   const [add, setAdd] = useState(initialAdd);
   const [target, setTarget] = useState<Customer | null>(null);
   const [sent, setSent] = useState(false);
@@ -759,7 +838,7 @@ export function Requests({ initialAdd = false }: { initialAdd?: boolean }) {
         </div>
         <div>
           <strong>
-            {items.filter((c) => c.status === 'Request sent (demo)').length}
+            {items.filter((c) => c.status.endsWith('sent (demo)')).length}
           </strong>
           <span>Requests simulated this session</span>
         </div>
@@ -795,8 +874,10 @@ export function Requests({ initialAdd = false }: { initialAdd?: boolean }) {
                           .slice(0, 2)}
                         tone="lavender"
                       />
-                      <div>
-                        <strong>{c.name}</strong>
+                      <div className="min-w-0">
+                        <strong className="block [overflow-wrap:anywhere]">
+                          {c.name}
+                        </strong>
                         <small>{c.email}</small>
                       </div>
                     </div>
@@ -815,8 +896,7 @@ export function Requests({ initialAdd = false }: { initialAdd?: boolean }) {
                   <td data-label="Request status">
                     <Badge
                       mint={
-                        c.status.startsWith('Request sent') ||
-                        c.status === 'Link clicked'
+                        hasSentRequest(c.status) || c.status === 'Link clicked'
                       }
                     >
                       {c.status}
@@ -832,7 +912,7 @@ export function Requests({ initialAdd = false }: { initialAdd?: boolean }) {
                         setSent(false);
                       }}
                     >
-                      {c.status.startsWith('Request sent')
+                      {hasSentRequest(c.status)
                         ? 'Preview reminder'
                         : 'Preview request'}
                       <ArrowRight size={14} />
@@ -865,8 +945,8 @@ export function Requests({ initialAdd = false }: { initialAdd?: boolean }) {
               ...items,
               {
                 id: Date.now(),
-                name,
-                email,
+                name: name.trim(),
+                email: email.trim(),
                 consent,
                 status: consent ? 'Ready to send' : 'No consent',
               },
@@ -882,6 +962,7 @@ export function Requests({ initialAdd = false }: { initialAdd?: boolean }) {
             Full name
             <input
               required
+              pattern={'.*\\S.*'}
               value={name}
               onChange={(e) => setName(e.target.value)}
               maxLength={60}
@@ -920,7 +1001,7 @@ export function Requests({ initialAdd = false }: { initialAdd?: boolean }) {
         title={
           sent
             ? 'Request simulated'
-            : target?.status.includes('sent')
+            : hasSentRequest(target?.status || '')
               ? 'Preview reminder'
               : 'Preview request'
         }
@@ -949,18 +1030,24 @@ export function Requests({ initialAdd = false }: { initialAdd?: boolean }) {
                 onChange={(e) => setRequestText(e.target.value)}
               />
             </Field>
-            <p className="message-preview">
+            <p className="message-preview [overflow-wrap:anywhere]">
               {requestText
                 .replace('{name}', target?.name.split(' ')[0] || '')
                 .replace('{review link}', '/r/demo-salon')}
             </p>
             <Button
-              disabled={!requestText.trim()}
+              disabled={!requestText.trim() || !target?.consent}
               onClick={() => {
+                if (!target?.consent || !requestText.trim()) return;
                 setItems(
                   items.map((c) =>
                     c.id === target?.id
-                      ? { ...c, status: 'Request sent (demo)' }
+                      ? {
+                          ...c,
+                          status: hasSentRequest(target.status)
+                            ? 'Reminder sent (demo)'
+                            : 'Request sent (demo)',
+                        }
                       : c,
                   ),
                 );
@@ -968,7 +1055,7 @@ export function Requests({ initialAdd = false }: { initialAdd?: boolean }) {
               }}
             >
               <Send size={16} /> Simulate{' '}
-              {target?.status.includes('sent') ? 'reminder' : 'send'}
+              {hasSentRequest(target?.status || '') ? 'reminder' : 'send'}
             </Button>
           </>
         )}
@@ -979,10 +1066,7 @@ export function Requests({ initialAdd = false }: { initialAdd?: boolean }) {
 export function Reviews() {
   const [rating, setRating] = useState('All ratings');
   const [selected, setSelected] = useState(1);
-  const [drafts, setDrafts] = useState<Record<number, string>>(
-    Object.fromEntries(reviews.map((r) => [r.id, r.draft])),
-  );
-  const [approved, setApproved] = useState<number[]>([]);
+  const { drafts, setDrafts, approved, setApproved } = useDemoWorkspace();
   const visible = reviews.filter(
     (r) => rating === 'All ratings' || r.rating === Number(rating),
   );

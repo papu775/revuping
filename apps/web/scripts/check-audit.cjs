@@ -127,7 +127,7 @@ const base = process.env.PROTOTYPE_URL || 'http://localhost:3000';
       // while Next is still hydrating and restoring the document scroll position.
       await p.waitForLoadState('networkidle');
       for (const href of ['#features', '#how-it-works', '#pricing']) {
-        if (width < 768)
+        if (width < 1024)
           await p.getByRole('button', { name: 'Toggle navigation' }).click();
         await p.locator(`header a[href="${href}"]:visible`).first().click();
         await expect

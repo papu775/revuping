@@ -1,6 +1,7 @@
 import './global.css';
 import './template.css';
 import { ThemeProvider } from '../components/theme';
+import { DemoWorkspace } from '../components/demo-workspace';
 import { TemplateMotion } from '../components/template-motion';
 export const metadata = {
   title: 'RevuPing — Review requests, feedback & replies',
@@ -16,7 +17,9 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body>
         <ThemeProvider>
-          <TemplateMotion>{children}</TemplateMotion>
+          <DemoWorkspace>
+            <TemplateMotion>{children}</TemplateMotion>
+          </DemoWorkspace>
         </ThemeProvider>
       </body>
     </html>

@@ -1,5 +1,6 @@
 'use client';
-import { Avatar } from '../../components/ui/avatar';
+import { AccountMenu } from '../../components/ui/account-menu';
+import { useDemoWorkspace } from '../../components/demo-workspace';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect, useRef } from 'react';
@@ -26,6 +27,8 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const path = usePathname();
+  const { feedbackItems } = useDemoWorkspace();
+  const attention = feedbackItems.filter((item) => !item.resolved).length;
   const reduced = useReducedMotion();
   const [mobile, setMobile] = useState(false);
   useEffect(() => {
@@ -51,11 +54,17 @@ export default function DashboardLayout({
     const sidebar = sidebarRef.current;
     sidebar?.querySelector<HTMLElement>('nav a[aria-current="page"]')?.focus();
     function handleKey(event: KeyboardEvent) {
+      // Nested menus own their keys; Escape dismisses the menu before the drawer.
+      if (
+        event.target instanceof Element &&
+        event.target.closest('[role="menu"]')
+      )
+        return;
       if (event.key === 'Escape') setOpen(false);
       if (event.key !== 'Tab' || !sidebar) return;
       const focusable = [
         ...sidebar.querySelectorAll<HTMLElement>('a, button'),
-      ].filter((element) => element.getClientRects().length);
+      ].filter((element) => element.tabIndex >= 0 && element.getClientRects().length);
       const first = focusable[0],
         last = focusable[focusable.length - 1];
       if (event.shiftKey && document.activeElement === first) {
@@ -119,7 +128,7 @@ export default function DashboardLayout({
                   >
                     <Icon size={19} />
                     {label}
-                    {i === 2 && <span className="nav-count">3</span>}
+                    {i === 2 && <span className="nav-count">{attention}</span>}
                   </Link>
                 );
               })}
@@ -131,7 +140,7 @@ export default function DashboardLayout({
                 <p>
                   You’re exploring a demo.
                   <br />
-                  All data is fictional.
+                  Fictional data. Changes reset on reload.
                 </p>
                 <Link href="/r/demo-salon">
                   See the customer view <ArrowUpRight size={14} />
@@ -140,13 +149,7 @@ export default function DashboardLayout({
               <Link href="/" className="back-site">
                 ← Back to RevuPing
               </Link>
-              <div className="profile">
-                <Avatar initials={'DO'} tone="lavender" />
-                <div>
-                  <strong>Demo Owner</strong>
-                  <small>Demo salon owner</small>
-                </div>
-              </div>
+              <AccountMenu />
             </div>
           </motion.aside>
         )}

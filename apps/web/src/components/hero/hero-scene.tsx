@@ -323,7 +323,7 @@ export default function HeroScene({
       <directionalLight position={[4, 2, -2]} color="#d3b6f2" intensity={1.2} />
       <Composition pointer={pointer} />
       <ContactShadows
-        position={[0, -1.55, 0]}
+        position={[0, -1.74, 0]}
         scale={8}
         opacity={0.3}
         blur={2.8}

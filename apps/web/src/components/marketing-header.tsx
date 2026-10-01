@@ -49,7 +49,7 @@ export function MarketingHeader() {
         trigger.current?.focus();
       }
     };
-    const media = window.matchMedia('(min-width: 768px)');
+    const media = window.matchMedia('(min-width: 1024px)');
     const resize = () => {
       if (media.matches) setOpen(false);
     };
@@ -68,7 +68,7 @@ export function MarketingHeader() {
         <Logo />
         <nav
           aria-label="Main navigation"
-          className="hidden items-center gap-7 md:flex"
+          className="hidden items-center gap-7 whitespace-nowrap lg:flex"
         >
           {links.map(([label, href]) => (
             <SectionLink
@@ -81,10 +81,10 @@ export function MarketingHeader() {
             </SectionLink>
           ))}
         </nav>
-        <div className="flex items-center gap-4 max-md:gap-2">
+        <div className="flex items-center gap-4 max-lg:gap-2">
           <Link
             href="/login"
-            className="hidden rounded-md py-2 text-sm font-medium hover:text-violet md:inline-flex"
+            className="hidden rounded-md py-2 text-sm font-medium hover:text-violet lg:inline-flex"
           >
             Log in
           </Link>
@@ -97,7 +97,7 @@ export function MarketingHeader() {
           </Button>
           <button
             ref={trigger}
-            className="mobile-toggle flex size-11 items-center justify-center rounded-lg transition-colors hover:bg-canvas md:hidden"
+            className="mobile-toggle flex size-11 items-center justify-center rounded-lg transition-colors hover:bg-canvas lg:hidden"
             onClick={() => setOpen(!open)}
             aria-label="Toggle navigation"
             aria-expanded={open}
@@ -124,7 +124,7 @@ export function MarketingHeader() {
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: reduced ? 'auto' : 0, opacity: reduced ? 1 : 0 }}
             transition={{ duration: reduced ? 0 : 0.2 }}
-            className="overflow-hidden border-t border-line md:hidden"
+            className="overflow-hidden border-t border-line lg:hidden"
           >
             <div className="flex flex-col gap-1 p-4">
               {[...links, ['Log in', '/login']].map(([label, href]) => (

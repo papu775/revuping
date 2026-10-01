@@ -1,4 +1,5 @@
 'use client';
+import { useDemoWorkspace } from '../../../components/demo-workspace';
 import { Select } from '../../../components/ui/select';
 import { Field } from '../../../components/shared';
 import { useState, useRef, useEffect } from 'react';
@@ -16,6 +17,7 @@ import {
 import { Button } from '../../../components/ui/button';
 import { Dialog } from '../../../components/ui/dialog';
 export default function CustomerPage() {
+  const { setFeedbackItems } = useDemoWorkspace();
   const [form, setForm] = useState(false);
   const [rating, setRating] = useState(0);
   const [text, setText] = useState('');
@@ -132,6 +134,19 @@ export default function CustomerPage() {
                     textRef.current?.focus();
                     return;
                   }
+                  setFeedbackItems((items) => [
+                    {
+                      id: Date.now(),
+                      name: 'Demo visitor',
+                      initials: 'DV',
+                      rating,
+                      text: text.trim(),
+                      staff,
+                      date: 'Just now · This session',
+                      resolved: false,
+                    },
+                    ...items,
+                  ]);
                   setDone(true);
                 }}
               >

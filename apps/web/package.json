@@ -35,6 +35,12 @@
         "options": {
           "command": "node apps/web/scripts/check-hero.cjs"
         }
+      },
+      "quality-check": {
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "node apps/web/scripts/check-quality.cjs"
+        }
       }
     }
   },
