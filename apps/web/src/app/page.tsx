@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { demoPlans, previewFeedback } from '../lib/mock-data';
+import { demoPlans } from '../lib/mock-data';
 import { useState } from 'react';
 import {
   ArrowRight,
@@ -28,6 +28,7 @@ import {
   TextLink,
 } from '../components/shared';
 import { QrCode } from '../components/qr-code';
+import { ProductShowcase } from '../components/product-showcase';
 export default function Landing() {
   const [menu, setMenu] = useState(false);
   const reduce = useReducedMotion();
@@ -69,20 +70,20 @@ export default function Landing() {
         <section className="hero wrap">
           <div className="hero-copy">
             <span className="eyebrow">
-              <span className="small-line" /> LESS ADMIN. MORE CONNECTION.
+              <span className="small-line" /> REVIEW REQUESTS & CUSTOMER
+              FEEDBACK
             </span>
             <h1>
-              Good experiences
+              Reviews &amp; feedback.
               <br />
-              deserve to be
+              Less busywork.
               <br />
-              <span>heard.</span>
-              <span className="hero-spark">✳</span>
+              <span>More connection.</span>
             </h1>
             <p>
-              A thoughtful way to collect feedback, ask for reviews, and keep
-              customer conversations moving. All while you get back to what you
-              do best.
+              Send review requests, collect private feedback, and prepare
+              thoughtful replies in one organised workspace. Built for salons
+              and the local businesses people love.
             </p>
             <div className="hero-actions">
               <Button asChild>
@@ -96,14 +97,14 @@ export default function Landing() {
             </div>
             <div className="hero-footnote">
               <Check size={14} /> No credit card <span>·</span> No setup needed{' '}
-              <span>·</span> Just a little look around
+              <span>·</span> Interactive demo
             </div>
           </div>
           <div className="hero-composition">
             <div className="orbit orbit-one" />
             <div className="orbit orbit-two" />
             <span className="composition-label">
-              A LITTLE PING. A BIG DIFFERENCE.
+              YOUR CUSTOMER EXPERIENCE, CONNECTED
             </span>
             <div className="salon-qr">
               <div className="salon-emblem">
@@ -124,15 +125,22 @@ export default function Landing() {
             </div>
             <motion.div
               className="floating-card feedback-float"
-              initial={reduce ? false : { opacity: 0, y: 24 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.25, duration: 0.6 }}
+              initial={{ opacity: 1, y: 0 }}
+              animate={
+                reduce
+                  ? { opacity: 1, y: 0 }
+                  : { opacity: [0.85, 1], y: [18, 0] }
+              }
+              transition={{
+                delay: reduce ? 0 : 0.15,
+                duration: reduce ? 0 : 0.45,
+              }}
             >
               <span className="float-icon mint">
                 <MessageSquare size={18} />
               </span>
               <div>
-                <small>A LITTLE FEEDBACK JUST ARRIVED</small>
+                <small>NEW PRIVATE FEEDBACK</small>
                 <Stars />
                 <p>“Sophie made my day. Love my new colour!”</p>
                 <span className="muted">
@@ -146,7 +154,7 @@ export default function Landing() {
                 <Send size={17} />
               </span>
               <div>
-                <strong>A kind nudge, right on time.</strong>
+                <strong>Review request ready</strong>
                 <p>Your review request is ready.</p>
                 <Badge mint>
                   <Check size={11} /> Consent confirmed
@@ -156,11 +164,11 @@ export default function Landing() {
             <div className="floating-card reply-float">
               <div className="reply-heading">
                 <Sparkles size={16} />
-                <strong>The right words, a little easier.</strong>
+                <strong>Editable reply draft</strong>
               </div>
               <p>“Thank you, Olivia! We’re so happy you love your new look…”</p>
               <div className="reply-bottom">
-                <span>Reply draft · ready for your touch</span>
+                <span>Review before approving</span>
                 <Check size={14} />
               </div>
             </div>
@@ -172,9 +180,12 @@ export default function Landing() {
               {['Scan', 'Share', 'Reply'].map((step, index) => (
                 <motion.span
                   key={step}
-                  initial={reduce ? false : { y: 8 }}
-                  animate={{ y: 0 }}
-                  transition={{ delay: 0.3 + index * 0.3 }}
+                  initial={{ y: 0 }}
+                  animate={{ y: reduce ? 0 : [8, 0] }}
+                  transition={{
+                    delay: reduce ? 0 : 0.3 + index * 0.2,
+                    duration: reduce ? 0 : 0.3,
+                  }}
                 >
                   <i>{index + 1}</i>
                   {step}
@@ -208,8 +219,8 @@ export default function Landing() {
         <section id="how-it-works" className="section wrap">
           <Reveal>
             <SectionTitle
-              eyebrow="SMALL STEPS. MEANINGFUL CONNECTIONS."
-              title="From a happy visit to a little ping."
+              eyebrow="A SIMPLE WORKFLOW"
+              title="From a visit to a useful conversation."
               text="No complicated workflows. Just three simple ways to stay close to your customers."
             />
           </Reveal>
@@ -224,7 +235,7 @@ export default function Landing() {
                   An open conversation.
                 </span>
               </div>
-              <h3>Give feedback a place to land.</h3>
+              <h3>Create your review QR code</h3>
               <p>
                 Put your branded QR at the counter, on a mirror, or wherever a
                 good visit ends.
@@ -240,7 +251,7 @@ export default function Landing() {
                   <b>Care to share your experience?</b>
                 </span>
               </div>
-              <h3>Ask with a little care.</h3>
+              <h3>Request reviews with consent</h3>
               <p>
                 Send a friendly request to customers who have opted in, with a
                 thoughtful reminder.
@@ -256,7 +267,7 @@ export default function Landing() {
                 </span>
                 <span>Listen. Learn. Grow.</span>
               </div>
-              <h3>See what’s really being said.</h3>
+              <h3>Manage feedback and replies</h3>
               <p>
                 Bring feedback and review drafts together. Spot patterns and
                 make your next visit even better.
@@ -264,63 +275,12 @@ export default function Landing() {
             </Reveal>
           </div>
         </section>
-        <section id="features" className="feature-section">
-          <div className="wrap feature-row">
-            <Reveal className="feature-copy">
-              <span className="eyebrow">EVERY VOICE, A LITTLE CLOSER</span>
-              <h2>
-                Less checking.
-                <br />
-                More understanding.
-              </h2>
-              <p>
-                A star rating is only the start of a conversation. Make room for
-                the details that help you care for your customers.
-              </p>
-              <CheckItem>
-                Private feedback, organised in one calm inbox
-              </CheckItem>
-              <CheckItem>Honest Google reviews, always accessible</CheckItem>
-              <CheckItem>
-                Useful trends without a spreadsheet in sight
-              </CheckItem>
-              <TextLink href="/dashboard/feedback">
-                Take a look at the inbox
-              </TextLink>
-            </Reveal>
-            <Reveal className="feature-preview">
-              <div className="preview-toolbar">
-                <span>
-                  <span className="mini-logo">r.</span> Your feedback inbox
-                </span>
-                <Badge mint>Demo preview</Badge>
-              </div>
-              <div className="preview-heading">
-                <h3>The little things matter.</h3>
-                <p>Listen to what’s going well. Notice what could be better.</p>
-              </div>
-              {previewFeedback.map((f) => (
-                <div className="preview-feedback" key={f.name}>
-                  <span className={`avatar ${f.color}`}>{f.initials}</span>
-                  <div>
-                    <strong>{f.name}</strong>
-                    <Stars rating={f.rating} />
-                    <p>{f.text}</p>
-                  </div>
-                  <span className="preview-status">{f.status}</span>
-                </div>
-              ))}
-              <Link href="/dashboard/feedback" className="preview-bottom">
-                Every conversation has a next step. <ArrowRight size={16} />
-              </Link>
-            </Reveal>
-          </div>
-        </section>
+        <ProductShowcase />
         <section className="section wrap feature-row reverse">
           <Reveal className="request-preview">
             <div className="request-preview-top">
               <Send size={22} />
-              <span>A REQUEST THAT SOUNDS LIKE YOU</span>
+              <span>REVIEW REQUEST PREVIEW · DEMO</span>
             </div>
             <div className="message-paper">
               <span>To Olivia Martin</span>
@@ -346,14 +306,16 @@ export default function Landing() {
               </p>
             </div>
             <div className="request-caption">
-              <Check size={16} /> Sent with permission. Written with care.
+              <Check size={16} /> Sample request · Consent required before
+              sending
             </div>
           </Reveal>
           <Reveal className="feature-copy">
             <span className="eyebrow">THOUGHTFUL, NEVER PUSHY</span>
             <h2>
-              Your personal touch.
-              <br />A little less effort.
+              Make each request personal.
+              <br />
+              Keep the process simple.
             </h2>
             <p>
               A friendly request, a considerate reminder, a helpful reply draft.
@@ -406,9 +368,9 @@ export default function Landing() {
         </section>
         <section id="pricing" className="section wrap">
           <SectionTitle
-            eyebrow="SIMPLE PLANS. ROOM TO GROW."
-            title="A little investment in better connections."
-            text="Proposed pricing for this prototype. No payments, subscriptions, or commitments."
+            eyebrow="PLACEHOLDER PLANS · NOT AVAILABLE TO PURCHASE"
+            title="A preview of how plans could work."
+            text="Plan names and features are illustrative. Prices and limits have not been approved; no subscriptions or payments are available."
           />
           <div className="pricing-grid">
             {demoPlans.map((plan) => (
@@ -417,12 +379,12 @@ export default function Landing() {
                 key={plan.name}
               >
                 {plan.featured && (
-                  <span className="plan-label">A GOOD PLACE TO GROW</span>
+                  <span className="plan-label">EXAMPLE TEAM PLAN</span>
                 )}
                 <span className="eyebrow">{plan.name}</span>
                 <div className="price">
-                  ${plan.price}
-                  <span>/ month</span>
+                  {plan.price}
+                  <span>pricing to be confirmed</span>
                 </div>
                 <p>{plan.desc}</p>
                 <Button
@@ -438,7 +400,7 @@ export default function Landing() {
                     <CheckItem key={f}>{f}</CheckItem>
                   ))}
                 </div>
-                <small>Sample plan · USD · not available for purchase</small>
+                <small>Placeholder plan · Price and limits not approved</small>
               </Reveal>
             ))}
           </div>
@@ -447,11 +409,11 @@ export default function Landing() {
           <div>
             <span className="eyebrow">A FEW THINGS YOU MIGHT BE WONDERING</span>
             <h2>
-              Good questions.
+              Questions?
               <br />
-              Straight answers.
+              Here are the details.
             </h2>
-            <p>A little clarity before your first ping.</p>
+            <p>What to expect from this frontend demo.</p>
           </div>
           <div className="faq-list">
             {[
@@ -490,10 +452,10 @@ export default function Landing() {
           <span className="cta-spark">✳</span>
           <div>
             <span className="eyebrow">GOOD CONVERSATIONS START HERE</span>
-            <h2>Make room for your next little ping.</h2>
+            <h2>See how RevuPing fits your business.</h2>
             <p>
-              Take a look around. See what a calmer customer experience could
-              feel like.
+              Explore the dashboard, customise a QR card, and try the customer
+              feedback flow.
             </p>
           </div>
           <Button asChild>

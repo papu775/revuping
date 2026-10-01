@@ -51,11 +51,11 @@ export function Auth({ signup = false }: { signup?: boolean }) {
           <span className="eyebrow">
             {signup ? 'YOUR NEXT CHAPTER STARTS HERE' : 'GOOD TO HAVE YOU HERE'}
           </span>
-          <h1>{signup ? 'Let’s make a little room.' : 'Welcome back.'}</h1>
+          <h1>{signup ? 'Explore demo signup.' : 'Log in to the demo.'}</h1>
           <p>
             {signup
               ? 'Explore a calmer way to care for your customers.'
-              : 'A little less admin is just around the corner.'}
+              : 'Explore your business workspace with fictional data.'}
           </p>
           <div className="auth-demo-note">
             <Check size={16} />

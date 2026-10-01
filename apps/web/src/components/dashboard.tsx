@@ -24,6 +24,7 @@ import { Button } from './ui/button';
 import { Dialog } from './ui/dialog';
 import { Badge, Stars, TextLink } from './shared';
 import { QrCode } from './qr-code';
+import { focusWorkspacePanel } from '../lib/workspace-focus';
 import {
   feedback as initialFeedback,
   customers as initialCustomers,
@@ -60,9 +61,9 @@ export function Overview() {
   return (
     <>
       <PageHeading
-        eyebrow="FRIDAY, OCTOBER 2 · SAMPLE DAY"
-        title="A good day to listen, Jamie."
-        text="Here’s what’s happening at Bloom & Co."
+        eyebrow="BLOOM & CO. · DEMO WORKSPACE"
+        title="Business overview"
+        text="Track customer activity, follow up on feedback, and manage review requests."
       >
         <Button asChild>
           <Link href="/dashboard/requests">
@@ -76,8 +77,8 @@ export function Overview() {
             <Sparkles size={23} />
           </span>
           <div>
-            <strong>Small conversations. Meaningful progress.</strong>
-            <p>Three pieces of feedback are waiting for a little attention.</p>
+            <strong>3 feedback responses need attention</strong>
+            <p>Review recent comments and decide what to follow up on.</p>
           </div>
         </div>
         <TextLink href="/dashboard/feedback">Open your inbox</TextLink>
@@ -104,7 +105,7 @@ export function Overview() {
         <section className="panel trend-panel">
           <div className="panel-heading">
             <div>
-              <h2>A little momentum.</h2>
+              <h2>Customer activity</h2>
               <p>Customer activity · sample last 7 days</p>
             </div>
             <Badge>This week</Badge>
@@ -147,7 +148,7 @@ export function Overview() {
         <section className="panel setup-panel">
           <div className="panel-heading">
             <div>
-              <h2>Make yourself at home.</h2>
+              <h2>Complete your setup</h2>
               <p>Your salon setup checklist</p>
             </div>
             <span className="setup-fraction">
@@ -181,7 +182,7 @@ export function Overview() {
         <section className="panel">
           <div className="panel-heading">
             <div>
-              <h2>The latest little pings.</h2>
+              <h2>Recent private feedback</h2>
               <p>Recent private feedback</p>
             </div>
             <TextLink href="/dashboard/feedback">View all</TextLink>
@@ -210,26 +211,26 @@ export function Overview() {
         <section className="panel">
           <div className="panel-heading">
             <div>
-              <h2>Keep things moving.</h2>
+              <h2>Quick actions</h2>
               <p>A few useful shortcuts</p>
             </div>
           </div>
           {[
             {
               title: 'Create a branded QR',
-              desc: 'A small invitation at your counter',
+              desc: 'Customise and download a QR card',
               href: '/dashboard/qr',
               icon: QrIcon,
             },
             {
               title: 'Add a customer',
-              desc: 'Start with permission, always',
+              desc: 'Record consent before sending requests',
               href: '/dashboard/requests?add=true',
               icon: Users,
             },
             {
               title: 'Prepare a reply',
-              desc: 'Your voice. A little help with the words.',
+              desc: 'Review and edit a sample reply draft',
               href: '/dashboard/reviews',
               icon: Sparkles,
             },
@@ -306,14 +307,14 @@ export function QrStudio() {
   return (
     <>
       <PageHeading
-        eyebrow="YOUR BRAND. YOUR LITTLE INVITATION."
-        title="The QR studio."
-        text="Turn the end of a visit into the start of a conversation."
+        eyebrow="BRANDED CUSTOMER EXPERIENCE"
+        title="QR code studio"
+        text="Customise your salon’s QR card and download a print-ready SVG."
       />
       <div className="qr-editor">
         <section className="panel qr-controls">
-          <h2>Make it feel like you.</h2>
-          <p className="muted">A few small details, a personal touch.</p>
+          <h2>Customise your QR card</h2>
+          <p className="muted">Changes appear instantly in the live preview.</p>
           <label className="field">
             Business name
             <input
@@ -357,12 +358,33 @@ export function QrStudio() {
             <Tabs.Root value={template} onValueChange={setTemplate}>
               <Tabs.List className="template-tabs" aria-label="QR card layout">
                 {['Counter card', 'Minimal poster'].map((t) => (
-                  <Tabs.Trigger key={t} value={t}>
+                  <Tabs.Trigger
+                    key={t}
+                    value={t}
+                    id={`qr-template-${t === 'Counter card' ? 'card' : 'poster'}-tab`}
+                    aria-controls={`qr-template-${t === 'Counter card' ? 'card' : 'poster'}-panel`}
+                  >
                     <QrIcon size={21} />
                     {t}
                   </Tabs.Trigger>
                 ))}
               </Tabs.List>
+              <Tabs.Content
+                value="Counter card"
+                id="qr-template-card-panel"
+                aria-labelledby="qr-template-card-tab"
+                className="field-help"
+              >
+                Rounded card with a branded border, designed for your counter.
+              </Tabs.Content>
+              <Tabs.Content
+                value="Minimal poster"
+                id="qr-template-poster-panel"
+                aria-labelledby="qr-template-poster-tab"
+                className="field-help"
+              >
+                A clean, straight-edged layout for display on a wall or mirror.
+              </Tabs.Content>
             </Tabs.Root>
           </div>
           <div className="form-divider" />
@@ -395,14 +417,14 @@ export function QrStudio() {
           </div>
           {card}
           <span className="canvas-footnote">
-            Made for your counter. Ready for a conversation.
+            SVG download · Links to your demo customer page
           </span>
         </section>
       </div>
       <Dialog
         open={preview}
         onOpenChange={setPreview}
-        title="One scan. Two honest options."
+        title="Preview the customer experience"
         description="Customers can always choose a Google review or private feedback, regardless of their rating."
       >
         <div className="preview-customer">
@@ -444,9 +466,9 @@ export function FeedbackInbox() {
   return (
     <>
       <PageHeading
-        eyebrow="EVERY VOICE DESERVES A LITTLE SPACE"
-        title="Your feedback inbox."
-        text="Listen, leave a note, and give each conversation a next step."
+        eyebrow="PRIVATE CUSTOMER FEEDBACK"
+        title="Feedback inbox"
+        text="Search customer feedback, add internal notes, and track resolution."
       >
         <Button variant="secondary" onClick={refresh}>
           <Clock3 size={16} /> Refresh demo
@@ -490,6 +512,7 @@ export function FeedbackInbox() {
                 onClick={() => {
                   setSelected(f.id);
                   setSaved(false);
+                  focusWorkspacePanel('feedback-detail');
                 }}
               >
                 <div className="feedback-row-top">
@@ -515,7 +538,7 @@ export function FeedbackInbox() {
           ) : (
             <div className="empty-state">
               <MessageSquare size={35} />
-              <h3>A quiet corner.</h3>
+              <h3>No matching feedback</h3>
               <p>
                 No feedback matches your search. Try a different name or filter.
               </p>
@@ -531,7 +554,12 @@ export function FeedbackInbox() {
             </div>
           )}
         </section>
-        <section className="panel feedback-detail">
+        <section
+          className="panel feedback-detail"
+          id="feedback-detail"
+          tabIndex={-1}
+          aria-label="Selected feedback details"
+        >
           {detail && !loading ? (
             <>
               <div className="detail-top">
@@ -603,8 +631,8 @@ export function FeedbackInbox() {
               <MessageSquare size={35} />
               <p>
                 {loading
-                  ? 'Your conversations will be right back.'
-                  : 'Choose a conversation to see the details.'}
+                  ? 'Loading sample feedback…'
+                  : 'Select a feedback response to view details.'}
               </p>
             </div>
           )}
@@ -626,9 +654,9 @@ export function Requests({ initialAdd = false }: { initialAdd?: boolean }) {
   return (
     <>
       <PageHeading
-        eyebrow="A FRIENDLY ASK. A THOUGHTFUL FOLLOW-UP."
-        title="A little nudge, with care."
-        text="Every request starts with permission and sounds like you."
+        eyebrow="CONSENT-BASED CUSTOMER OUTREACH"
+        title="Review requests"
+        text="Add customers, confirm consent, and preview requests or reminders."
       >
         <Button onClick={() => setAdd(true)}>
           <Plus size={17} /> Add customer
@@ -661,7 +689,7 @@ export function Requests({ initialAdd = false }: { initialAdd?: boolean }) {
       <section className="panel">
         <div className="panel-heading">
           <div>
-            <h2>Your customer conversations.</h2>
+            <h2>Customers and request status</h2>
             <p>Fictional contacts · no live messaging</p>
           </div>
           <Badge>Demo data</Badge>
@@ -679,7 +707,7 @@ export function Requests({ initialAdd = false }: { initialAdd?: boolean }) {
             <tbody>
               {items.map((c) => (
                 <tr key={c.id}>
-                  <td>
+                  <td data-label="Customer">
                     <div className="table-person">
                       <span className="avatar lavender">
                         {c.name
@@ -694,7 +722,7 @@ export function Requests({ initialAdd = false }: { initialAdd?: boolean }) {
                       </div>
                     </div>
                   </td>
-                  <td>
+                  <td data-label="Consent">
                     <span className={c.consent ? 'consent-yes' : 'muted'}>
                       {c.consent ? (
                         <>
@@ -705,16 +733,17 @@ export function Requests({ initialAdd = false }: { initialAdd?: boolean }) {
                       )}
                     </span>
                   </td>
-                  <td>
+                  <td data-label="Request status">
                     <Badge
                       mint={
-                        c.status.includes('sent') || c.status === 'Link clicked'
+                        c.status.startsWith('Request sent') ||
+                        c.status === 'Link clicked'
                       }
                     >
                       {c.status}
                     </Badge>
                   </td>
-                  <td>
+                  <td data-label="Next step">
                     <Button
                       variant="secondary"
                       size="small"
@@ -724,7 +753,7 @@ export function Requests({ initialAdd = false }: { initialAdd?: boolean }) {
                         setSent(false);
                       }}
                     >
-                      {c.status.includes('sent')
+                      {c.status.startsWith('Request sent')
                         ? 'Preview reminder'
                         : 'Preview request'}
                       <ArrowRight size={14} />
@@ -751,7 +780,7 @@ export function Requests({ initialAdd = false }: { initialAdd?: boolean }) {
       <Dialog
         open={add}
         onOpenChange={setAdd}
-        title="A new customer conversation."
+        title="Add a demo customer"
         description="Add a fictional customer to this session. No contact details are sent anywhere."
       >
         <form
@@ -815,17 +844,17 @@ export function Requests({ initialAdd = false }: { initialAdd?: boolean }) {
         }}
         title={
           sent
-            ? 'A little ping, simulated.'
+            ? 'Request simulated'
             : target?.status.includes('sent')
-              ? 'A considerate reminder.'
-              : 'Preview your request.'
+              ? 'Preview reminder'
+              : 'Preview request'
         }
         description="Demo interaction only. No email or text message will be sent."
       >
         {sent ? (
           <div className="empty-state">
             <CheckCircle2 className="success-icon" size={42} />
-            <h3>All set in this demo.</h3>
+            <h3>Demo request complete</h3>
             <p>
               The status has been updated. Nothing was sent to {target?.name}.
             </p>
@@ -886,9 +915,9 @@ export function Reviews() {
   return (
     <>
       <PageHeading
-        eyebrow="YOUR VOICE. A LITTLE HELP WITH THE WORDS."
-        title="Thoughtful replies start here."
-        text="Review a draft, make it yours, and approve it when it feels right."
+        eyebrow="SIMULATED GOOGLE CONNECTION"
+        title="Google reviews & replies"
+        text="Read sample Google reviews and edit a reply draft before approving."
       />
       <div className="info-banner violet-banner">
         <Sparkles size={19} />
@@ -922,7 +951,10 @@ export function Reviews() {
               <button
                 className={`panel review-card ${active?.id === r.id ? 'selected' : ''}`}
                 key={r.id}
-                onClick={() => setSelected(r.id)}
+                onClick={() => {
+                  setSelected(r.id);
+                  focusWorkspacePanel('reply-editor');
+                }}
               >
                 <div>
                   <span className="avatar sage">{r.name[0]}</span>
@@ -944,7 +976,7 @@ export function Reviews() {
           ) : (
             <div className="panel empty-state">
               <Star size={32} />
-              <h3>No sample reviews here.</h3>
+              <h3>No matching sample reviews</h3>
               <p>Choose another rating to see a review.</p>
               <Button
                 variant="secondary"
@@ -955,13 +987,18 @@ export function Reviews() {
             </div>
           )}
         </section>
-        <section className="panel reply-editor">
+        <section
+          className="panel reply-editor"
+          id="reply-editor"
+          tabIndex={-1}
+          aria-label="Selected review reply editor"
+        >
           {active ? (
             <>
               <div className="panel-heading">
                 <div>
                   <h2>
-                    <Sparkles size={19} /> A little help, still your voice.
+                    <Sparkles size={19} /> Edit reply draft
                   </h2>
                   <p>Sample AI-assisted reply to {active.name}</p>
                 </div>
@@ -969,7 +1006,7 @@ export function Reviews() {
               <label className="field">
                 Your reply draft
                 <textarea
-                  rows={9}
+                  rows={6}
                   value={drafts[active.id]}
                   onChange={(e) => {
                     setDrafts({ ...drafts, [active.id]: e.target.value });

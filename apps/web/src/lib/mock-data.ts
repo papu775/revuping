@@ -128,7 +128,7 @@ export const reviews = [
 ];
 export const navItems = [
   ['Overview', '/dashboard', 'overview'],
-  ['QR studio', '/dashboard/qr', 'qr'],
+  ['QR code studio', '/dashboard/qr', 'qr'],
   ['Feedback inbox', '/dashboard/feedback', 'feedback'],
   ['Review requests', '/dashboard/requests', 'requests'],
   ['Google reviews', '/dashboard/reviews', 'reviews'],
@@ -143,22 +143,22 @@ export const demoPlans: {
 }[] = [
   {
     name: 'Starter',
-    price: '19',
+    price: 'TBD',
     desc: 'For one chair, one counter, one great start.',
     features: [
-      '1 business location',
+      'Single-location concept',
       'Branded review QR codes',
       'Private feedback inbox',
-      '50 review requests / month',
+      'Request limits to be confirmed',
     ],
   },
   {
     name: 'Grow',
-    price: '39',
+    price: 'TBD',
     desc: 'For busy teams with more stories to hear.',
     features: [
       'Everything in Starter',
-      '250 review requests / month',
+      'Request limits to be confirmed',
       'Reminder previews',
       'AI-assisted reply drafts',
     ],
@@ -166,12 +166,12 @@ export const demoPlans: {
   },
   {
     name: 'Together',
-    price: '79',
+    price: 'TBD',
     desc: 'A little more room for every location.',
     features: [
       'Everything in Grow',
-      'Up to 3 business locations',
-      '750 review requests / month',
+      'Multiple business locations',
+      'Request limits to be confirmed',
       'Location-level insights',
     ],
   },

@@ -56,6 +56,7 @@ export default function DashboardLayout({
                 key={href}
                 href={href}
                 className={path === href ? 'active' : ''}
+                aria-current={path === href ? 'page' : undefined}
                 onClick={() => setOpen(false)}
               >
                 <Icon size={19} />
@@ -68,7 +69,7 @@ export default function DashboardLayout({
         <div className="sidebar-bottom">
           <div className="demo-sidebar">
             <span className="live-dot" />
-            <strong>A little look around</strong>
+            <strong>Demo workspace</strong>
             <p>
               You’re exploring a demo.
               <br />
@@ -142,7 +143,7 @@ export default function DashboardLayout({
           {children}
         </main>
         <footer className="dashboard-footer">
-          A little closer to your customers.{' '}
+          Bloom & Co. · Fictional salon{' '}
           <span>RevuPing prototype · No live integrations</span>
         </footer>
       </div>

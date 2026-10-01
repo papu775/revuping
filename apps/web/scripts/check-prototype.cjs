@@ -6,6 +6,9 @@ const base = process.env.PROTOTYPE_URL || 'http://localhost:3000';
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();
   const errors = [];
+  page.on('console', (message) => {
+    if (message.type() === 'error') errors.push(message.text());
+  });
   page.on('pageerror', (error) => errors.push(error.message));
   const routes = [
     '/',
@@ -28,9 +31,25 @@ const base = process.env.PROTOTYPE_URL || 'http://localhost:3000';
         await page.evaluate(
           () => document.documentElement.scrollWidth <= innerWidth,
         ),
+        `${width}px ${route}: document must fit the viewport`,
       ).toBe(true);
     }
   }
+  await page.goto(base + '/');
+  await page.getByRole('tab', { name: 'Review requests', exact: true }).click();
+  await expect(page.getByRole('tabpanel')).toContainText('Consent first');
+  await page.getByRole('tab', { name: 'Review replies', exact: true }).click();
+  await expect(page.getByRole('tabpanel')).toContainText(
+    'Nothing is published to Google',
+  );
+  await page
+    .getByRole('tab', { name: 'Private feedback', exact: true })
+    .click();
+  await expect(page.getByRole('tabpanel')).toContainText('Feedback inbox');
+  await expect(page.locator('.pricing-grid')).not.toContainText('$');
+  await expect(page.locator('.pricing-grid')).toContainText(
+    'pricing to be confirmed',
+  );
   await page.goto(base + '/dashboard/qr');
   await page.getByLabel('Business name').fill('The Test Salon');
   await expect(page.locator('.qr-print-card h2')).toHaveText('The Test Salon');
@@ -50,7 +69,7 @@ const base = process.env.PROTOTYPE_URL || 'http://localhost:3000';
   await expect(page.getByRole('dialog')).not.toBeVisible();
   await page.goto(base + '/dashboard/feedback');
   await page.getByLabel('Search feedback').fill('no-match-123');
-  await expect(page.getByText('A quiet corner.')).toBeVisible();
+  await expect(page.getByText('No matching feedback')).toBeVisible();
   await page.getByRole('button', { name: 'Clear filters' }).click();
   await page.getByRole('button', { name: 'Mark as resolved' }).click();
   await expect(
@@ -71,7 +90,7 @@ const base = process.env.PROTOTYPE_URL || 'http://localhost:3000';
   const row = page.getByRole('row').filter({ hasText: 'Test Customer' });
   await row.getByRole('button', { name: 'Preview request' }).click();
   await page.getByRole('button', { name: 'Simulate send' }).click();
-  await expect(page.getByText('All set in this demo.')).toBeVisible();
+  await expect(page.getByText('Demo request complete')).toBeVisible();
   await page.getByRole('button', { name: 'Back to customers' }).click();
   await expect(row).toContainText('Request sent (demo)');
   await expect(
@@ -87,7 +106,7 @@ const base = process.env.PROTOTYPE_URL || 'http://localhost:3000';
   await page.getByRole('button', { name: 'Approve demo draft' }).click();
   await expect(page.getByRole('status')).toContainText('not been published');
   await page.getByLabel('Filter reviews by rating').selectOption('1');
-  await expect(page.getByText('No sample reviews here.')).toBeVisible();
+  await expect(page.getByText('No matching sample reviews')).toBeVisible();
   await page.goto(base + '/r/demo-salon');
   await page.getByRole('button', { name: 'Send private feedback' }).click();
   await page.getByRole('button', { name: '1 star', exact: true }).click();
@@ -115,8 +134,30 @@ const base = process.env.PROTOTYPE_URL || 'http://localhost:3000';
   await expect(page).toHaveURL(base + '/dashboard');
   await page.setViewportSize({ width: 390, height: 844 });
   await page.getByRole('button', { name: 'Open navigation' }).click();
-  await page.getByRole('link', { name: 'QR studio', exact: true }).click();
+  await page.getByRole('link', { name: 'QR code studio', exact: true }).click();
   await expect(page).toHaveURL(base + '/dashboard/qr');
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto(base + '/dashboard/feedback');
+  await page
+    .locator('.feedback-row')
+    .filter({ hasText: 'James Wilson' })
+    .click();
+  await expect(page.locator('#feedback-detail')).toBeFocused();
+  await expect(page.locator('#feedback-detail')).toBeInViewport();
+  await page.goto(base + '/dashboard/reviews');
+  await page.locator('.review-card').filter({ hasText: 'Noah P.' }).click();
+  await expect(page.locator('#reply-editor')).toBeFocused();
+  await expect(page.locator('#reply-editor')).toBeInViewport();
+  await page.goto(base + '/dashboard/requests');
+  const mobileRequest = page
+    .getByRole('row')
+    .filter({ hasText: 'Olivia Martin' })
+    .getByRole('button');
+  await mobileRequest.scrollIntoViewIfNeeded();
+  await expect(mobileRequest).toBeInViewport();
+  await mobileRequest.click();
+  await expect(page.getByRole('dialog')).toBeVisible();
+  await page.keyboard.press('Escape');
   await page.goto(base + '/');
   await page.getByRole('button', { name: 'Toggle navigation' }).click();
   await page
@@ -127,7 +168,7 @@ const base = process.env.PROTOTYPE_URL || 'http://localhost:3000';
   expect(errors).toEqual([]);
   await browser.close();
   console.log(
-    'PASS: 27 responsive route checks, SVG download, inbox, consent, dialogs, review drafts, feedback, login and mobile navigation.',
+    'PASS: 27 responsive route checks; product tabs, SVG download, inbox, consent, dialogs, review drafts, feedback, demo login, mobile navigation, detail focus and reduced motion. No browser-console errors.',
   );
 })().catch((error) => {
   console.error(error);
