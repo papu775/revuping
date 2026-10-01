@@ -6,9 +6,7 @@ import {
   MotionConfig,
   motion,
   useInView,
-  useMotionValue,
   useReducedMotion,
-  useSpring,
 } from 'motion/react';
 import { ChevronDown } from 'lucide-react';
 
@@ -20,66 +18,6 @@ export function TemplateMotion({ children }: { children: React.ReactNode }) {
     >
       {children}
     </MotionConfig>
-  );
-}
-
-/** Decorative motion is isolated from text, CTAs and the functional QR studio. */
-export function HeroScene({ children }: { children: React.ReactNode }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, { amount: 0.15 });
-  const reduced = useReducedMotion();
-  const [visible, setVisible] = useState(true);
-  const [fine, setFine] = useState(false);
-  const x = useMotionValue(0),
-    y = useMotionValue(0);
-  const rotateX = useSpring(x, { stiffness: 90, damping: 24 });
-  const rotateY = useSpring(y, { stiffness: 90, damping: 24 });
-  useEffect(() => {
-    const media = window.matchMedia('(hover: hover) and (pointer: fine)');
-    const updatePointer = () => setFine(media.matches);
-    const updateVisibility = () => setVisible(!document.hidden);
-    updatePointer();
-    updateVisibility();
-    media.addEventListener('change', updatePointer);
-    document.addEventListener('visibilitychange', updateVisibility);
-    return () => {
-      media.removeEventListener('change', updatePointer);
-      document.removeEventListener('visibilitychange', updateVisibility);
-    };
-  }, []);
-  const enabled = fine && !reduced;
-  useEffect(() => {
-    if (!enabled || !inView || !visible) {
-      x.set(0);
-      y.set(0);
-    }
-  }, [enabled, inView, visible, x, y]);
-  return (
-    <div ref={ref} className="hero-depth" style={{ perspective: 1200 }}>
-      <motion.div
-        className="hero-composition"
-        data-floating={enabled && inView && visible ? 'running' : 'paused'}
-        style={{
-          rotateX: reduced ? 0 : rotateX,
-          rotateY: reduced ? 0 : rotateY,
-          transformStyle: 'preserve-3d',
-        }}
-        onPointerMove={(event) => {
-          if (!enabled) return;
-          const rect = event.currentTarget.getBoundingClientRect();
-          const bounded = (value: number) =>
-            Math.max(-0.5, Math.min(0.5, value - 0.5));
-          x.set(-bounded((event.clientY - rect.top) / rect.height) * 3);
-          y.set(bounded((event.clientX - rect.left) / rect.width) * 4);
-        }}
-        onPointerLeave={() => {
-          x.set(0);
-          y.set(0);
-        }}
-      >
-        {children}
-      </motion.div>
-    </div>
   );
 }
 

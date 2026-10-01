@@ -9,20 +9,20 @@ import {
   Send,
   Sparkles,
   QrCode as QrIcon,
-  Leaf,
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
-import { Logo, Stars, Reveal, Badge, SectionTitle } from '../components/shared';
-import { QrCode } from '../components/qr-code';
+import { Logo, Reveal, SectionTitle } from '../components/shared';
 import { MarketingHeader } from '../components/marketing-header';
-import { HeroScene, HeroIntro, FaqItem } from '../components/template-motion';
+import { HeroIntro, FaqItem } from '../components/template-motion';
+import { HeroArtwork } from '../components/hero/hero-artwork';
+import { ConversationCurves } from '../components/conversation-curves';
 import { ProductShowcase } from '../components/product-showcase';
 export default function Landing() {
   return (
     <>
       <MarketingHeader />
       <main>
-        <section className="hero wrap">
+        <section className="hero wrap relative isolate">
           <HeroIntro>
             <span className="eyebrow">
               <span className="small-line" /> Reviews, feedback & replies
@@ -54,78 +54,7 @@ export default function Landing() {
               <span>·</span> Interactive demo
             </div>
           </HeroIntro>
-          <HeroScene>
-            <div className="orbit orbit-one" />
-            <div className="orbit orbit-two" />
-            <span className="composition-label">
-              An illustrative customer journey
-            </span>
-            <div className="salon-qr">
-              <div className="salon-emblem">
-                <Leaf size={27} />
-              </div>
-              <span className="salon-wordmark">bloom & co.</span>
-              <span className="salon-sub">Salon & beauty</span>
-              <div className="hero-qr">
-                <QrCode decorative />
-              </div>
-              <h3>How was your visit?</h3>
-              <p>We’d love to hear about it.</p>
-              <div className="qr-card-footer">
-                Illustrative card · Demo preview <ArrowUpRight size={13} />
-              </div>
-            </div>
-            <div className="floating-card feedback-float">
-              <span className="float-icon mint">
-                <MessageSquare size={18} />
-              </span>
-              <div>
-                <small>NEW PRIVATE FEEDBACK</small>
-                <Stars />
-                <p>“Sophie made my day. Love my new colour!”</p>
-                <span className="muted">
-                  Olivia M. <span>·</span> Just now
-                </span>
-              </div>
-              <span className="live-dot" />
-            </div>
-            <div className="floating-card request-float">
-              <span className="float-icon violet">
-                <Send size={17} />
-              </span>
-              <div>
-                <strong>Review request ready</strong>
-                <p>Olivia Martin · Sample request</p>
-                <Badge mint>
-                  <Check size={11} /> Consent confirmed
-                </Badge>
-              </div>
-            </div>
-            <div className="floating-card reply-float">
-              <div className="reply-heading">
-                <Sparkles size={16} />
-                <strong>Editable reply draft</strong>
-              </div>
-              <p>“Thank you, Olivia! We’re so happy you love your new look…”</p>
-              <div className="reply-bottom">
-                <span>Review before approving</span>
-                <Check size={14} />
-              </div>
-            </div>
-            <span className="composition-star ping-mark" aria-hidden="true" />
-            <div
-              className="mini-journey"
-              aria-label="Product journey: scan, share feedback, prepare reply"
-            >
-              {['Scan', 'Share', 'Reply'].map((step, index) => (
-                <span key={step}>
-                  <i>{index + 1}</i>
-                  {step}
-                  {index < 2 && <ArrowRight size={12} />}
-                </span>
-              ))}
-            </div>
-          </HeroScene>
+          <HeroArtwork />
         </section>
         <section className="value-strip" aria-label="Product capabilities">
           <div className="wrap">
@@ -160,7 +89,14 @@ export default function Landing() {
           </div>
         </section>
         <ProductShowcase />
-        <section id="how-it-works" className="section wrap">
+        <section
+          id="how-it-works"
+          className="section wrap relative isolate overflow-hidden"
+        >
+          <ConversationCurves
+            variant="workflow"
+            className="-left-24 top-4 h-[180px] w-[280px] max-sm:w-[160px]"
+          />
           <Reveal className="w-full">
             <SectionTitle
               className="mx-auto w-full max-w-[800px]"
@@ -349,8 +285,11 @@ export default function Landing() {
             ))}
           </div>
         </section>
-        <section className="final-cta wrap">
-          <span className="cta-spark ping-mark" aria-hidden="true" />
+        <section className="final-cta wrap relative isolate overflow-hidden [&>div]:relative [&>a]:relative">
+          <ConversationCurves
+            variant="closing"
+            className="-right-12 -top-20 h-[300px] w-[300px] max-sm:hidden"
+          />
           <div>
             <span className="eyebrow">Good conversations start here</span>
             <h2>See how RevuPing fits your business.</h2>

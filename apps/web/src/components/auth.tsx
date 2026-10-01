@@ -1,18 +1,14 @@
 'use client';
 import { PasswordField } from './ui/password-field';
+import { HeroStatic } from './hero/hero-static';
+import { ConversationCurves } from './conversation-curves';
 import { FloatingSample } from './template-motion';
 import { Avatar } from './ui/avatar';
 import { Field } from './shared';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import {
-  ArrowRight,
-  Send,
-  MessageSquare,
-  Check,
-  AudioLines,
-} from 'lucide-react';
+import { ArrowRight, Send, MessageSquare, Check } from 'lucide-react';
 import { Logo, Stars } from './shared';
 import { Button } from './ui/button';
 export function Auth({ signup = false }: { signup?: boolean }) {
@@ -22,11 +18,10 @@ export function Auth({ signup = false }: { signup?: boolean }) {
   return (
     <main className="auth-page">
       <section className="auth-story">
-        <AudioLines
-          aria-hidden="true"
-          focusable="false"
-          strokeWidth={0.8}
-          className="pointer-events-none absolute -right-24 top-[18%] size-[560px] text-violet opacity-[0.07]"
+        <HeroStatic className="pointer-events-none absolute -right-16 bottom-0 w-[330px] opacity-[0.14]" />
+        <ConversationCurves
+          variant="auth"
+          className="-right-16 top-5 h-[420px] w-[380px]"
         />
         <Logo light />
         <div className="auth-story-copy mx-auto w-full max-w-[520px]">
