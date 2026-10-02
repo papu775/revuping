@@ -148,6 +148,13 @@ const artifacts =
     await page
       .getByRole('button', { name: 'Simulate send', exact: true })
       .click();
+    await expect(page.locator('.brand-toast')).toContainText(
+      'Demo request created. No message was sent.',
+    );
+    await expect(page.locator('.toast-stack')).not.toHaveAttribute(
+      'aria-hidden',
+      'true',
+    );
     await page
       .getByRole('button', { name: 'Back to customers', exact: true })
       .click();

@@ -52,7 +52,7 @@ const base = process.env.PROTOTYPE_URL || 'http://localhost:3000';
   await expect(page.locator('#pricing')).not.toContainText('$');
   await expect(page.locator('#pricing')).toContainText('Pricing coming soon.');
   await page.getByRole('button', { name: 'Resolve preview feedback' }).click();
-  await expect(page.getByRole('status')).toContainText(
+  await expect(page.locator('.preview-state')).toContainText(
     'Resolved in this preview',
   );
   await page.getByRole('button', { name: 'Reopen preview feedback' }).click();
@@ -69,13 +69,17 @@ const base = process.env.PROTOTYPE_URL || 'http://localhost:3000';
     .filter({ hasText: 'Olivia Martin' })
     .click();
   await page.getByRole('button', { name: 'Simulate preview request' }).click();
-  await expect(page.getByRole('status')).toContainText('No message was sent');
+  await expect(page.locator('.brand-toast')).toContainText(
+    'No message was sent',
+  );
   await page.getByRole('tab', { name: 'Reply drafts', exact: true }).click();
   await page.getByLabel('Edit this reply').fill('Thank you for your visit!');
   await page.getByRole('button', { name: 'Approve preview draft' }).click();
-  await expect(page.getByRole('status')).toContainText(
-    'Nothing is published to Google',
-  );
+  await expect(
+    page
+      .locator('.preview-state')
+      .filter({ hasText: 'Nothing is published to Google' }),
+  ).toBeVisible();
   await page
     .getByLabel('Edit this reply')
     .fill('Thanks for sharing your visit.');
@@ -137,10 +141,14 @@ const base = process.env.PROTOTYPE_URL || 'http://localhost:3000';
   ).toBeVisible();
   await page.getByLabel('A note for your team').fill('Follow up next week.');
   await page.getByRole('button', { name: 'Save note' }).click();
-  await expect(page.getByRole('status')).toContainText('Note saved');
+  await expect(
+    page.locator('.brand-toast').filter({ hasText: 'Note saved' }),
+  ).toBeVisible();
   await page.getByRole('button', { name: 'Refresh demo' }).click();
-  await expect(page.getByText('Refreshing sample feedback…')).toBeVisible();
-  await expect(page.getByText('Refreshing sample feedback…')).not.toBeVisible();
+  await expect(page.getByText('Demo feedback is up to date')).toBeVisible();
+  await expect(page.getByLabel('A note for your team')).toHaveValue(
+    'Follow up next week.',
+  );
   await page.goto(base + '/dashboard/requests?add=true');
   await expect(page.getByRole('dialog')).toBeVisible();
   await page.getByLabel('Full name').fill('Test Customer');
@@ -164,7 +172,9 @@ const base = process.env.PROTOTYPE_URL || 'http://localhost:3000';
     .getByLabel('Your reply draft')
     .fill('Thank you for visiting our salon!');
   await page.getByRole('button', { name: 'Approve demo draft' }).click();
-  await expect(page.getByRole('status')).toContainText('not been published');
+  await expect(page.locator('.success-note')).toContainText(
+    'not been published',
+  );
   await page
     .getByRole('combobox', { name: 'Filter reviews by rating' })
     .click();

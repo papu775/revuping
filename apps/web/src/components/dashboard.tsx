@@ -1,10 +1,12 @@
 'use client';
+import { InlineSpinner } from './ui/loading';
+import { useToast } from './ui/toaster';
 import { useDemoWorkspace } from './demo-workspace';
 import { Avatar } from './ui/avatar';
 import { Panel, Field, panelSurface } from './shared';
 import Link from 'next/link';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import {
   ArrowUpRight,
   ArrowRight,
@@ -40,6 +42,22 @@ import {
   sampleTrend,
   sampleRequestText,
 } from '../lib/mock-data';
+async function withDeadline<T>(work: Promise<T>): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      work,
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(
+          () => reject(new Error('Operation timed out')),
+          10000,
+        );
+      }),
+    ]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
 export function SessionNotice({ children }: { children: React.ReactNode }) {
   const reduced = useReducedMotion();
   return (
@@ -314,6 +332,7 @@ export function Overview() {
   );
 }
 export function QrStudio() {
+  const toast = useToast();
   const [name, setName] = useState('Bloom & Co.');
   const [text, setText] = useState('How was your visit?');
   const [color, setColor] = useState('#6250b5');
@@ -322,11 +341,19 @@ export function QrStudio() {
   const [preview, setPreview] = useState(false);
   const printColor = printableColor(color);
   const [message, setMessage] = useState('');
+  const [failureAction, setFailureAction] = useState<'export' | 'copy'>(
+    'export',
+  );
   const [exporting, setExporting] = useState(false);
+  const exportLock = useRef(false);
+  const copyLock = useRef(false);
+  const [copying, setCopying] = useState(false);
   const qrReady = svg.includes(`stroke="${printColor}"`);
   const ready = useCallback((s: string) => setSvg(s), []);
   async function download(format: 'svg' | 'png' = 'svg') {
-    if (!qrReady || !name.trim() || !text.trim()) return;
+    if (exportLock.current || !qrReady || !name.trim() || !text.trim()) return;
+    exportLock.current = true;
+    setMessage('');
     setExporting(true);
     try {
       const file = qrCardSvg({
@@ -342,24 +369,29 @@ export function QrStudio() {
         const source = URL.createObjectURL(vector);
         const image = new Image();
         try {
-          await new Promise<void>((resolve, reject) => {
-            image.onload = () => resolve();
-            image.onerror = () => reject(new Error('Image export unavailable'));
-            image.src = source;
-          });
+          await withDeadline(
+            new Promise<void>((resolve, reject) => {
+              image.onload = () => resolve();
+              image.onerror = () =>
+                reject(new Error('Image export unavailable'));
+              image.src = source;
+            }),
+          );
           const canvas = document.createElement('canvas');
           canvas.width = image.naturalWidth * 2;
           canvas.height = image.naturalHeight * 2;
           const context = canvas.getContext('2d');
           if (!context) throw new Error('Image export unavailable');
           context.drawImage(image, 0, 0, canvas.width, canvas.height);
-          asset = await new Promise<Blob>((resolve, reject) =>
-            canvas.toBlob(
-              (blob) =>
-                blob
-                  ? resolve(blob)
-                  : reject(new Error('Image export unavailable')),
-              'image/png',
+          asset = await withDeadline(
+            new Promise<Blob>((resolve, reject) =>
+              canvas.toBlob(
+                (blob) =>
+                  blob
+                    ? resolve(blob)
+                    : reject(new Error('Image export unavailable')),
+                'image/png',
+              ),
             ),
           );
         } finally {
@@ -372,13 +404,38 @@ export function QrStudio() {
       a.download = `revuping-salon-qr.${format}`;
       a.click();
       window.setTimeout(() => URL.revokeObjectURL(url), 1000);
-      setMessage(`${template} ${format.toUpperCase()} download started.`);
+      toast('QR downloaded');
     } catch {
+      setFailureAction('export');
+      toast('QR export failed', 'error');
       setMessage(
         'The download could not be prepared. Please try the SVG option.',
       );
     } finally {
+      exportLock.current = false;
       setExporting(false);
+    }
+  }
+
+  async function copyLink() {
+    if (copyLock.current) return;
+    copyLock.current = true;
+    setCopying(true);
+    try {
+      await withDeadline(
+        navigator.clipboard.writeText(`${window.location.origin}/r/demo-salon`),
+      );
+      setMessage('');
+      toast('Link copied');
+    } catch {
+      setFailureAction('copy');
+      toast('Link could not be copied', 'error');
+      setMessage(
+        'Clipboard access is unavailable. Open the customer preview to use the link.',
+      );
+    } finally {
+      copyLock.current = false;
+      setCopying(false);
     }
   }
 
@@ -416,17 +473,31 @@ export function QrStudio() {
             <input
               value={name}
               maxLength={30}
+              aria-invalid={!name.trim()}
+              aria-describedby={!name.trim() ? 'qr-name-error' : undefined}
               onChange={(e) => setName(e.target.value)}
             />
           </Field>
+          {!name.trim() && (
+            <p className="error-note" id="qr-name-error">
+              Enter a business name before exporting.
+            </p>
+          )}
           <Field>
             Display text
             <input
               value={text}
               maxLength={40}
+              aria-invalid={!text.trim()}
+              aria-describedby={!text.trim() ? 'qr-text-error' : undefined}
               onChange={(e) => setText(e.target.value)}
             />
           </Field>
+          {!text.trim() && (
+            <p className="error-note" id="qr-text-error">
+              Enter display text before exporting.
+            </p>
+          )}
           <Field as="div">
             Brand colour
             <div className="color-options">
@@ -498,40 +569,73 @@ export function QrStudio() {
             </p>
           </div>
           <Button
+            aria-busy={exporting}
             onClick={() => void download('svg')}
-            disabled={!qrReady || !name.trim() || !text.trim() || exporting}
+            disabled={!qrReady || !name.trim() || !text.trim()}
+            aria-disabled={exporting}
           >
-            <Download size={17} /> Download SVG card
+            {exporting ? <InlineSpinner /> : <Download size={17} />}{' '}
+            <span className="action-label">
+              <span className="reserved-label" aria-hidden="true">
+                Download SVG card
+              </span>
+              <span>{exporting ? 'Exporting…' : 'Download SVG card'}</span>
+            </span>
           </Button>
           <Button
             variant="secondary"
-            disabled={!qrReady || !name.trim() || !text.trim() || exporting}
+            disabled={!qrReady || !name.trim() || !text.trim()}
+            aria-disabled={exporting}
             onClick={() => void download('png')}
             aria-busy={exporting}
           >
-            <Download size={17} /> Download PNG card
+            {exporting ? <InlineSpinner /> : <Download size={17} />}{' '}
+            <span className="action-label">
+              <span className="reserved-label" aria-hidden="true">
+                Download PNG card
+              </span>
+              <span>{exporting ? 'Exporting…' : 'Download PNG card'}</span>
+            </span>
           </Button>
           <Button
             variant="ghost"
-            onClick={async () => {
-              try {
-                await navigator.clipboard.writeText(
-                  `${window.location.origin}/r/demo-salon`,
-                );
-                setMessage('Customer link copied.');
-              } catch {
-                setMessage(
-                  'Clipboard access is unavailable. Open the customer preview to use the link.',
-                );
-              }
-            }}
+            aria-disabled={copying}
+            aria-busy={copying}
+            onClick={() => void copyLink()}
           >
-            <Copy size={17} /> Copy customer link
+            {copying ? <InlineSpinner /> : <Copy size={17} />}{' '}
+            <span className="action-label">
+              <span className="reserved-label" aria-hidden="true">
+                Copy customer link
+              </span>
+              <span>{copying ? 'Copying…' : 'Copy customer link'}</span>
+            </span>
           </Button>
           <Button variant="secondary" onClick={() => setPreview(true)}>
             Preview customer experience <ArrowUpRight size={16} />
           </Button>
-          {message && <SessionNotice>{message}</SessionNotice>}
+          {message && (
+            <div role="alert" className="info-note">
+              <p>{message}</p>
+              {failureAction === 'export' ? (
+                <Button
+                  variant="secondary"
+                  onClick={() => void download('svg')}
+                  disabled={exporting || !qrReady}
+                >
+                  Retry SVG export
+                </Button>
+              ) : (
+                <Button
+                  variant="secondary"
+                  onClick={() => void copyLink()}
+                  aria-disabled={copying}
+                >
+                  Retry copying link
+                </Button>
+              )}
+            </div>
+          )}
         </Panel>
         <section className="qr-canvas bg-section">
           <div className="canvas-label">
@@ -580,8 +684,9 @@ export function FeedbackInbox({
     initialAttention ? 'Needs attention' : 'All feedback',
   );
   const [selected, setSelected] = useState(1);
+  const toast = useToast();
   const [saved, setSaved] = useState<number | null>(null);
-  const [loading, setLoading] = useState(false);
+  const loading = false;
   const visible = items.filter(
     (f) =>
       (filter === 'All feedback' ||
@@ -593,8 +698,7 @@ export function FeedbackInbox({
   );
   const detail = visible.find((f) => f.id === selected) || visible[0];
   function refresh() {
-    setLoading(true);
-    setTimeout(() => setLoading(false), 600);
+    toast('Demo feedback is up to date', 'info');
   }
   return (
     <>
@@ -635,12 +739,7 @@ export function FeedbackInbox({
       </div>
       <div className="inbox-layout">
         <Panel className="inbox-list" aria-label="Feedback list">
-          {loading ? (
-            <div className="loading-state" role="status">
-              <span className="spinner" />
-              Refreshing sample feedback…
-            </div>
-          ) : visible.length ? (
+          {visible.length ? (
             visible.map((f) => (
               <button
                 className={`feedback-row ${detail?.id === f.id ? 'selected' : ''}`}
@@ -698,7 +797,7 @@ export function FeedbackInbox({
           tabIndex={-1}
           aria-label="Selected feedback details"
         >
-          {detail && !loading ? (
+          {detail ? (
             <>
               <div className="detail-top">
                 <Badge>PRIVATE FEEDBACK</Badge>
@@ -748,6 +847,11 @@ export function FeedbackInbox({
               <div className="detail-actions">
                 <Button
                   onClick={() => {
+                    toast(
+                      detail.resolved
+                        ? 'Feedback reopened'
+                        : 'Feedback marked as resolved',
+                    );
                     setItems(
                       items.map((f) =>
                         f.id === detail.id
@@ -763,16 +867,19 @@ export function FeedbackInbox({
                 <Button
                   variant="secondary"
                   disabled={!notes[detail.id]?.trim()}
-                  onClick={() => setSaved(detail.id)}
+                  onClick={() => {
+                    setSaved(detail.id);
+                    toast('Note saved');
+                  }}
                 >
                   Save note
                 </Button>
               </div>
               <AnimatePresence initial={false}>
                 {saved === detail.id && (
-                  <SessionNotice>
-                    <CheckCircle2 size={17} /> Note saved in this demo session.
-                  </SessionNotice>
+                  <p className="success-note">
+                    Note saved in this demo session.
+                  </p>
                 )}
               </AnimatePresence>
             </>
@@ -798,6 +905,7 @@ function hasSentRequest(status: string) {
   );
 }
 export function Requests({ initialAdd = false }: { initialAdd?: boolean }) {
+  const toast = useToast();
   const { customerItems: items, setCustomerItems: setItems } =
     useDemoWorkspace();
   const [add, setAdd] = useState(initialAdd);
@@ -806,7 +914,6 @@ export function Requests({ initialAdd = false }: { initialAdd?: boolean }) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [consent, setConsent] = useState(false);
-  const [message, setMessage] = useState('');
   const [requestText, setRequestText] = useState(sampleRequestText);
   return (
     <>
@@ -931,7 +1038,6 @@ export function Requests({ initialAdd = false }: { initialAdd?: boolean }) {
           a review.
         </p>
       </div>
-      {message && <SessionNotice>{message}</SessionNotice>}
       <Dialog
         open={add}
         onOpenChange={setAdd}
@@ -955,7 +1061,7 @@ export function Requests({ initialAdd = false }: { initialAdd?: boolean }) {
             setName('');
             setEmail('');
             setConsent(false);
-            setMessage('Sample customer added to this demo session.');
+            toast('Demo customer added');
           }}
         >
           <Field>
@@ -1030,6 +1136,11 @@ export function Requests({ initialAdd = false }: { initialAdd?: boolean }) {
                 onChange={(e) => setRequestText(e.target.value)}
               />
             </Field>
+            {!requestText.trim() && (
+              <p className="error-note" role="alert">
+                Enter a message to preview a demo request.
+              </p>
+            )}
             <p className="message-preview [overflow-wrap:anywhere]">
               {requestText
                 .replace('{name}', target?.name.split(' ')[0] || '')
@@ -1052,6 +1163,7 @@ export function Requests({ initialAdd = false }: { initialAdd?: boolean }) {
                   ),
                 );
                 setSent(true);
+                toast('Demo request created. No message was sent.');
               }}
             >
               <Send size={16} /> Simulate{' '}
@@ -1064,6 +1176,7 @@ export function Requests({ initialAdd = false }: { initialAdd?: boolean }) {
   );
 }
 export function Reviews() {
+  const toast = useToast();
   const [rating, setRating] = useState('All ratings');
   const [selected, setSelected] = useState(1);
   const { drafts, setDrafts, approved, setApproved } = useDemoWorkspace();
@@ -1188,7 +1301,10 @@ export function Reviews() {
                 disabled={
                   !drafts[active.id].trim() || approved.includes(active.id)
                 }
-                onClick={() => setApproved([...approved, active.id])}
+                onClick={() => {
+                  setApproved([...approved, active.id]);
+                  toast('Reply draft approved. Not published to Google.');
+                }}
               >
                 <Check size={16} />
                 {approved.includes(active.id)
@@ -1196,10 +1312,10 @@ export function Reviews() {
                   : 'Approve demo draft'}
               </Button>
               {approved.includes(active.id) && (
-                <SessionNotice>
+                <p className="success-note">
                   Draft approved for this session. It has not been published to
                   Google.
-                </SessionNotice>
+                </p>
               )}
               <Button
                 variant="ghost"

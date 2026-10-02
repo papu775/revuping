@@ -1,4 +1,5 @@
 'use client';
+import { useToast } from './ui/toaster';
 import { Avatar } from './ui/avatar';
 import { Field } from './shared';
 import { AnimatedHeight } from './template-motion';
@@ -43,6 +44,7 @@ const views = [
 ] as const;
 
 export function ProductShowcase() {
+  const toast = useToast();
   const [view, setView] = useState('feedback');
   const demo = usePreviewDemo();
   const reduced = useReducedMotion();
@@ -210,7 +212,14 @@ export function ProductShowcase() {
                           </p>
                         </div>
                         <Button
-                          onClick={demo.toggleResolved}
+                          onClick={() => {
+                            demo.toggleResolved();
+                            toast(
+                              demo.selected.resolved
+                                ? 'Preview feedback reopened'
+                                : 'Feedback marked as resolved',
+                            );
+                          }}
                           variant={
                             demo.selected.resolved ? 'secondary' : 'default'
                           }
@@ -220,7 +229,7 @@ export function ProductShowcase() {
                             ? 'Reopen preview feedback'
                             : 'Resolve preview feedback'}
                         </Button>
-                        <p className="preview-state" role="status">
+                        <p className="preview-state">
                           {demo.selected.resolved
                             ? 'Resolved in this preview.'
                             : 'Needs attention · Demo only'}
@@ -295,14 +304,17 @@ export function ProductShowcase() {
                         </p>
                         <Button
                           disabled={!demo.customer.consent || demo.sent}
-                          onClick={demo.simulateSend}
+                          onClick={() => {
+                            demo.simulateSend();
+                            toast('Demo request created. No message was sent.');
+                          }}
                         >
                           <Send size={16} />
                           {demo.sent
                             ? 'Request simulated'
                             : 'Simulate preview request'}
                         </Button>
-                        <small role="status">
+                        <small>
                           {!demo.customer.consent
                             ? 'Consent is required before a request.'
                             : demo.sent
@@ -368,7 +380,12 @@ export function ProductShowcase() {
                         </Field>
                         <Button
                           disabled={!demo.draft.trim() || demo.approved}
-                          onClick={demo.approve}
+                          onClick={() => {
+                            demo.approve();
+                            toast(
+                              'Reply draft approved. Not published to Google.',
+                            );
+                          }}
                         >
                           <Check size={16} />
                           {demo.approved
@@ -376,7 +393,7 @@ export function ProductShowcase() {
                             : 'Approve preview draft'}
                         </Button>
                         {demo.approved && (
-                          <p className="preview-state" role="status">
+                          <p className="preview-state">
                             Approved for this preview. Nothing is published to
                             Google.
                           </p>

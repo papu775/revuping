@@ -1,6 +1,7 @@
 import './global.css';
 import './template.css';
 import { ThemeProvider } from '../components/theme';
+import { ToastProvider } from '../components/ui/toaster';
 import { DemoWorkspace } from '../components/demo-workspace';
 import { TemplateMotion } from '../components/template-motion';
 export const metadata = {
@@ -17,9 +18,11 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body>
         <ThemeProvider>
-          <DemoWorkspace>
-            <TemplateMotion>{children}</TemplateMotion>
-          </DemoWorkspace>
+          <ToastProvider>
+            <DemoWorkspace>
+              <TemplateMotion>{children}</TemplateMotion>
+            </DemoWorkspace>
+          </ToastProvider>
         </ThemeProvider>
       </body>
     </html>

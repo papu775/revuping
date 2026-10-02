@@ -7,12 +7,14 @@ import { Avatar } from './ui/avatar';
 import { Field } from './shared';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { InlineSpinner } from './ui/loading';
+import { useTransition, useState } from 'react';
 import { ArrowRight, Send, MessageSquare, Check } from 'lucide-react';
 import { Logo, Stars } from './shared';
 import { Button } from './ui/button';
 export function Auth({ signup = false }: { signup?: boolean }) {
   const router = useRouter();
+  const [pending, startTransition] = useTransition();
   const [error, setError] = useState('');
   const [password, setPassword] = useState('');
   return (
@@ -118,11 +120,12 @@ export function Auth({ signup = false }: { signup?: boolean }) {
           <form
             onSubmit={(e) => {
               e.preventDefault();
+              if (pending) return;
               if (password.length < 8) {
                 setError('Use at least 8 characters for this demo password.');
                 return;
               }
-              router.push('/dashboard');
+              startTransition(() => router.push('/dashboard'));
             }}
           >
             {signup && (
@@ -160,9 +163,25 @@ export function Auth({ signup = false }: { signup?: boolean }) {
                 {error}
               </p>
             )}
-            <Button type="submit" variant="secondary">
-              {signup ? 'Create demo workspace' : 'Enter demo workspace'}
-              <ArrowRight size={17} />
+            <Button
+              type="submit"
+              variant="secondary"
+              disabled={pending}
+              aria-busy={pending}
+            >
+              <span className="action-label">
+                <span className="reserved-label" aria-hidden="true">
+                  {signup ? 'Create demo workspace' : 'Enter demo workspace'}
+                </span>
+                <span>
+                  {pending
+                    ? 'Opening workspace…'
+                    : signup
+                      ? 'Create demo workspace'
+                      : 'Enter demo workspace'}
+                </span>
+              </span>
+              {pending ? <InlineSpinner /> : <ArrowRight size={17} />}
             </Button>
           </form>
           <p className="auth-switch">

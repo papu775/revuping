@@ -12,9 +12,21 @@ export function QrCode({
   decorative?: boolean;
 }) {
   const [svg, setSvg] = useState('');
+  const [error, setError] = useState(false);
+  const [attempt, setAttempt] = useState(0);
+  const [busy, setBusy] = useState(true);
   const foreground = printableColor(color);
   useEffect(() => {
     let active = true;
+    setBusy(true);
+    setError(false);
+    const deadline = setTimeout(() => {
+      if (active) {
+        active = false;
+        setError(true);
+        setBusy(false);
+      }
+    }, 10000);
     QRCode.toString(
       decorative
         ? 'RevuPing illustration: explore the demo to create a business QR card.'
@@ -26,19 +38,46 @@ export function QrCode({
         color: { dark: foreground, light: printPalette.paper },
         errorCorrectionLevel: 'M',
       },
-    ).then((value) => {
-      if (active) {
-        setSvg(value);
-        onReady?.(value);
-      }
-    });
+    )
+      .then((value) => {
+        if (active) {
+          clearTimeout(deadline);
+          setBusy(false);
+          setSvg(value);
+          onReady?.(value);
+        }
+      })
+      .catch(() => {
+        if (active) {
+          clearTimeout(deadline);
+          setBusy(false);
+          setError(true);
+        }
+      });
     return () => {
       active = false;
+      clearTimeout(deadline);
     };
-  }, [foreground, onReady, decorative]);
+  }, [foreground, onReady, decorative, attempt]);
+  if (error)
+    return (
+      <div className="qr-code" role="alert">
+        <p>QR preview could not load.</p>
+        <button onClick={() => setAttempt((value) => value + 1)}>
+          Retry QR preview
+        </button>
+      </div>
+    );
   return (
     <div
       className="qr-code"
+      style={{
+        minHeight: 220,
+        width: '100%',
+        maxWidth: 220,
+        marginInline: 'auto',
+      }}
+      aria-busy={busy}
       role="img"
       aria-label={
         decorative
