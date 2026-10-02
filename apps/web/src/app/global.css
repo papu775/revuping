@@ -314,150 +314,250 @@
   box-shadow: none;
 }
 
-/* Original pre-WebGL cards, with clear spacing and quiet brand curves. */
+/* Layered composition recovered from 2deed00; scoped to landing artwork. */
+.hero.wrap {
+  overflow: visible;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 60px;
+}
+.hero.wrap h1 {
+  font-weight: 400;
+  line-height: 1.12;
+  font-size: clamp(48px, 4.7vw, 68px);
+}
+.hero.wrap .hero-spark {
+  color: var(--muted);
+  font-size: 0.65em;
+  margin-left: 12px;
+}
+.hero-feedback-art {
+  container-type: inline-size;
+}
 .feedback-composition.hero-composition {
   position: relative;
   isolation: isolate;
-  display: grid;
-  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
-  gap: 18px;
-  align-items: center;
+  display: block;
   width: 100%;
-  height: auto;
-  min-height: 540px;
+  height: 550px;
+  overflow: clip;
+  min-height: 0;
   margin: 0;
-  padding: 40px 8px 24px;
+  padding: 0;
   transform: none;
 }
-.feedback-composition > svg {
-  z-index: -1;
-  opacity: 0.55;
-  pointer-events: none;
+.feedback-composition .orbit {
+  border-color: var(--accent-line);
+  opacity: 0.32;
+  z-index: 0;
+}
+.feedback-composition .orbit-one {
+  width: 88%;
+  height: 440px;
+  left: 4%;
+  top: 48px;
+}
+.feedback-composition .orbit-two {
+  width: 78%;
+  height: 490px;
+  left: 13%;
+  top: 25px;
 }
 .feedback-composition .composition-label {
-  position: absolute;
   top: 0;
-  left: 8px;
+  left: 18%;
+  font-size: 9px;
+  letter-spacing: 2px;
   color: var(--muted);
-  font-size: 12px;
 }
 .feedback-composition .salon-qr {
-  position: relative;
-  grid-column: 1;
-  grid-row: 1 / 4;
-  top: auto;
-  left: auto;
-  width: 100%;
-  padding: 24px 14px 0;
-  transform: none;
-  background: var(--surface-work);
+  --ink: inherit;
+  --muted: inherit;
+  --surface-work: inherit;
+  --surface-canvas: inherit;
+  --surface-soft: inherit;
+  --surface-selected: inherit;
+  --border: inherit;
+  --violet: inherit;
+  --warm-ink: inherit;
+  --positive-ink: inherit;
+  color-scheme: inherit;
+  display: block;
+  position: absolute;
+  top: 55px;
+  left: 24%;
+  width: 52%;
+  padding: 25px 22px 0;
+  transform: rotate(-7deg);
+  z-index: 1;
+  background: var(--surface-canvas);
   color: var(--ink);
   border: 1px solid var(--border);
-  box-shadow: 0 16px 40px var(--shadow-color);
+  box-shadow: 12px 25px 55px var(--shadow-color);
 }
 .feedback-composition .salon-wordmark {
-  font-size: 27px;
+  font-size: 28px;
+}
+.feedback-composition .salon-sub {
+  font-size: 10px;
 }
 .feedback-composition .hero-qr {
-  width: 100%;
-  max-width: 220px;
-  margin: 18px auto;
+  width: 155px;
+  max-width: 100%;
+  margin: 20px auto 14px;
+  background: white;
 }
 .feedback-composition .hero-qr .qr-code {
   background: white;
-  border-radius: 8px;
+  min-height: 0 !important;
+  aspect-ratio: 1;
 }
 .feedback-composition .salon-qr h3 {
   font-size: 20px;
 }
 .feedback-composition .salon-qr p {
-  font-size: 14px;
+  font-size: 12px;
+}
+.feedback-composition .qr-card-footer {
+  font-size: 9px;
+  padding: 14px 0;
 }
 .feedback-composition .floating-card {
-  position: relative;
-  grid-column: 2;
-  top: auto;
+  position: absolute;
   bottom: auto;
-  left: auto;
   right: auto;
-  width: 100%;
   margin: 0;
-  padding: 18px;
-  transform: none;
+  padding: 17px;
   background: var(--surface-work);
   color: var(--ink);
   border: 1px solid var(--border);
-  box-shadow: 0 10px 28px var(--shadow-color);
+  box-shadow: 0 14px 36px var(--shadow-color);
 }
 .feedback-composition .feedback-float {
-  grid-row: 1;
-  gap: 10px;
+  top: 118px;
+  left: 1%;
+  width: 61%;
+  transform: rotate(0deg);
+  z-index: 4;
+  gap: 12px;
 }
 .feedback-composition .request-float {
-  grid-row: 2;
+  top: 305px;
+  left: 3%;
+  width: 55%;
+  transform: rotate(-3deg);
+  z-index: 3;
 }
 .feedback-composition .reply-float {
-  grid-row: 3;
+  top: 365px;
+  left: 49%;
+  width: 50%;
+  transform: rotate(4deg);
+  z-index: 5;
 }
 .feedback-composition .floating-card p {
-  font-size: 14px;
+  font-size: 12px;
   line-height: 1.65;
   overflow-wrap: anywhere;
 }
 .feedback-composition .floating-card strong {
-  font-size: 15px;
-}
-.feedback-composition .floating-card small {
-  font-size: 11px;
-  letter-spacing: 0.6px;
-}
-.feedback-composition .reply-bottom {
-  gap: 8px;
   font-size: 12px;
 }
+.feedback-composition .floating-card small {
+  font-size: 7px;
+  letter-spacing: 1px;
+}
+.feedback-composition .feedback-float .muted {
+  font-size: 9px;
+}
 .feedback-composition .stars svg {
-  width: 15px;
-  height: 15px;
+  width: 11px;
+  height: 11px;
+}
+.feedback-composition .request-float .badge {
+  font-size: 9px;
+  padding: 3px 6px;
+}
+.feedback-composition .reply-bottom {
+  font-size: 9px;
+  gap: 8px;
 }
 .feedback-composition .composition-star {
-  display: none;
+  display: block;
+  position: absolute;
+  top: 80px;
+  right: 2%;
+  color: var(--muted);
+  font-size: 38px;
 }
 .feedback-composition .mini-journey {
-  position: relative;
-  grid-column: 1 / -1;
+  position: absolute;
   top: auto;
-  bottom: auto;
-  left: auto;
-  justify-self: center;
-  margin-top: 8px;
+  bottom: 0;
+  left: 7%;
+  font-size: 11px;
+  z-index: 6;
 }
 @media (max-width: 1100px) {
-  .feedback-composition.hero-composition {
+  .hero.wrap {
     grid-template-columns: minmax(0, 1fr);
-    min-height: 0;
-    padding-top: 36px;
-    gap: 16px;
+    gap: 40px;
+  }
+  .hero-feedback-art {
+    width: min(100%, 520px);
+    justify-self: center;
+  }
+}
+@container (max-width: 400px) {
+  .feedback-composition.hero-composition {
+    height: 525px;
   }
   .feedback-composition .salon-qr {
-    display: none;
+    left: 29%;
+    width: 60%;
+    padding: 20px 16px 0;
+  }
+  .feedback-composition .hero-qr {
+    width: 135px;
   }
   .feedback-composition .floating-card {
-    grid-column: 1;
+    padding: 12px;
+  }
+  .feedback-composition .feedback-float {
+    top: 105px;
+    left: 2%;
+    width: 78%;
+  }
+  .feedback-composition .request-float {
+    top: 285px;
+    left: 2%;
+    width: 72%;
+  }
+  .feedback-composition .reply-float {
+    top: 365px;
+    left: 22%;
+    width: 75%;
+  }
+  .feedback-composition .composition-label {
+    left: 4%;
+    font-size: 8px;
+  }
+  .feedback-composition .orbit-one {
+    height: 360px;
+  }
+  .feedback-composition .orbit-two {
+    height: 410px;
   }
   .feedback-composition .mini-journey {
-    grid-column: 1;
+    bottom: 0;
   }
 }
 @media (max-width: 600px) {
-  .feedback-composition .floating-card {
-    animation: none;
-    translate: none;
+  .hero.wrap {
+    padding-bottom: 65px;
   }
-  .feedback-composition .floating-card small {
-    font-size: 12px;
-  }
-  .feedback-composition > svg {
-    opacity: 0.25;
+  .hero.wrap h1 {
+    font-size: clamp(44px, 12vw, 60px);
+    letter-spacing: -2px;
   }
 }
 
@@ -1287,4 +1387,6 @@
   white-space: normal;
 }
 
-.product-detail { scroll-margin-top: 112px; }
+.product-detail {
+  scroll-margin-top: 112px;
+}

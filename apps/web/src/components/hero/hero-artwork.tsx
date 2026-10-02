@@ -12,8 +12,8 @@ import {
 } from 'lucide-react';
 import { Stars, Badge } from '../shared';
 import { QrCode } from '../qr-code';
-import { ConversationCurves } from '../conversation-curves';
-/** Recovered from the pre-WebGL landing composition in commit 9a59e5c. */
+
+/** Recovered from the original layered landing composition in commit 2deed00. */
 export function HeroArtwork() {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { amount: 0.15 });
@@ -33,10 +33,11 @@ export function HeroArtwork() {
         data-floating={!reduced && inView && visible ? 'running' : 'paused'}
         aria-label="Illustrative customer feedback, review request and reply previews"
       >
-        <ConversationCurves variant="hero" className="inset-0 size-full" />
+        <div className="orbit orbit-one" />
+        <div className="orbit orbit-two" />
 
         <span className="composition-label">
-          An illustrative customer journey
+          A LITTLE PING. A BIG DIFFERENCE.
         </span>
         <div className="salon-qr">
           <div className="salon-emblem">
@@ -58,7 +59,7 @@ export function HeroArtwork() {
             <MessageSquare size={18} />
           </span>
           <div>
-            <small>NEW PRIVATE FEEDBACK</small>
+            <small>A LITTLE FEEDBACK JUST ARRIVED</small>
             <Stars />
             <p>“Sophie made my day. Love my new colour!”</p>
             <span className="muted">
@@ -72,8 +73,8 @@ export function HeroArtwork() {
             <Send size={17} />
           </span>
           <div>
-            <strong>Review request ready</strong>
-            <p>Olivia Martin · Sample request</p>
+            <strong>A kind nudge, right on time.</strong>
+            <p>Your review request is ready.</p>
             <Badge mint>
               <Check size={11} /> Consent confirmed
             </Badge>
@@ -82,7 +83,7 @@ export function HeroArtwork() {
         <div className="floating-card reply-float">
           <div className="reply-heading">
             <Sparkles size={16} />
-            <strong>Editable reply draft</strong>
+            <strong>The right words, a little easier.</strong>
           </div>
           <p>“Thank you, Olivia! We’re so happy you love your new look…”</p>
           <div className="reply-bottom">
@@ -90,7 +91,9 @@ export function HeroArtwork() {
             <Check size={14} />
           </div>
         </div>
-        <span className="composition-star ping-mark" aria-hidden="true" />
+        <span className="composition-star" aria-hidden="true">
+          ✧
+        </span>
         <div
           className="mini-journey"
           aria-label="Product journey: scan, share feedback, prepare reply"

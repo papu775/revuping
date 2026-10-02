@@ -25,19 +25,21 @@ export default function Landing() {
         <section className="hero wrap relative isolate">
           <HeroIntro>
             <span className="eyebrow">
-              <span className="small-line" /> Reviews, feedback & replies
+              <span className="small-line" /> LESS ADMIN. MORE CONNECTION.
             </span>
             <h1>
-              Reviews &amp; feedback.
-              <br />
-              Less busywork.
-              <br />
-              <span>More connection.</span>
+              Good <br />
+              experiences <br />
+              deserve to be <br />
+              <span>heard.</span>{' '}
+              <span className="hero-spark" aria-hidden="true">
+                ✳
+              </span>
             </h1>
             <p>
-              Send review requests, collect private feedback, and prepare
-              thoughtful replies in one organised workspace. Built for salons
-              and the local businesses people love.
+              A thoughtful way to collect feedback, ask for reviews, and keep
+              customer conversations moving. All while you get back to what you
+              do best.
             </p>
             <div className="hero-actions">
               <Button asChild>

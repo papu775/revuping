@@ -27,8 +27,8 @@ const artifacts = process.env.HERO_ARTIFACTS || '/tmp/revuping-feedback-hero';
         await expect(scene).toContainText(
           'Sophie made my day. Love my new colour!',
         );
-        await expect(scene).toContainText('Review request ready');
-        await expect(scene).toContainText('Editable reply draft');
+        await expect(scene).toContainText('A kind nudge, right on time.');
+        await expect(scene).toContainText('The right words, a little easier.');
         await expect(
           page.getByRole('link', { name: 'Try the demo', exact: true }).last(),
         ).toBeVisible();
@@ -56,18 +56,39 @@ const artifacts = process.env.HERO_ARTIFACTS || '/tmp/revuping-feedback-hero';
           )
             throw new Error('Clipped or overflowing card');
         }
-        for (let i = 0; i < nodes.length; i++)
-          for (let j = i + 1; j < nodes.length; j++) {
-            const a = nodes[i],
-              b = nodes[j];
-            if (
-              a.x < b.right &&
-              a.right > b.x &&
-              a.y < b.bottom &&
-              a.bottom > b.y
-            )
-              throw new Error('Overlapping cards');
-          }
+        await expect(page.locator('h1')).toHaveText(
+          'Good experiences deserve to be heard. ✳',
+        );
+        await expect(scene.locator('.salon-qr')).toBeVisible();
+        const qr = await scene.locator('.salon-qr').boundingBox();
+        const sceneBox = await scene.boundingBox();
+        expect(qr.y + qr.height).toBeLessThanOrEqual(
+          sceneBox.y + sceneBox.height,
+        );
+        for (const card of nodes)
+          expect(card.bottom).toBeLessThanOrEqual(sceneBox.y + sceneBox.height);
+        if (theme === 'dark')
+          await expect(scene.locator('.salon-qr')).toHaveCSS(
+            'background-color',
+            'rgb(18, 21, 33)',
+          );
+        expect(
+          nodes.some(
+            (card) =>
+              card.x < qr.x + qr.width &&
+              card.right > qr.x &&
+              card.y < qr.y + qr.height &&
+              card.bottom > qr.y,
+          ),
+        ).toBe(true);
+        const copyBox = await page.locator('.hero-copy').boundingBox();
+        expect(
+          nodes.every(
+            (card) =>
+              card.y >= copyBox.y + copyBox.height ||
+              card.x >= copyBox.x + copyBox.width,
+          ),
+        ).toBe(true);
         expect(
           await page.evaluate(
             () => document.documentElement.scrollWidth <= innerWidth,
@@ -129,7 +150,7 @@ const artifacts = process.env.HERO_ARTIFACTS || '/tmp/revuping-feedback-hero';
         await context.close();
       }
     console.log(
-      'PASS: original feedback/request/reply cards, no hero canvas, no overlapping/clipped cards or horizontal overflow, distinct bounded 6px floating, stationary hero copy, reduced motion, both themes at 390/768/1440 and functional QR download.',
+      'PASS: original feedback/request/reply cards, no hero canvas, layered overlapping QR composition without clipped cards or horizontal overflow, distinct bounded 6px floating, stationary hero copy, reduced motion, both themes at 390/768/1440 and functional QR download.',
     );
   } finally {
     await browser.close();
