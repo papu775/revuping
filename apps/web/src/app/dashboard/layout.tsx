@@ -11,6 +11,8 @@ import {
   MessageSquare,
   Send,
   Star,
+  Users,
+  ChevronDown,
   Menu,
   X,
   ArrowUpRight,
@@ -19,15 +21,20 @@ import {
 import { ThemeControl } from '../../components/theme';
 import { Select } from '../../components/ui/select';
 import { Logo } from '../../components/shared';
-import { navItems } from '../../lib/mock-data';
-const icons = [LayoutDashboard, QrCode, MessageSquare, Send, Star];
+import { navigationGroups, sectionLabel } from '../../lib/product-data';
+const icons = {
+  Reputation: QrCode,
+  Campaigns: Send,
+  Insights: Star,
+  'Tools & settings': Leaf,
+};
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   const path = usePathname();
-  const { feedbackItems } = useDemoWorkspace();
+  const { feedbackItems, product, updateProduct } = useDemoWorkspace();
   const attention = feedbackItems.filter((item) => !item.resolved).length;
   const reduced = useReducedMotion();
   const [mobile, setMobile] = useState(false);
@@ -63,8 +70,10 @@ export default function DashboardLayout({
       if (event.key === 'Escape') setOpen(false);
       if (event.key !== 'Tab' || !sidebar) return;
       const focusable = [
-        ...sidebar.querySelectorAll<HTMLElement>('a, button'),
-      ].filter((element) => element.tabIndex >= 0 && element.getClientRects().length);
+        ...sidebar.querySelectorAll<HTMLElement>('a, button, summary'),
+      ].filter(
+        (element) => element.tabIndex >= 0 && element.getClientRects().length,
+      );
       const first = focusable[0],
         last = focusable[focusable.length - 1];
       if (event.shiftKey && document.activeElement === first) {
@@ -81,7 +90,8 @@ export default function DashboardLayout({
       previous?.focus();
     };
   }, [open]);
-  const [location, setLocation] = useState('Bloom & Co. · Notting Hill');
+  const location = product.location;
+  const setLocation = (location: string) => updateProduct({ location });
   return (
     <div className="dashboard-shell flex min-h-screen bg-canvas">
       <AnimatePresence initial={false}>
@@ -110,26 +120,71 @@ export default function DashboardLayout({
                 <Leaf size={19} />
               </span>
               <div>
-                <strong>Bloom & Co.</strong>
-                <small>Salon & beauty</small>
+                <strong title={product.business.name}>
+                  {product.business.name}
+                </strong>
+                <small>{product.business.category}</small>
               </div>
             </div>
-            <span className="sidebar-label">Your workspace</span>
-            <nav>
-              {navItems.map(([label, href], i) => {
-                const Icon = icons[i];
+            <nav className="workspace-nav" aria-label="Product navigation">
+              <Link
+                href="/dashboard"
+                className={path === '/dashboard' ? 'active' : ''}
+                aria-current={path === '/dashboard' ? 'page' : undefined}
+                onClick={() => setOpen(false)}
+              >
+                <LayoutDashboard size={19} />
+                Overview
+              </Link>
+              <Link
+                href="/dashboard/customers"
+                className={path === '/dashboard/customers' ? 'active' : ''}
+                aria-current={
+                  path === '/dashboard/customers' ? 'page' : undefined
+                }
+                onClick={() => setOpen(false)}
+              >
+                <Users size={19} />
+                Customers
+              </Link>
+              {navigationGroups.map((group) => {
+                const Icon = icons[group.label as keyof typeof icons];
                 return (
-                  <Link
-                    key={href}
-                    href={href}
-                    className={path === href ? 'active' : ''}
-                    aria-current={path === href ? 'page' : undefined}
-                    onClick={() => setOpen(false)}
+                  <details
+                    key={group.label}
+                    open={group.items.some(
+                      ([, section]) => path === `/dashboard/${section}`,
+                    )}
                   >
-                    <Icon size={19} />
-                    {label}
-                    {i === 2 && <span className="nav-count">{attention}</span>}
-                  </Link>
+                    <summary>
+                      <Icon size={18} />
+                      <span>{group.label}</span>
+                      <ChevronDown size={15} />
+                    </summary>
+                    {group.items.map(([label, section]) => (
+                      <Link
+                        key={section}
+                        href={`/dashboard/${section}`}
+                        className={
+                          path === `/dashboard/${section}` ? 'active' : ''
+                        }
+                        aria-current={
+                          path === `/dashboard/${section}` ? 'page' : undefined
+                        }
+                        onClick={() => setOpen(false)}
+                      >
+                        {section === 'feedback' ? (
+                          <MessageSquare size={16} />
+                        ) : (
+                          <span className="nav-item-dot" aria-hidden="true" />
+                        )}
+                        {label}
+                        {section === 'feedback' && (
+                          <span className="nav-count">{attention}</span>
+                        )}
+                      </Link>
+                    ))}
+                  </details>
                 );
               })}
             </nav>
@@ -140,7 +195,8 @@ export default function DashboardLayout({
                 <p>
                   You’re exploring a demo.
                   <br />
-                  Fictional data. Changes reset on reload.
+                  Contacts and comments reset on reload. Safe display
+                  preferences stay local.
                 </p>
                 <Link href="/r/demo-salon">
                   See the customer view <ArrowUpRight size={14} />
@@ -181,9 +237,7 @@ export default function DashboardLayout({
             </button>
             <span>
               Workspace <span className="breadcrumb-slash">/</span>{' '}
-              <strong>
-                {navItems.find(([, href]) => href === path)?.[0] || 'Overview'}
-              </strong>
+              <strong>{sectionLabel(path)}</strong>
             </span>
           </div>
           <div className="topbar-right !gap-2">
@@ -196,11 +250,12 @@ export default function DashboardLayout({
               className="w-[210px] max-[800px]:w-[180px] max-[600px]:w-[140px]"
               icon={<Leaf size={15} className="max-[600px]:hidden" />}
               options={[
-                { value: 'Bloom & Co. · Notting Hill', label: 'Notting Hill' },
+                { value: 'Notting Hill', label: 'Notting Hill' },
+                { value: 'All locations', label: 'All sample locations' },
                 {
-                  value: 'Bloom & Co. · Richmond (sample)',
+                  value: 'Richmond',
                   label: 'Richmond (sample)',
-                  description: 'Same illustrative dataset',
+                  description: 'Separate sample report fixtures',
                 },
               ]}
             />
@@ -210,8 +265,8 @@ export default function DashboardLayout({
           {location.includes('Richmond') && (
             <div className="info-banner">
               <p>
-                Richmond location preview selected. Both locations use the same
-                illustrative dataset in this prototype.
+                Richmond location preview selected. Reports show a separate
+                fictional dataset. Other screens share the demo workspace.
               </p>
             </div>
           )}

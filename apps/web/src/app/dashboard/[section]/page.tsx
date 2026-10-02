@@ -1,3 +1,5 @@
+import { ProductModule } from '../../../components/product';
+import { productSections } from '../../../lib/product-data';
 import { notFound } from 'next/navigation';
 import {
   QrStudio,
@@ -6,22 +8,44 @@ import {
   Reviews,
 } from '../../../components/dashboard';
 export function generateStaticParams() {
-  return ['qr', 'feedback', 'requests', 'reviews'].map((section) => ({
-    section,
-  }));
+  return ['qr', 'feedback', 'requests', 'reviews', ...productSections].map(
+    (section) => ({
+      section,
+    }),
+  );
 }
 export default async function Page({
   params,
   searchParams,
 }: {
   params: Promise<{ section: string }>;
-  searchParams: Promise<{ add?: string; status?: string }>;
+  searchParams: Promise<{
+    add?: string;
+    status?: string;
+    item?: string;
+    staff?: string;
+  }>;
 }) {
   const { section } = await params;
+  const search = await searchParams;
+  if (productSections.some((item) => item === section))
+    return (
+      <ProductModule
+        section={section}
+        selectedId={search.item ? Number(search.item) : undefined}
+      />
+    );
+  if (section === 'reviews')
+    return (
+      <Reviews initialId={search.item ? Number(search.item) : undefined} />
+    );
   if (section === 'feedback')
     return (
       <FeedbackInbox
-        initialAttention={(await searchParams).status === 'attention'}
+        initialAttention={search.status === 'attention'}
+        initialOverdue={search.status === 'overdue'}
+        initialId={search.item ? Number(search.item) : undefined}
+        initialQuery={search.staff || ''}
       />
     );
   if (section === 'requests')

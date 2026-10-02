@@ -236,6 +236,9 @@ export default function CustomerPage() {
             </p>
           </>
         )}
+        <Link href="/survey/demo-salon" className="customer-back">
+          Preview the optional customer survey →
+        </Link>
         <div className="customer-powered">
           Powered by <Link href="/">revuping.</Link>
         </div>

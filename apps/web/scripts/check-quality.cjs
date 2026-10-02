@@ -31,10 +31,26 @@ const artifacts =
       .getByRole('button', { name: 'Mark as resolved', exact: true })
       .click();
     await page.getByRole('link', { name: 'Overview', exact: true }).click();
+    await expect(page).toHaveURL(base + '/dashboard');
+    await expect(
+      page.getByRole('heading', { name: 'Business overview', exact: true }),
+    ).toBeVisible();
     await expect(page.locator('.overview-welcome')).toContainText(
       '2 feedback responses need attention',
     );
     await expect(page.locator('.nav-count')).toHaveText('2');
+    await page.waitForLoadState('networkidle');
+    if (
+      !(await page
+        .locator('.workspace-nav a')
+        .filter({ hasText: 'Feedback inbox' })
+        .first()
+        .isVisible())
+    )
+      await page
+        .locator('.workspace-nav summary')
+        .filter({ hasText: 'Reputation' })
+        .click();
     await page
       .getByRole('link', { name: /Feedback inbox/ })
       .first()
@@ -63,6 +79,18 @@ const artifacts =
     await expect(page.locator('.overview-welcome')).toContainText(
       '4 feedback responses need attention',
     );
+    await page.waitForLoadState('networkidle');
+    if (
+      !(await page
+        .locator('.workspace-nav a')
+        .filter({ hasText: 'Feedback inbox' })
+        .first()
+        .isVisible())
+    )
+      await page
+        .locator('.workspace-nav summary')
+        .filter({ hasText: 'Reputation' })
+        .click();
     await page
       .getByRole('link', { name: /Feedback inbox/ })
       .first()
@@ -83,6 +111,19 @@ const artifacts =
       fullPage: true,
     });
     await page.setViewportSize({ width: 1440, height: 1000 });
+    await expect(page.locator('.workspace-nav')).toBeVisible();
+    await page.waitForLoadState('networkidle');
+    if (
+      !(await page
+        .locator('.workspace-nav a')
+        .filter({ hasText: 'Google reviews' })
+        .first()
+        .isVisible())
+    )
+      await page
+        .locator('.workspace-nav summary')
+        .filter({ hasText: 'Reputation' })
+        .click();
     await page
       .getByRole('link', { name: 'Google reviews', exact: true })
       .click();
@@ -92,9 +133,33 @@ const artifacts =
     await page
       .getByRole('button', { name: 'Approve demo draft', exact: true })
       .click();
+    await page.waitForLoadState('networkidle');
+    if (
+      !(await page
+        .locator('.workspace-nav a')
+        .filter({ hasText: 'QR code studio' })
+        .first()
+        .isVisible())
+    )
+      await page
+        .locator('.workspace-nav summary')
+        .filter({ hasText: 'Reputation' })
+        .click();
     await page
       .getByRole('link', { name: 'QR code studio', exact: true })
       .click();
+    await page.waitForLoadState('networkidle');
+    if (
+      !(await page
+        .locator('.workspace-nav a')
+        .filter({ hasText: 'Google reviews' })
+        .first()
+        .isVisible())
+    )
+      await page
+        .locator('.workspace-nav summary')
+        .filter({ hasText: 'Reputation' })
+        .click();
     await page
       .getByRole('link', { name: 'Google reviews', exact: true })
       .click();
@@ -110,6 +175,18 @@ const artifacts =
     await expect(
       page.getByRole('button', { name: 'Approve demo draft', exact: true }),
     ).toBeEnabled();
+    await page.waitForLoadState('networkidle');
+    if (
+      !(await page
+        .locator('.workspace-nav a')
+        .filter({ hasText: 'Review requests' })
+        .first()
+        .isVisible())
+    )
+      await page
+        .locator('.workspace-nav summary')
+        .filter({ hasText: 'Campaigns' })
+        .click();
     await page
       .getByRole('link', { name: 'Review requests', exact: true })
       .click();
@@ -159,6 +236,22 @@ const artifacts =
       .getByRole('button', { name: 'Back to customers', exact: true })
       .click();
     await page.getByRole('link', { name: 'Overview', exact: true }).click();
+    await expect(page).toHaveURL(base + '/dashboard');
+    await expect(
+      page.getByRole('heading', { name: 'Business overview', exact: true }),
+    ).toBeVisible();
+    await page.waitForLoadState('networkidle');
+    if (
+      !(await page
+        .locator('.workspace-nav a')
+        .filter({ hasText: 'Review requests' })
+        .first()
+        .isVisible())
+    )
+      await page
+        .locator('.workspace-nav summary')
+        .filter({ hasText: 'Campaigns' })
+        .click();
     await page
       .getByRole('link', { name: 'Review requests', exact: true })
       .click();
@@ -234,6 +327,19 @@ const artifacts =
       }
     }
     await page.setViewportSize({ width: 1440, height: 1000 });
+    await expect(page.locator('.workspace-nav')).toBeVisible();
+    await page.waitForLoadState('networkidle');
+    if (
+      !(await page
+        .locator('.workspace-nav a')
+        .filter({ hasText: 'QR code studio' })
+        .first()
+        .isVisible())
+    )
+      await page
+        .locator('.workspace-nav summary')
+        .filter({ hasText: 'Reputation' })
+        .click();
     await page
       .getByRole('link', { name: 'QR code studio', exact: true })
       .click();

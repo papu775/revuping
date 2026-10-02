@@ -1,4 +1,10 @@
 'use client';
+import { withDeadline } from '../lib/async-actions';
+import { PageHeading } from './ui/page-heading';
+export { PageHeading } from './ui/page-heading';
+import { OwnerTasks } from './product/overview';
+import { FollowUpEditor } from './product/follow-up';
+import { followUpFor, demoDate } from '../lib/product-data';
 import { InlineSpinner } from './ui/loading';
 import { useToast } from './ui/toaster';
 import { useDemoWorkspace } from './demo-workspace';
@@ -42,22 +48,7 @@ import {
   sampleTrend,
   sampleRequestText,
 } from '../lib/mock-data';
-async function withDeadline<T>(work: Promise<T>): Promise<T> {
-  let timer: ReturnType<typeof setTimeout> | undefined;
-  try {
-    return await Promise.race([
-      work,
-      new Promise<never>((_, reject) => {
-        timer = setTimeout(
-          () => reject(new Error('Operation timed out')),
-          10000,
-        );
-      }),
-    ]);
-  } finally {
-    clearTimeout(timer);
-  }
-}
+
 export function SessionNotice({ children }: { children: React.ReactNode }) {
   const reduced = useReducedMotion();
   return (
@@ -73,40 +64,39 @@ export function SessionNotice({ children }: { children: React.ReactNode }) {
     </motion.p>
   );
 }
-export function PageHeading({
-  eyebrow,
-  title,
-  text,
-  children,
-}: {
-  eyebrow: string;
-  title: string;
-  text: string;
-  children?: React.ReactNode;
-}) {
-  return (
-    <div className="page-heading mb-7 flex flex-wrap items-end justify-between gap-5 max-md:items-start">
-      <div>
-        <span className="eyebrow">{eyebrow}</span>
-        <h1 className="mt-2 text-[30px] font-semibold leading-tight tracking-[-1px] max-md:text-[28px]">
-          {title}
-        </h1>
-        <p className="mt-2 max-w-[620px] text-[15px] leading-7 text-muted">
-          {text}
-        </p>
-      </div>
-      {children}
-    </div>
-  );
-}
 export function Overview() {
-  const { feedbackItems, addedFeedbackCount } = useDemoWorkspace();
+  const { feedbackItems, addedFeedbackCount, product, customerItems } =
+    useDemoWorkspace();
   const attention = feedbackItems.filter((item) => !item.resolved).length;
-  const [checks, setChecks] = useState([true, true, false, false]);
+  const setup = [
+    {
+      label: 'Complete business onboarding',
+      href: '/dashboard/onboarding',
+      complete: product.business.onboarded,
+    },
+    {
+      label: 'Record customer consent',
+      href: '/dashboard/customers',
+      complete: customerItems.some((customer) => customer.consent),
+    },
+    {
+      label: 'Inspect a request schedule',
+      href: '/dashboard/campaigns?item=1',
+      complete: product.campaigns.some(
+        (campaign) => campaign.status === 'Scheduled',
+      ),
+    },
+    {
+      label: 'Preview a Google connection',
+      href: '/dashboard/integrations',
+      complete: product.connections.Google === 'Demo-connected',
+    },
+  ];
+  const completedSetup = setup.filter((item) => item.complete).length;
   return (
     <>
       <PageHeading
-        eyebrow="Bloom & Co. · Demo workspace"
+        eyebrow={`${product.business.name} · Demo workspace`}
         title="Business overview"
         text="Track customer activity, follow up on feedback, and manage review requests."
       >
@@ -135,6 +125,7 @@ export function Overview() {
           Review unresolved feedback
         </TextLink>
       </div>
+      <OwnerTasks />
       <div className="metric-grid">
         {overviewMetrics.map((m) => (
           <div className="metric" key={m.label}>
@@ -223,36 +214,27 @@ export function Overview() {
           <div className="panel-heading">
             <div>
               <h2>Complete your setup</h2>
-              <p>Your salon setup checklist</p>
+              <p>Readiness from shared demo state</p>
             </div>
-            <span className="setup-fraction">
-              {checks.filter(Boolean).length}/4
-            </span>
+            <span className="setup-fraction">{completedSetup}/4</span>
           </div>
           <div className="progress-track">
-            <span style={{ width: `${checks.filter(Boolean).length * 25}%` }} />
+            <span style={{ width: `${completedSetup * 25}%` }} />
           </div>
-          {[
-            'Add your business details',
-            'Choose your QR style',
-            'Add a consenting customer',
-            'Preview your first request',
-          ].map((label, i) => (
-            <label className="checklist-item" key={label}>
-              <input
-                type="checkbox"
-                checked={checks[i]}
-                onChange={() =>
-                  setChecks(checks.map((v, n) => (n === i ? !v : v)))
-                }
-              />
-              <span>{label}</span>
-            </label>
+          {setup.map((item) => (
+            <Link href={item.href} className="checklist-item" key={item.label}>
+              <span
+                className="setup-state"
+                aria-label={item.complete ? 'Ready in demo' : 'Setup needed'}
+              >
+                {item.complete ? <Check size={17} /> : <ArrowRight size={17} />}
+              </span>
+              <span>{item.label}</span>
+            </Link>
           ))}
-          {checks.every(Boolean) && (
+          {completedSetup === 4 && (
             <p className="setup-complete" role="status">
-              <span className="ping-mark" aria-hidden="true" />
-              Demo checklist complete. Try your customer page.
+              Demo checklist complete. All connections remain simulated.
             </p>
           )}
           <TextLink href="/dashboard/qr">Visit your QR studio</TextLink>
@@ -270,7 +252,7 @@ export function Overview() {
           {feedbackItems.slice(0, 3).map((f) => (
             <Link
               className="activity-item"
-              href="/dashboard/feedback"
+              href={`/dashboard/feedback?item=${f.id}`}
               key={f.id}
             >
               <Avatar initials={f.initials} tone="lavender" />
@@ -332,8 +314,9 @@ export function Overview() {
   );
 }
 export function QrStudio() {
+  const { product } = useDemoWorkspace();
   const toast = useToast();
-  const [name, setName] = useState('Bloom & Co.');
+  const [name, setName] = useState(product.business.name);
   const [text, setText] = useState('How was your visit?');
   const [color, setColor] = useState('#6250b5');
   const [template, setTemplate] = useState('Counter card');
@@ -670,20 +653,32 @@ export function QrStudio() {
 }
 export function FeedbackInbox({
   initialAttention = false,
+  initialOverdue = false,
+  initialId,
+  initialQuery = '',
 }: {
   initialAttention?: boolean;
+  initialOverdue?: boolean;
+  initialId?: number;
+  initialQuery?: string;
 }) {
   const {
     feedbackItems: items,
     setFeedbackItems: setItems,
     notes,
     setNotes,
+    product,
+    updateProduct,
   } = useDemoWorkspace();
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState(initialQuery);
   const [filter, setFilter] = useState(
-    initialAttention ? 'Needs attention' : 'All feedback',
+    initialOverdue
+      ? 'Overdue'
+      : initialAttention
+        ? 'Needs attention'
+        : 'All feedback',
   );
-  const [selected, setSelected] = useState(1);
+  const [selected, setSelected] = useState(initialId || 1);
   const toast = useToast();
   const [saved, setSaved] = useState<number | null>(null);
   const loading = false;
@@ -691,7 +686,13 @@ export function FeedbackInbox({
     (f) =>
       (filter === 'All feedback' ||
         (filter === 'Needs attention' && !f.resolved) ||
-        (filter === 'Resolved' && f.resolved)) &&
+        (filter === 'Resolved' && f.resolved) ||
+        (filter === 'In progress' &&
+          product.followUps[f.id]?.status === 'In progress') ||
+        (filter === 'Overdue' &&
+          !f.resolved &&
+          !!(product.followUps[f.id] || followUpFor(f.id)).due &&
+          (product.followUps[f.id] || followUpFor(f.id)).due < demoDate)) &&
       `${f.name} ${f.text} ${f.staff}`
         .toLowerCase()
         .includes(query.toLowerCase()),
@@ -731,7 +732,13 @@ export function FeedbackInbox({
           value={filter}
           onValueChange={setFilter}
           icon={<SlidersHorizontal size={16} />}
-          options={['All feedback', 'Needs attention', 'Resolved'].map((v) => ({
+          options={[
+            'All feedback',
+            'Needs attention',
+            'In progress',
+            'Overdue',
+            'Resolved',
+          ].map((v) => ({
             value: v,
             label: v,
           }))}
@@ -844,9 +851,35 @@ export function FeedbackInbox({
               <p className="field-help">
                 Internal demo note. Not sent to the customer.
               </p>
+              <FollowUpEditor
+                key={`${detail.id}-${detail.resolved}`}
+                id={detail.id}
+                resolved={detail.resolved}
+              />
               <div className="detail-actions">
                 <Button
                   onClick={() => {
+                    const plan =
+                      product.followUps[detail.id] ||
+                      followUpFor(detail.id, detail.resolved);
+                    updateProduct((state) => ({
+                      ...state,
+                      followUps: {
+                        ...state.followUps,
+                        [detail.id]: {
+                          ...plan,
+                          status: detail.resolved ? 'Open' : 'Resolved',
+                          summary:
+                            plan.summary || 'Resolved in this demo session.',
+                          history: [
+                            ...plan.history,
+                            detail.resolved
+                              ? 'Reopened in demo'
+                              : 'Marked resolved in demo',
+                          ],
+                        },
+                      },
+                    }));
                     toast(
                       detail.resolved
                         ? 'Feedback reopened'
@@ -869,6 +902,22 @@ export function FeedbackInbox({
                   disabled={!notes[detail.id]?.trim()}
                   onClick={() => {
                     setSaved(detail.id);
+                    const plan =
+                      product.followUps[detail.id] ||
+                      followUpFor(detail.id, detail.resolved);
+                    updateProduct((state) => ({
+                      ...state,
+                      followUps: {
+                        ...state.followUps,
+                        [detail.id]: {
+                          ...plan,
+                          history: [
+                            ...plan.history,
+                            'Internal note saved in this demo',
+                          ],
+                        },
+                      },
+                    }));
                     toast('Note saved');
                   }}
                 >
@@ -1175,10 +1224,10 @@ export function Requests({ initialAdd = false }: { initialAdd?: boolean }) {
     </>
   );
 }
-export function Reviews() {
+export function Reviews({ initialId }: { initialId?: number } = {}) {
   const toast = useToast();
   const [rating, setRating] = useState('All ratings');
-  const [selected, setSelected] = useState(1);
+  const [selected, setSelected] = useState(initialId || 1);
   const { drafts, setDrafts, approved, setApproved } = useDemoWorkspace();
   const visible = reviews.filter(
     (r) => rating === 'All ratings' || r.rating === Number(rating),

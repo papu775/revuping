@@ -89,6 +89,55 @@ export default function Landing() {
           </div>
         </section>
         <ProductShowcase />
+        <section className="section wrap">
+          <Reveal>
+            <SectionTitle
+              eyebrow="Explore the working demo"
+              title="A clearer picture of every customer conversation."
+              text="Try connected sample workflows, from permission-based outreach to follow-up and reporting. Everything here uses fictional data."
+            />
+          </Reveal>
+          <div className="product-journey">
+            {[
+              {
+                icon: <Send size={28} />,
+                title: 'Plan thoughtful outreach',
+                text: 'Select eligible customers, preview a request and set reminder rules. Repeat-visit messages have their own workflow.',
+                href: '/dashboard/campaigns',
+                action: 'Build a demo campaign',
+              },
+              {
+                icon: <MessageSquare size={28} />,
+                title: 'Listen, then follow through',
+                text: 'Explore customer surveys, assign private feedback and keep notes and resolution history together.',
+                href: '/dashboard/surveys',
+                action: 'Explore demo surveys',
+              },
+              {
+                icon: <Sparkles size={28} />,
+                title: 'See the context behind counts',
+                text: 'Filter sample reports by date and location. Link clicks and confirmed review fixtures are shown separately.',
+                href: '/dashboard/reports',
+                action: 'View sample reports',
+              },
+            ].map((item) => (
+              <article key={item.href}>
+                <span className="eyebrow">INTERACTIVE DEMO</span>
+                <div className="mt-5 text-[var(--violet)]">{item.icon}</div>
+                <h3>{item.title}</h3>
+                <p>{item.text}</p>
+                <Link className="product-action-link" href={item.href}>
+                  <span>{item.action}</span>
+                  <ArrowRight size={17} />
+                </Link>
+              </article>
+            ))}
+          </div>
+          <p className="field-help mt-6">
+            Live messaging, Google connections, production widgets and billing
+            are planned integrations. Demo actions stay in this frontend.
+          </p>
+        </section>
         <section
           id="how-it-works"
           className="section wrap relative isolate overflow-hidden"

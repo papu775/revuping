@@ -229,6 +229,17 @@ const base = process.env.PROTOTYPE_URL || 'http://localhost:3000';
   await expect(page).toHaveURL(base + '/dashboard');
   await page.setViewportSize({ width: 390, height: 844 });
   await page.getByRole('button', { name: 'Open navigation' }).click();
+  if (
+    !(await page
+      .locator('.workspace-nav a')
+      .filter({ hasText: 'QR code studio' })
+      .first()
+      .isVisible())
+  )
+    await page
+      .locator('.workspace-nav summary')
+      .filter({ hasText: 'Reputation' })
+      .click();
   await page.getByRole('link', { name: 'QR code studio', exact: true }).click();
   await expect(page).toHaveURL(base + '/dashboard/qr');
   await page.emulateMedia({ reducedMotion: 'reduce' });
@@ -330,11 +341,10 @@ const base = process.env.PROTOTYPE_URL || 'http://localhost:3000';
   await page.getByRole('button', { name: 'Hide password' }).click();
   await page.getByRole('button', { name: 'Create demo workspace' }).click();
   await expect(page).toHaveURL(base + '/dashboard');
-  for (const checkbox of await page.getByRole('checkbox').all())
-    await checkbox.check();
-  await expect(page.getByRole('status')).toContainText(
-    'Demo checklist complete',
-  );
+  await expect(
+    page.getByRole('link', { name: 'Complete business onboarding' }),
+  ).toBeVisible();
+  await expect(page.locator('.setup-fraction')).toHaveText('2/4');
   expect(errors).toEqual([]);
   await require('./check-motion.cjs')(browser, base);
   await browser.close();

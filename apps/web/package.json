@@ -47,6 +47,12 @@
         "options": {
           "command": "node apps/web/scripts/check-notifications.cjs"
         }
+      },
+      "product-check": {
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "node apps/web/scripts/check-product.cjs"
+        }
       }
     }
   },

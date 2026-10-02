@@ -142,9 +142,9 @@ export const demoPlans: {
   featured?: boolean;
 }[] = [
   {
-    name: 'Starter',
+    name: 'Essentials',
     price: 'TBD',
-    desc: 'For one chair, one counter, one great start.',
+    desc: 'For a single business location.',
     features: [
       'Single-location concept',
       'Branded review QR codes',
@@ -153,23 +153,23 @@ export const demoPlans: {
     ],
   },
   {
-    name: 'Grow',
+    name: 'Growth',
     price: 'TBD',
-    desc: 'For busy teams with more stories to hear.',
+    desc: 'For teams exploring outreach and follow-up.',
     features: [
-      'Everything in Starter',
+      'Everything in Essentials',
       'Request limits to be confirmed',
       'Reminder previews',
-      'AI-assisted reply drafts',
+      'Reply draft previews',
     ],
     featured: true,
   },
   {
-    name: 'Together',
+    name: 'Multiple locations',
     price: 'TBD',
-    desc: 'A little more room for every location.',
+    desc: 'For owners planning across several locations.',
     features: [
-      'Everything in Grow',
+      'Everything in Growth',
       'Multiple business locations',
       'Request limits to be confirmed',
       'Location-level insights',

@@ -190,6 +190,13 @@ export function Auth({ signup = false }: { signup?: boolean }) {
               {signup ? 'Log in to the demo' : 'Explore signup'}
             </Link>
           </p>
+          {signup && (
+            <p className="auth-switch">
+              <Link href="/dashboard/onboarding">
+                Preview business onboarding →
+              </Link>
+            </p>
+          )}
           <p className="auth-disclaimer">
             This is a frontend prototype. Form values are not transmitted or
             stored, and no real authentication takes place.
