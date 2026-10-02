@@ -1,8 +1,8 @@
 'use client';
-import { useToast } from './ui/toaster';
-import { Avatar } from './ui/avatar';
-import { Field } from './shared';
-import { AnimatedHeight } from './template-motion';
+import { useToast } from '@/components/ui/toaster';
+import { Avatar } from '@/components/ui/avatar';
+import { Field } from '@/components/shared';
+import { AnimatedHeight } from '@/components/template-motion';
 import Link from 'next/link';
 import { useState } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
@@ -17,10 +17,10 @@ import {
   Leaf,
   QrCode,
 } from 'lucide-react';
-import { Button } from './ui/button';
-import { Badge, Stars, Reveal } from './shared';
-import { customers, reviews } from '../lib/mock-data';
-import { usePreviewDemo } from '../lib/use-preview-demo';
+import { Button } from '@/components/ui/button';
+import { Badge, Stars, Reveal } from '@/components/shared';
+import { customers, reviews } from '@/data-access/mock-data';
+import { usePreviewDemo } from '@/features/marketing/use-preview-demo';
 
 const views = [
   {

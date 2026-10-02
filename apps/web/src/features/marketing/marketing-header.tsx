@@ -3,10 +3,10 @@ import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { ArrowUpRight, Menu, X } from 'lucide-react';
-import { Logo } from './shared';
-import { SectionLink, scrollToSection } from './ui/section-link';
-import { ThemeControl } from './theme';
-import { Button } from './ui/button';
+import { Logo } from '@/components/shared';
+import { SectionLink, scrollToSection } from '@/components/ui/section-link';
+import { ThemeControl } from '@/components/theme';
+import { Button } from '@/components/ui/button';
 const links = [
   ['Features', '#features'],
   ['How it works', '#how-it-works'],

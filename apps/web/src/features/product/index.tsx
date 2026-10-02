@@ -1,10 +1,18 @@
 'use client';
-import { CustomerDirectory } from './customers';
-import { Campaigns, Referrals } from './campaigns';
-import { StaffInsights, Reports, Competitors } from './insights';
-import { Surveys } from './surveys';
-import { Widgets } from './widgets';
-import { BusinessSettings, Integrations, Billing } from './settings';
+import { CustomerDirectory } from '@/features/product/customers';
+import { Campaigns, Referrals } from '@/features/product/campaigns';
+import {
+  StaffInsights,
+  Reports,
+  Competitors,
+} from '@/features/product/insights';
+import { Surveys } from '@/features/product/surveys';
+import { Widgets } from '@/features/product/widgets';
+import {
+  BusinessSettings,
+  Integrations,
+  Billing,
+} from '@/features/product/settings';
 export function ProductModule({
   section,
   selectedId,

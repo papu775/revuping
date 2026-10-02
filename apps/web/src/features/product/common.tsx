@@ -2,11 +2,11 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { ArrowRight, CheckCircle2, Download, Search } from 'lucide-react';
-import { PageHeading } from '../ui/page-heading';
-import { Panel as SharedPanel, Badge, Field } from '../shared';
-import { Button } from '../ui/button';
-import { Select } from '../ui/select';
-import { useToast } from '../ui/toaster';
+import { PageHeading } from '@/components/ui/page-heading';
+import { Panel as SharedPanel, Badge, Field } from '@/components/shared';
+import { Button } from '@/components/ui/button';
+import { Select } from '@/components/ui/select';
+import { useToast } from '@/components/ui/toaster';
 export { Badge, Field, Button, Select, Link, PageHeading };
 export function Panel({
   className = '',
@@ -25,16 +25,16 @@ export function DemoBanner({ children }: { children?: React.ReactNode }) {
     </div>
   );
 }
-export function Picker({
+export function Picker<T extends string>({
   label,
   value,
   options,
   onChange,
 }: {
   label: string;
-  value: string;
-  options: string[];
-  onChange: (value: string) => void;
+  value: T;
+  options: T[];
+  onChange: (value: T) => void;
 }) {
   return (
     <Field as="div">
@@ -42,7 +42,10 @@ export function Picker({
       <Select
         label={label}
         value={value}
-        onValueChange={onChange}
+        onValueChange={(value) => {
+          const option = options.find((option) => option === value);
+          if (option !== undefined) onChange(option);
+        }}
         options={options.map((value) => ({ value, label: value }))}
         className="w-full"
       />

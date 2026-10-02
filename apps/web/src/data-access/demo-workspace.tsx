@@ -1,7 +1,7 @@
 'use client';
 import { createContext, useContext, useEffect, useState } from 'react';
-import { initialProduct, type ProductState } from '../lib/product-data';
-import { feedback, customers, reviews } from '../lib/mock-data';
+import { initialProduct, type ProductState } from '@/data-access/product-data';
+import { feedback, customers, reviews } from '@/data-access/mock-data';
 
 function useWorkspaceState() {
   const [product, setProduct] = useState<ProductState>(initialProduct);

@@ -10,8 +10,8 @@ import {
   Send,
   Sparkles,
 } from 'lucide-react';
-import { Stars, Badge } from '../shared';
-import { QrCode } from '../qr-code';
+import { Stars, Badge } from '@/components/shared';
+import { QrCode } from '@/components/qr-code';
 
 /** Recovered from the original layered landing composition in commit 2deed00. */
 export function HeroArtwork() {

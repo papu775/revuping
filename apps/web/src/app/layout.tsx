@@ -1,9 +1,9 @@
-import './global.css';
-import './template.css';
-import { ThemeProvider } from '../components/theme';
-import { ToastProvider } from '../components/ui/toaster';
-import { DemoWorkspace } from '../components/demo-workspace';
-import { TemplateMotion } from '../components/template-motion';
+import '@/app/global.css';
+import '@/app/template.css';
+import { ThemeProvider } from '@/components/theme';
+import { ToastProvider } from '@/components/ui/toaster';
+import { DemoWorkspace } from '@/data-access/demo-workspace';
+import { TemplateMotion } from '@/components/template-motion';
 export const metadata = {
   title: 'RevuPing — Review requests, feedback & replies',
   description:

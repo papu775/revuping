@@ -1,19 +1,19 @@
 'use client';
-import { focusWorkspacePanel } from '../../lib/workspace-focus';
+import { focusWorkspacePanel } from '@/lib/workspace-focus';
 import { useState, useRef } from 'react';
-import { withDeadline } from '../../lib/async-actions';
-import { InlineSpinner } from '../ui/loading';
+import { withDeadline } from '@/lib/async-actions';
+import { InlineSpinner } from '@/components/ui/loading';
 import { Plus, Upload, Pencil, UserRound } from 'lucide-react';
-import { useDemoWorkspace } from '../demo-workspace';
-import { useToast } from '../ui/toaster';
-import { Dialog } from '../ui/dialog';
-import { Avatar } from '../ui/avatar';
-import { type Customer } from '../../lib/mock-data';
+import { useDemoWorkspace } from '@/data-access/demo-workspace';
+import { useToast } from '@/components/ui/toaster';
+import { Dialog } from '@/components/ui/dialog';
+import { Avatar } from '@/components/ui/avatar';
+import { type Customer } from '@/data-access/mock-data';
 import {
   profileFor,
   demoDate,
   type CustomerProfile,
-} from '../../lib/product-data';
+} from '@/data-access/product-data';
 import {
   Panel,
   Badge,
@@ -26,7 +26,7 @@ import {
   DemoBanner,
   ErrorText,
   ActionLink,
-} from './common';
+} from '@/features/product/common';
 const blankProfile: CustomerProfile = {
   tags: [],
   source: 'In-salon permission · fictional',
@@ -270,7 +270,10 @@ export function CustomerDirectory({ selectedId }: { selectedId?: number }) {
                   size="small"
                   variant="secondary"
                   aria-pressed={active?.id === customer.id}
-                  onClick={() => { setSelected(customer.id); focusWorkspacePanel('customers-detail'); }}
+                  onClick={() => {
+                    setSelected(customer.id);
+                    focusWorkspacePanel('customers-detail');
+                  }}
                 >
                   View {customer.name.split(' ')[0]}
                 </Button>,
@@ -278,7 +281,12 @@ export function CustomerDirectory({ selectedId }: { selectedId?: number }) {
             })}
           />
         </Panel>
-        <Panel className="product-detail" id="customers-detail" tabIndex={-1} aria-label="Customer details">
+        <Panel
+          className="product-detail"
+          id="customers-detail"
+          tabIndex={-1}
+          aria-label="Customer details"
+        >
           {active ? (
             (() => {
               const p = getProfile(active.id);

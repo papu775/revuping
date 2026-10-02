@@ -1,8 +1,31 @@
 import { test, expect } from '@playwright/test';
 
-test('has title', async ({ page }) => {
+test('landing page opens the interactive demo', async ({ page }) => {
   await page.goto('/');
+  await expect(page).toHaveTitle(/RevuPing/);
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('heard.');
+  await page
+    .getByRole('link', { name: 'Try the demo', exact: true })
+    .first()
+    .click();
+  await expect(page).toHaveURL(/\/dashboard$/);
+  await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+});
 
-  // Expect h1 to contain a substring.
-  expect(await page.locator('h1').innerText()).toContain('Welcome');
+test('public demo routes and dashboard sections remain reachable', async ({
+  page,
+}) => {
+  for (const route of [
+    '/login',
+    '/signup',
+    '/dashboard/customers',
+    '/dashboard/surveys',
+    '/r/demo-salon',
+    '/survey/demo-salon',
+    '/refer/demo-salon',
+  ]) {
+    const response = await page.goto(route);
+    expect(response?.status()).toBe(200);
+    await expect(page.getByRole('heading', { level: 1 }).first()).toBeVisible();
+  }
 });

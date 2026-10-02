@@ -1,11 +1,15 @@
 'use client';
-import { focusWorkspacePanel } from '../../lib/workspace-focus';
+import { focusWorkspacePanel } from '@/lib/workspace-focus';
 import { useState, useRef } from 'react';
 import { CalendarDays, Plus, Pause, Play } from 'lucide-react';
-import { useDemoWorkspace } from '../demo-workspace';
-import { useToast } from '../ui/toaster';
-import { Dialog } from '../ui/dialog';
-import { demoDate, profileFor, type Campaign } from '../../lib/product-data';
+import { useDemoWorkspace } from '@/data-access/demo-workspace';
+import { useToast } from '@/components/ui/toaster';
+import { Dialog } from '@/components/ui/dialog';
+import {
+  demoDate,
+  profileFor,
+  type Campaign,
+} from '@/data-access/product-data';
 import {
   Panel,
   Badge,
@@ -20,7 +24,7 @@ import {
   Link,
   MetricCards,
   Empty,
-} from './common';
+} from '@/features/product/common';
 export function Campaigns({
   kind = 'Review request',
   selectedId,
@@ -307,7 +311,12 @@ export function Campaigns({
             ])}
           />
         </Panel>
-        <Panel className="product-detail" id="campaigns-detail" tabIndex={-1} aria-label="Campaign details">
+        <Panel
+          className="product-detail"
+          id="campaigns-detail"
+          tabIndex={-1}
+          aria-label="Campaign details"
+        >
           {active ? (
             <>
               <span className="eyebrow">CAMPAIGN PREVIEW</span>

@@ -1,13 +1,17 @@
 'use client';
-import { focusWorkspacePanel } from '../../lib/workspace-focus';
+import { focusWorkspacePanel } from '@/lib/workspace-focus';
 import { useState, useEffect, useRef } from 'react';
 import { Plus, Trash2, ArrowUp, CheckCircle2 } from 'lucide-react';
-import { useDemoWorkspace } from '../demo-workspace';
-import { useToast } from '../ui/toaster';
-import { Dialog } from '../ui/dialog';
-import { ThemeControl } from '../theme';
-import { demoDate, type Question, type Survey } from '../../lib/product-data';
-import { Logo } from '../shared';
+import { useDemoWorkspace } from '@/data-access/demo-workspace';
+import { useToast } from '@/components/ui/toaster';
+import { Dialog } from '@/components/ui/dialog';
+import { ThemeControl } from '@/components/theme';
+import {
+  demoDate,
+  type Question,
+  type Survey,
+} from '@/data-access/product-data';
+import { Logo } from '@/components/shared';
 import {
   Panel,
   Badge,
@@ -22,7 +26,7 @@ import {
   MetricCards,
   Link,
   Empty,
-} from './common';
+} from '@/features/product/common';
 function npsSummary(values: number[]) {
   if (!values.length) return 'No responses';
   return `${Math.round(((values.filter((value) => value >= 9).length - values.filter((value) => value <= 6).length) / values.length) * 100)}`;
@@ -132,14 +136,22 @@ export function Surveys({ selectedId }: { selectedId?: number }) {
                 key="open"
                 variant="secondary"
                 size="small"
-                onClick={() => { setSelected(survey.id); focusWorkspacePanel('surveys-detail'); }}
+                onClick={() => {
+                  setSelected(survey.id);
+                  focusWorkspacePanel('surveys-detail');
+                }}
               >
                 View survey
               </Button>,
             ])}
           />
         </Panel>
-        <Panel className="product-detail" id="surveys-detail" tabIndex={-1} aria-label="Survey details">
+        <Panel
+          className="product-detail"
+          id="surveys-detail"
+          tabIndex={-1}
+          aria-label="Survey details"
+        >
           {active ? (
             <>
               <h2>{active.name}</h2>
@@ -252,9 +264,7 @@ export function Surveys({ selectedId }: { selectedId?: number }) {
         <Picker
           label="Survey status"
           value={draft.status}
-          onChange={(status) =>
-            setDraft({ ...draft, status: status as Survey['status'] })
-          }
+          onChange={(status) => setDraft({ ...draft, status: status })}
           options={['Draft', 'Active', 'Paused']}
         />
         {draft.questions.map((question, index) => (
@@ -307,7 +317,7 @@ export function Surveys({ selectedId }: { selectedId?: number }) {
                       : '',
                 }));
                 changeQuestion(question.id, {
-                  type: type as Question['type'],
+                  type: type,
                   required:
                     type === 'Optional text' ? false : question.required,
                   options:

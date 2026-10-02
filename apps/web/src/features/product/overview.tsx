@@ -1,8 +1,8 @@
 'use client';
-import { useDemoWorkspace } from '../demo-workspace';
-import { reviews } from '../../lib/mock-data';
-import { demoDate, followUpFor } from '../../lib/product-data';
-import { Panel, Badge, ActionLink } from './common';
+import { useDemoWorkspace } from '@/data-access/demo-workspace';
+import { reviews } from '@/data-access/mock-data';
+import { demoDate, followUpFor } from '@/data-access/product-data';
+import { Panel, Badge, ActionLink } from '@/features/product/common';
 export function OwnerTasks() {
   const { product, feedbackItems, approved } = useDemoWorkspace();
   const open = feedbackItems.filter((feedback) => !feedback.resolved);

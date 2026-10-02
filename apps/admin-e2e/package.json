@@ -5,6 +5,12 @@
   "nx": {
     "implicitDependencies": [
       "admin"
-    ]
+    ],
+    "tags": [
+      "scope:admin",
+      "platform:test",
+      "type:e2e"
+    ],
+    "targets": {}
   }
 }

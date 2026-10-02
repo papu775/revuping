@@ -75,7 +75,12 @@
           "passWithNoTests": true
         }
       }
-    }
+    },
+    "tags": [
+      "scope:api",
+      "platform:server",
+      "type:app"
+    ]
   },
   "dependencies": {
     "@nestjs/common": "^11.0.0",

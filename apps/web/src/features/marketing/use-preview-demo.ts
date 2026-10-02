@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { feedback, customers, reviews } from './mock-data';
+import { feedback, customers, reviews } from '@/data-access/mock-data';
 
 /** Session-only state for the landing preview; never calls a service. */
 export function usePreviewDemo() {

@@ -2,7 +2,7 @@
 import { ThemeProvider as Provider, useTheme } from 'next-themes';
 import { useSyncExternalStore } from 'react';
 import { SunMoon } from 'lucide-react';
-import { Select } from './ui/select';
+import { Select } from '@/components/ui/select';
 const subscribe = () => () => undefined;
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   return (

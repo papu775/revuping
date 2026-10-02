@@ -5,6 +5,7 @@ const createJestConfig = nextJest({
 });
 
 const config = {
+  moduleNameMapper: { '^@/(.*)$': '<rootDir>/src/$1' },
   displayName: 'admin',
   preset: '../../jest.preset.js',
   transform: {

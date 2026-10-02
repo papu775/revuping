@@ -10,51 +10,84 @@
         "options": {
           "command": "tsc --noEmit -p apps/web/tsconfig.json"
         },
-        "cache": true
+        "cache": true,
+        "outputs": [
+          "{projectRoot}/dist/tsconfig.tsbuildinfo"
+        ]
       },
       "prototype-check": {
         "executor": "nx:run-commands",
         "options": {
           "command": "node apps/web/scripts/check-prototype.cjs"
-        }
+        },
+        "cache": false
       },
       "audit-check": {
         "executor": "nx:run-commands",
         "options": {
           "command": "node apps/web/scripts/check-audit.cjs"
-        }
+        },
+        "cache": false
       },
       "refinement-check": {
         "executor": "nx:run-commands",
         "options": {
           "command": "node apps/web/scripts/check-refinements.cjs"
-        }
+        },
+        "cache": false
       },
       "hero-check": {
         "executor": "nx:run-commands",
         "options": {
           "command": "node apps/web/scripts/check-hero.cjs"
-        }
+        },
+        "cache": false
       },
       "quality-check": {
         "executor": "nx:run-commands",
         "options": {
           "command": "node apps/web/scripts/check-quality.cjs"
-        }
+        },
+        "cache": false
       },
       "notification-check": {
         "executor": "nx:run-commands",
         "options": {
           "command": "node apps/web/scripts/check-notifications.cjs"
-        }
+        },
+        "cache": false
       },
       "product-check": {
         "executor": "nx:run-commands",
         "options": {
           "command": "node apps/web/scripts/check-product.cjs"
-        }
+        },
+        "cache": false
+      },
+      "dev": {
+        "options": {
+          "command": "next dev --port 3000"
+        },
+        "cache": false
+      },
+      "start": {
+        "options": {
+          "command": "next start --port 3000"
+        },
+        "cache": false
+      },
+      "serve-static": {
+        "options": {
+          "command": "next start --port 3000"
+        },
+        "cache": false
       }
-    }
+    },
+    "tags": [
+      "scope:web",
+      "platform:browser",
+      "type:app"
+    ]
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.23",

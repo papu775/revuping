@@ -1,109 +1,85 @@
-# New Nx Repository
+# RevuPing
 
-<a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
+An organized production-development foundation with a completed interactive customer frontend. Authentication, persistence, tenant isolation and service integrations are not implemented. Admin and API retain their generated starter behavior.
 
-✨ Your new, shiny [Nx workspace](https://nx.dev) is ready ✨.
+## Setup and commands
 
-[Learn more about this workspace setup and its capabilities](https://nx.dev/docs/technologies/typescript/introduction?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) or run `npx nx graph` to visually explore what was created. Now, let's get you up to speed!
-
-🚀 If you haven't connected to Nx Cloud yet, [complete your setup here](https://cloud.nx.app/get-started). Get faster builds with remote caching, distributed task execution, and self-healing CI. [See how your workspace can benefit](#nx-cloud).
-
-## Generate a library
+Use Node **24.20.x** (see `.node-version`) and pnpm **11.25.0** (pinned in `package.json`). The audited dependencies are Nx 23.2.0, Next.js 16.1.7, NestJS 11.2.7 and TypeScript 6.0.3. No framework upgrade is part of this organization work.
 
 ```sh
-npx nx g @nx/js:lib packages/pkg1 --publishable --importPath=@my-org/pkg1
+pnpm install --frozen-lockfile
+pnpm dev:web                    # localhost:3000
+pnpm dev:admin                  # localhost:3001
+pnpm dev:api                    # localhost:3002/api
+pnpm check                      # all lint, typecheck and unit test targets, sequentially
+pnpm build                      # all three production builds, sequentially
+pnpm check:affected --base=main --head=HEAD
+pnpm exec playwright install chromium
+pnpm e2e:web
+pnpm e2e:admin
+pnpm e2e:api
+pnpm nx show project web --json  # resolved inferred + explicit tasks
+pnpm nx graph
 ```
 
-## Run tasks
+The browser tests start their owning frontend automatically. `BASE_URL` optionally points them at an already running server. Existing detailed mock-flow scripts remain Nx targets (`web:product-check`, `web:prototype-check`, etc.). Start web first and set `PROTOTYPE_URL=http://localhost:3000` to run them. They write artifacts under `/tmp` by default and are deliberately uncached. API end-to-end tests start API through Nx task dependencies.
 
-To build the library use:
+## Ownership and structure
 
-```sh
-npx nx run pkg1:build
-```
+| Project      | Responsibility                                                                        |
+| ------------ | ------------------------------------------------------------------------------------- |
+| `apps/web`   | Customer Next.js App Router application, marketing, demo authentication and dashboard |
+| `apps/admin` | Platform administration Next.js starter; no administration features yet               |
+| `apps/api`   | NestJS starter module/controller/service; no product APIs yet                         |
+| `apps/*-e2e` | Tests owned by the corresponding application                                          |
 
-To run any task with Nx use:
+Web source:
 
-```sh
-npx nx run <project-name>:<target>
-```
+- `src/app`: framework routes, layouts, loading states and styles. Keep Next route files here.
+- `src/features/auth`, `dashboard`, `marketing`, `product`: application feature implementation.
+- `src/components`: reusable application presentation, UI primitives, theme and motion.
+- `src/data-access`: fictional fixtures, product state and demo workspace provider. This does not call API.
+- `src/lib`: focused browser utilities (deadlines, print palette, QR export and panel focus).
+- `specs` and `scripts`: unit tests and existing browser regression tools.
 
-These targets are either [inferred automatically](https://nx.dev/docs/concepts/inferred-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) or defined in the `project.json` or `package.json` files.
+Admin's small starter stays in `src/app`; API composition, transport and service remain in `src/app/app.module.ts`, `app.controller.ts` and `app.service.ts`. Add cohesive Nest feature modules as real backend features arrive. Do not create empty layers merely to match web.
 
-[More about running tasks in the docs &raquo;](https://nx.dev/docs/features/run-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+There are no shared libraries: current applications have no concrete shared implementation consumers. Extract a library under `packages/` only with clear ownership, a public package export and real consumers. Use pnpm workspace dependencies (`workspace:*`) rather than aliases into another project's source.
 
-## Versioning and releasing
+## Dependency rules
 
-To version and release the library use
+Nx ESLint tags use `scope:web|admin|api`, `type:app|e2e` and `platform:browser|server|test`. No source project may import another application or e2e project. The e2e projects retain intentional implicit graph edges to their tested apps.
 
-```
-npx nx release
-```
+For future libraries, use meaningful platform/type tags: browser projects can consume only browser or neutral libraries; neutral contracts remain independent of framework/server packages. UI consumes UI/contracts/util libraries, data access consumes data-access/contracts/util, and features consume feature/UI/data-access/contracts/util. Nx checks cycles and cross-project deep imports. All rules are enforced by lint, not just documentation.
 
-Pass `--dry-run` to see what would happen without actually releasing the library.
+Browser source also rejects Node/server packages and imports from `src/server`. Future Next server implementation must live in `src/server`, import `server-only`, and be used from appropriate server entry points. Current `app/api` routes are server entry points. Never import server code into a client component or re-export it through a browser barrel. Existing `@/` aliases are local to each frontend and supported in Jest.
 
-[Learn more about Nx release &raquo;](https://nx.dev/docs/features/manage-releases?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+## Configuration
 
-## Keep TypeScript project references up to date
+No application environment variables are needed for the frontend demo. `.env.example` files describe the actual configuration; they contain no service credentials. Next loads its app-local environment files. Never put a secret in `NEXT_PUBLIC_*`: those values are exposed to browsers. API currently reads only `PORT` from the process environment (default 3002); it does not load dotenv files. Export it in the shell when overriding the default.
 
-Nx automatically updates TypeScript [project references](https://www.typescriptlang.org/docs/handbook/project-references.html) in `tsconfig.json` files to ensure they remain accurate based on your project dependencies (`import` or `require` statements). This sync is automatically done when running tasks such as `build` or `typecheck`, which require updated references to function correctly.
+Local `.env*` files are ignored except examples. Add configuration only when consumed by implemented behavior, validate server values at startup, and update examples and Nx build inputs when adding environment-dependent build output.
 
-To manually trigger the process to sync the project graph dependencies information to the TypeScript project references, run the following command:
+## Adding a feature
 
-```sh
-npx nx sync
-```
+Keep the route under `src/app`, feature implementation under its owning `src/features/<feature>`, and reusable presentation in `src/components`. Keep fixture/state access separate from rendering; replace mock data with a deliberate data-access boundary when real APIs exist. Preserve framework conventions and strict TypeScript. Use explicit imports; add barrels only for intentional public APIs. Backend controllers should delegate to services inside a cohesive module. Do not import an application's internals from another application.
 
-You can enforce that the TypeScript project references are always in the correct state when running in CI by adding a step to your CI job configuration that runs the following command:
+## Tasks and CI
 
-```sh
-npx nx sync:check
-```
+Nx infers framework tasks; package metadata adds application-specific targets. Shared compiler/workspace/package settings and Node version participate in task inputs. Generated Next/build/test output is excluded from default input hashing. Typecheck outputs declare incremental build metadata. Builds, lint, types and unit tests are cached; servers and browser checks are not.
 
-[Learn more about nx sync](https://nx.dev/reference/nx-commands#sync)
+GitHub Actions installs with the pinned pnpm and frozen lockfile. PR lint/types/unit tests use explicit base/head affected checks; main pushes and manual runs check the full workspace. Every run builds all applications sequentially and runs Chromium frontend and API end-to-end tests. No Nx Cloud account or paid distributed runners are required.
 
-## Nx Cloud
+## Official guidance consulted
 
-Nx Cloud ensures a [fast and scalable CI](https://nx.dev/nx-cloud?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) pipeline. It includes features such as:
+Checked current official guidance on 2026-10-02 and applied it to the installed versions:
 
-- [Remote caching](https://nx.dev/docs/features/ci-features/remote-cache?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Task distribution across multiple machines](https://nx.dev/docs/features/ci-features/distribute-task-execution?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Automated e2e test splitting](https://nx.dev/docs/features/ci-features/split-e2e-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Task flakiness detection and rerunning](https://nx.dev/docs/features/ci-features/flaky-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+- [Nx workspace organization](https://nx.dev/docs/concepts/decisions/overview), [module boundaries](https://nx.dev/docs/features/enforce-module-boundaries), [task inputs](https://nx.dev/docs/reference/inputs), [affected checks](https://nx.dev/docs/features/ci-features/affected)
+- [Next.js App Router structure](https://nextjs.org/docs/app/getting-started/project-structure) and [server/client isolation](https://nextjs.org/docs/app/getting-started/server-and-client-components)
+- [NestJS modules](https://docs.nestjs.com/modules)
+- [TypeScript configuration](https://www.typescriptlang.org/tsconfig/) and [strict](https://www.typescriptlang.org/tsconfig/strict)
+- [pnpm workspaces](https://pnpm.io/workspaces) and [package settings](https://pnpm.io/package_json)
 
-### Set up CI (non-Github Actions CI)
+## Before production deployment
 
-**Note:** This is only required if your CI provider is not GitHub Actions.
-
-Use the following command to configure a CI workflow for your workspace:
-
-```sh
-npx nx g ci-workflow
-```
-
-[Learn more about Nx on CI](https://nx.dev/docs/features/ci-features?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-## Install Nx Console
-
-Nx Console is an editor extension that enriches your developer experience. It lets you run tasks, generate code, and improves code autocompletion in your IDE. It is available for VSCode and IntelliJ.
-
-[Install Nx Console &raquo;](https://nx.dev/docs/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-## 🔗 Learn More
-
-- [Nx Documentation](https://nx.dev/docs)
-- [Crafting Your Workspace Tutorial](https://nx.dev/docs/getting-started/tutorials/crafting-your-workspace)
-- [Module Boundaries](https://nx.dev/docs/features/enforce-module-boundaries)
-- [Releasing Packages](https://nx.dev/docs/features/manage-releases)
-- [Nx Plugins](https://nx.dev/docs/concepts/nx-plugins)
-- [Nx Cloud](https://nx.dev/nx-cloud)
-
-## 💬 Community
-
-Join the Nx community:
-
-- [Discord](https://go.nx.dev/community)
-- [X (Twitter)](https://twitter.com/nxdevtools)
-- [LinkedIn](https://www.linkedin.com/company/nrwl)
-- [YouTube](https://www.youtube.com/@nxdevtools)
-- [Blog](https://nx.dev/blog)
+Implement and verify authentication/authorization, tenant data isolation, durable storage, API contracts, real integrations, secret management, operational monitoring and deployment configuration. Web auth, messages, billing, integrations, survey/referral results and dashboard state are fictional/session-local interactions; browser refresh resets demo state. Starter hello routes are not production product APIs.

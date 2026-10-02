@@ -21,3 +21,14 @@
 - The `nx-generate` skill handles generator discovery internally - don't call nx_docs just to look up generator syntax
 
 <!-- nx configuration end-->
+
+# RevuPing conventions
+
+- Preserve the completed web design, route locations, CSS and mock behavior when organizing code.
+- Web features live in `apps/web/src/features`; demo fixtures/state in `src/data-access`; reusable presentation in `src/components`. `@/` is app-local.
+- Admin and API are starters. Do not imply implemented authentication, storage or integrations.
+- Applications never import each other. Extract `packages/` libraries only for concrete consumers, use workspace package dependencies, public exports and platform/type tags.
+- Browser source cannot import server packages or `src/server`. Future Next server modules must import `server-only` and stay behind server entry points.
+- Use Node 24.20.x, pnpm 11.25.0 and the frozen pnpm lockfile. Never commit local environment files or credentials.
+- Verify with `pnpm check` and `pnpm build` (build sequentially). For route/interaction changes run `pnpm e2e:web`; detailed existing flows use `PROTOTYPE_URL=http://localhost:3000 pnpm nx run web:product-check` against running web.
+- Run `pnpm nx graph` after changing project dependencies. CI uses affected checks for PRs and full checks on main/manual runs.

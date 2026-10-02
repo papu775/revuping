@@ -1,6 +1,6 @@
 'use client';
-import { AccountMenu } from '../../components/ui/account-menu';
-import { useDemoWorkspace } from '../../components/demo-workspace';
+import { AccountMenu } from '@/components/ui/account-menu';
+import { useDemoWorkspace } from '@/data-access/demo-workspace';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect, useRef } from 'react';
@@ -18,10 +18,10 @@ import {
   ArrowUpRight,
   Leaf,
 } from 'lucide-react';
-import { ThemeControl } from '../../components/theme';
-import { Select } from '../../components/ui/select';
-import { Logo } from '../../components/shared';
-import { navigationGroups, sectionLabel } from '../../lib/product-data';
+import { ThemeControl } from '@/components/theme';
+import { Select } from '@/components/ui/select';
+import { Logo } from '@/components/shared';
+import { navigationGroups, sectionLabel } from '@/data-access/product-data';
 const icons = {
   Reputation: QrCode,
   Campaigns: Send,

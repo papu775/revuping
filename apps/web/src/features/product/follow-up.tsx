@@ -1,9 +1,9 @@
 'use client';
 import { useState } from 'react';
-import { useDemoWorkspace } from '../demo-workspace';
-import { useToast } from '../ui/toaster';
-import { followUpFor, type FollowUp } from '../../lib/product-data';
-import { Field, Button, Picker, ErrorText } from './common';
+import { useDemoWorkspace } from '@/data-access/demo-workspace';
+import { useToast } from '@/components/ui/toaster';
+import { followUpFor, type FollowUp } from '@/data-access/product-data';
+import { Field, Button, Picker, ErrorText } from '@/features/product/common';
 export function FollowUpEditor({
   id,
   resolved,
@@ -35,9 +35,7 @@ export function FollowUpEditor({
         <Picker
           label="Follow-up state"
           value={draft.status}
-          onChange={(status) =>
-            setDraft({ ...draft, status: status as FollowUp['status'] })
-          }
+          onChange={(status) => setDraft({ ...draft, status: status })}
           options={['Open', 'In progress', 'Resolved']}
         />
         <Field>

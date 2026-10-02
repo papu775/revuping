@@ -5,6 +5,12 @@
   "nx": {
     "implicitDependencies": [
       "web"
-    ]
+    ],
+    "tags": [
+      "scope:web",
+      "platform:test",
+      "type:e2e"
+    ],
+    "targets": {}
   }
 }

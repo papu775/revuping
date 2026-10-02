@@ -1,4 +1,4 @@
-import { PublicSurvey } from '../../../components/product/surveys';
+import { PublicSurvey } from '@/features/product/surveys';
 export default async function Page({
   searchParams,
 }: {

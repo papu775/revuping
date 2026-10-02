@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { ChevronUp, ArrowUpRight } from 'lucide-react';
-import { Avatar } from './avatar';
+import { Avatar } from '@/components/ui/avatar';
 const actions = [
   ['Customer demo', '/r/demo-salon'],
   ['Back to website', '/'],

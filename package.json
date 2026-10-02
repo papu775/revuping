@@ -2,7 +2,17 @@
   "name": "revuping",
   "version": "0.0.0",
   "license": "MIT",
-  "scripts": {},
+  "scripts": {
+    "dev:web": "nx run web:dev",
+    "dev:admin": "nx run admin:dev",
+    "dev:api": "nx run api:serve",
+    "check": "nx run-many -t lint typecheck test --parallel=1",
+    "build": "nx run-many -t build --projects=web,admin,api --parallel=1",
+    "check:affected": "nx affected -t lint typecheck test --parallel=1",
+    "e2e:web": "nx run web-e2e:e2e -- --project=chromium",
+    "e2e:admin": "nx run admin-e2e:e2e -- --project=chromium",
+    "e2e:api": "nx run api-e2e:e2e"
+  },
   "private": true,
   "devDependencies": {
     "@eslint/js": "^9.8.0",
@@ -65,5 +75,10 @@
     "react-dom": "^19.0.0",
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.0"
+  },
+  "packageManager": "pnpm@11.25.0",
+  "engines": {
+    "node": ">=24.20.0 <25",
+    "pnpm": ">=11.25.0 <12"
   }
 }

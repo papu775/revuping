@@ -1,12 +1,12 @@
 'use client';
 import { useState, useRef } from 'react';
-import { withDeadline } from '../../lib/async-actions';
-import { InlineSpinner } from '../ui/loading';
+import { withDeadline } from '@/lib/async-actions';
+import { InlineSpinner } from '@/components/ui/loading';
 import { Copy, ChevronLeft, ChevronRight } from 'lucide-react';
-import { useDemoWorkspace } from '../demo-workspace';
-import { useToast } from '../ui/toaster';
-import { reviews } from '../../lib/mock-data';
-import { Stars } from '../shared';
+import { useDemoWorkspace } from '@/data-access/demo-workspace';
+import { useToast } from '@/components/ui/toaster';
+import { reviews } from '@/data-access/mock-data';
+import { Stars } from '@/components/shared';
 import {
   Panel,
   Field,
@@ -18,7 +18,7 @@ import {
   ErrorText,
   ExportButton,
   Empty,
-} from './common';
+} from '@/features/product/common';
 const xml = (text: string) =>
   text
     .replaceAll('&', '&amp;')

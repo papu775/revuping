@@ -54,3 +54,9 @@ Thumbs.db
 out
 
 test-output
+
+# Local configuration (examples are safe to commit)
+.env
+.env.*
+!.env.example
+*.tsbuildinfo

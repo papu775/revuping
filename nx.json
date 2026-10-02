@@ -1,7 +1,13 @@
 {
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
   "namedInputs": {
-    "default": ["{projectRoot}/**/*", "sharedGlobals"],
+    "default": [
+      "{projectRoot}/**/*",
+      "sharedGlobals",
+      "!{projectRoot}/.next/**/*",
+      "!{projectRoot}/dist/**/*",
+      "!{projectRoot}/test-output/**/*"
+    ],
     "production": [
       "default",
       "!{projectRoot}/.eslintrc.json",
@@ -10,9 +16,18 @@
       "!{projectRoot}/tsconfig.spec.json",
       "!{projectRoot}/jest.config.[jt]s",
       "!{projectRoot}/src/test-setup.[jt]s",
-      "!{projectRoot}/test-setup.[jt]s"
+      "!{projectRoot}/test-setup.[jt]s",
+      "!{projectRoot}/specs/**/*",
+      "!{projectRoot}/jest.config.cts"
     ],
-    "sharedGlobals": []
+    "sharedGlobals": [
+      "{workspaceRoot}/tsconfig.base.json",
+      "{workspaceRoot}/pnpm-workspace.yaml",
+      "{workspaceRoot}/package.json",
+      {
+        "runtime": "node --version"
+      }
+    ]
   },
   "plugins": [
     {
@@ -75,6 +90,13 @@
   "targetDefaults": {
     "test": {
       "dependsOn": ["^build"]
+    },
+    "typecheck": {
+      "cache": true,
+      "inputs": ["default", "^default"]
+    },
+    "e2e": {
+      "cache": false
     }
   },
   "generators": {

@@ -1,13 +1,13 @@
 'use client';
 import { useState } from 'react';
-import { useDemoWorkspace } from '../demo-workspace';
+import { useDemoWorkspace } from '@/data-access/demo-workspace';
 import {
   staffMembers,
   followUpFor,
   profileFor,
   reportRows,
   demoDate,
-} from '../../lib/product-data';
+} from '@/data-access/product-data';
 import {
   Panel,
   Badge,
@@ -21,7 +21,7 @@ import {
   ActionLink,
   ExportButton,
   csvCell,
-} from './common';
+} from '@/features/product/common';
 export function StaffInsights() {
   const { feedbackItems, product, customerItems } = useDemoWorkspace();
   const [staff, setStaff] = useState('All staff');
@@ -238,15 +238,16 @@ export function Reports() {
   );
   const sum = (key: 'requests' | 'clicks' | 'feedback' | 'reviews') =>
     rows.reduce((total, row) => total + row[key], 0);
-  const key =
-    (
-      {
-        Requests: 'requests',
-        'Link clicks': 'clicks',
-        'Private feedback': 'feedback',
-        'Confirmed sample reviews': 'reviews',
-      } as const
-    )[metric as 'Requests'] || 'requests';
+  const metricKeys: Record<
+    string,
+    'requests' | 'clicks' | 'feedback' | 'reviews'
+  > = {
+    Requests: 'requests',
+    'Link clicks': 'clicks',
+    'Private feedback': 'feedback',
+    'Confirmed sample reviews': 'reviews',
+  };
+  const key = metricKeys[metric] || 'requests';
   const trend = [...new Set(rows.map((row) => row.date))].map((date) => ({
     label: date.slice(5),
     value: rows

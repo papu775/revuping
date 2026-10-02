@@ -1,7 +1,7 @@
 'use client';
-import { useDemoWorkspace } from '../../../components/demo-workspace';
-import { Select } from '../../../components/ui/select';
-import { Field } from '../../../components/shared';
+import { useDemoWorkspace } from '@/data-access/demo-workspace';
+import { Select } from '@/components/ui/select';
+import { Field } from '@/components/shared';
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { motion, useReducedMotion } from 'motion/react';
@@ -14,8 +14,8 @@ import {
   CheckCircle2,
   Heart,
 } from 'lucide-react';
-import { Button } from '../../../components/ui/button';
-import { Dialog } from '../../../components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Dialog } from '@/components/ui/dialog';
 export default function CustomerPage() {
   const { setFeedbackItems } = useDemoWorkspace();
   const [form, setForm] = useState(false);

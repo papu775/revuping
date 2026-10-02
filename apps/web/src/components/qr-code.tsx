@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import QRCode from 'qrcode';
-import { printPalette, printableColor } from '../lib/print-palette';
+import { printPalette, printableColor } from '@/lib/print-palette';
 export function QrCode({
   color = '#22213e',
   onReady,

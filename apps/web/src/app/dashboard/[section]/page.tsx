@@ -1,12 +1,12 @@
-import { ProductModule } from '../../../components/product';
-import { productSections } from '../../../lib/product-data';
+import { ProductModule } from '@/features/product';
+import { productSections } from '@/data-access/product-data';
 import { notFound } from 'next/navigation';
 import {
   QrStudio,
   FeedbackInbox,
   Requests,
   Reviews,
-} from '../../../components/dashboard';
+} from '@/features/dashboard/dashboard';
 export function generateStaticParams() {
   return ['qr', 'feedback', 'requests', 'reviews', ...productSections].map(
     (section) => ({

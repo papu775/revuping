@@ -1,12 +1,12 @@
 'use client';
 import { useState, useRef } from 'react';
 import { Plus, CheckCircle2, Plug, RotateCcw } from 'lucide-react';
-import { useDemoWorkspace } from '../demo-workspace';
-import { useToast } from '../ui/toaster';
-import { Dialog } from '../ui/dialog';
-import { fictionalEmail } from './customers';
-import { reviews } from '../../lib/mock-data';
-import { initialProduct } from '../../lib/product-data';
+import { useDemoWorkspace } from '@/data-access/demo-workspace';
+import { useToast } from '@/components/ui/toaster';
+import { Dialog } from '@/components/ui/dialog';
+import { fictionalEmail } from '@/features/product/customers';
+import { reviews } from '@/data-access/mock-data';
+import { initialProduct } from '@/data-access/product-data';
 import {
   Panel,
   Badge,
@@ -20,7 +20,7 @@ import {
   MetricCards,
   ActionLink,
   ExportButton,
-} from './common';
+} from '@/features/product/common';
 export function BusinessSettings({
   onboarding = false,
 }: {

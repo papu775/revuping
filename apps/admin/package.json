@@ -3,7 +3,42 @@
   "version": "0.0.1",
   "private": true,
   "nx": {
-    "sourceRoot": "apps/admin/src"
+    "sourceRoot": "apps/admin/src",
+    "tags": [
+      "scope:admin",
+      "platform:browser",
+      "type:app"
+    ],
+    "targets": {
+      "typecheck": {
+        "executor": "nx:run-commands",
+        "cache": true,
+        "options": {
+          "command": "tsc --noEmit -p apps/admin/tsconfig.json"
+        },
+        "outputs": [
+          "{projectRoot}/dist/tsconfig.tsbuildinfo"
+        ]
+      },
+      "dev": {
+        "options": {
+          "command": "next dev --port 3001"
+        },
+        "cache": false
+      },
+      "start": {
+        "options": {
+          "command": "next start --port 3001"
+        },
+        "cache": false
+      },
+      "serve-static": {
+        "options": {
+          "command": "next start --port 3001"
+        },
+        "cache": false
+      }
+    }
   },
   "dependencies": {
     "next": "~16.1.6",

@@ -1,4 +1,4 @@
-import { printPalette, printTextLines } from './print-palette';
+import { printPalette, printTextLines } from '@/lib/print-palette';
 
 /** Local vector artwork; QR geometry comes from the same generator as the preview. */
 export function qrCardSvg({

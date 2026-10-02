@@ -1,17 +1,17 @@
 'use client';
-import { PasswordField } from './ui/password-field';
-import { HeroStatic } from './hero/hero-static';
-import { ConversationCurves } from './conversation-curves';
-import { FloatingSample } from './template-motion';
-import { Avatar } from './ui/avatar';
-import { Field } from './shared';
+import { PasswordField } from '@/components/ui/password-field';
+import { HeroStatic } from '@/components/hero/hero-static';
+import { ConversationCurves } from '@/components/conversation-curves';
+import { FloatingSample } from '@/components/template-motion';
+import { Avatar } from '@/components/ui/avatar';
+import { Field } from '@/components/shared';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { InlineSpinner } from './ui/loading';
+import { InlineSpinner } from '@/components/ui/loading';
 import { useTransition, useState } from 'react';
 import { ArrowRight, Send, MessageSquare, Check } from 'lucide-react';
-import { Logo, Stars } from './shared';
-import { Button } from './ui/button';
+import { Logo, Stars } from '@/components/shared';
+import { Button } from '@/components/ui/button';
 export function Auth({ signup = false }: { signup?: boolean }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();

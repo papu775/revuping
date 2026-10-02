@@ -1,15 +1,15 @@
 'use client';
-import { withDeadline } from '../lib/async-actions';
-import { PageHeading } from './ui/page-heading';
-export { PageHeading } from './ui/page-heading';
-import { OwnerTasks } from './product/overview';
-import { FollowUpEditor } from './product/follow-up';
-import { followUpFor, demoDate } from '../lib/product-data';
-import { InlineSpinner } from './ui/loading';
-import { useToast } from './ui/toaster';
-import { useDemoWorkspace } from './demo-workspace';
-import { Avatar } from './ui/avatar';
-import { Panel, Field, panelSurface } from './shared';
+import { withDeadline } from '@/lib/async-actions';
+import { PageHeading } from '@/components/ui/page-heading';
+export { PageHeading } from '@/components/ui/page-heading';
+import { OwnerTasks } from '@/features/product/overview';
+import { FollowUpEditor } from '@/features/product/follow-up';
+import { followUpFor, demoDate } from '@/data-access/product-data';
+import { InlineSpinner } from '@/components/ui/loading';
+import { useToast } from '@/components/ui/toaster';
+import { useDemoWorkspace } from '@/data-access/demo-workspace';
+import { Avatar } from '@/components/ui/avatar';
+import { Panel, Field, panelSurface } from '@/components/shared';
 import Link from 'next/link';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { useState, useCallback, useRef } from 'react';
@@ -33,21 +33,21 @@ import {
   SlidersHorizontal,
 } from 'lucide-react';
 import * as Tabs from '@radix-ui/react-tabs';
-import { Select } from './ui/select';
-import { Button } from './ui/button';
-import { Dialog } from './ui/dialog';
-import { Badge, Stars, TextLink } from './shared';
-import { printableColor } from '../lib/print-palette';
-import { qrCardSvg } from '../lib/qr-card-export';
-import { QrCode } from './qr-code';
-import { focusWorkspacePanel } from '../lib/workspace-focus';
+import { Select } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
+import { Dialog } from '@/components/ui/dialog';
+import { Badge, Stars, TextLink } from '@/components/shared';
+import { printableColor } from '@/lib/print-palette';
+import { qrCardSvg } from '@/lib/qr-card-export';
+import { QrCode } from '@/components/qr-code';
+import { focusWorkspacePanel } from '@/lib/workspace-focus';
 import {
   reviews,
   type Customer,
   overviewMetrics,
   sampleTrend,
   sampleRequestText,
-} from '../lib/mock-data';
+} from '@/data-access/mock-data';
 
 export function SessionNotice({ children }: { children: React.ReactNode }) {
   const reduced = useReducedMotion();

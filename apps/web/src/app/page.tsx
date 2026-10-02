@@ -1,5 +1,5 @@
 'use client';
-import { SectionLink } from '../components/ui/section-link';
+import { SectionLink } from '@/components/ui/section-link';
 import Link from 'next/link';
 import {
   ArrowRight,
@@ -10,13 +10,13 @@ import {
   Sparkles,
   QrCode as QrIcon,
 } from 'lucide-react';
-import { Button } from '../components/ui/button';
-import { Logo, Reveal, SectionTitle } from '../components/shared';
-import { MarketingHeader } from '../components/marketing-header';
-import { HeroIntro, FaqItem } from '../components/template-motion';
-import { HeroArtwork } from '../components/hero/hero-artwork';
-import { ConversationCurves } from '../components/conversation-curves';
-import { ProductShowcase } from '../components/product-showcase';
+import { Button } from '@/components/ui/button';
+import { Logo, Reveal, SectionTitle } from '@/components/shared';
+import { MarketingHeader } from '@/features/marketing/marketing-header';
+import { HeroIntro, FaqItem } from '@/components/template-motion';
+import { HeroArtwork } from '@/components/hero/hero-artwork';
+import { ConversationCurves } from '@/components/conversation-curves';
+import { ProductShowcase } from '@/features/marketing/product-showcase';
 export default function Landing() {
   return (
     <>
