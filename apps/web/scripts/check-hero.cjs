@@ -1,228 +1,140 @@
-/* Start web:dev first. Evidence stays outside the source tree. */
 const { chromium, expect } = require('@playwright/test');
 const fs = require('node:fs/promises');
-const base = process.env.PROTOTYPE_URL || 'http://localhost:3000';
-const artifacts = process.env.HERO_ARTIFACTS || '/tmp/revuping-3d';
+const base = process.env.PROTOTYPE_URL || 'http://localhost:3201';
+const artifacts = process.env.HERO_ARTIFACTS || '/tmp/revuping-feedback-hero';
 (async () => {
   await fs.mkdir(artifacts, { recursive: true });
   const browser = await chromium.launch();
-  for (const theme of ['light', 'dark']) {
-    for (const width of [390, 768, 1440]) {
-      const context = await browser.newContext({
-        viewport: { width, height: 1000 },
-        recordVideo:
-          width === 1440
-            ? { dir: artifacts, size: { width: 1440, height: 1000 } }
-            : undefined,
-      });
-      await context.addInitScript((t) => {
-        localStorage.setItem('revuping-theme', t);
-        window.heroShifts = [];
-        new PerformanceObserver((list) =>
-          list.getEntries().forEach((e) => {
-            if (!e.hadRecentInput) window.heroShifts.push(e.value);
-          }),
-        ).observe({ type: 'layout-shift', buffered: true });
-      }, theme);
-      const page = await context.newPage();
-      const errors = [],
-        requested = [];
-      page.on('request', (r) => requested.push(r.url()));
-      page.on('pageerror', (e) => errors.push(e.message));
-      await page.goto(base);
-      const artwork = page.locator('.hero-artwork');
-      const before = await artwork.boundingBox();
-      await expect(
-        page.getByRole('heading', {
-          name: 'Reviews & feedback. Less busywork. More connection.',
-        }),
-      ).toBeVisible();
-      await expect(
-        page
-          .locator('.hero-actions')
-          .getByRole('link', { name: 'Try the demo' }),
-      ).toBeVisible();
-      if (width === 1440) {
-        await expect(artwork).toHaveAttribute('data-scene', 'ready', {
-          timeout: 45000,
+  try {
+    for (const theme of ['light', 'dark'])
+      for (const width of [390, 768, 1440]) {
+        const context = await browser.newContext({
+          viewport: { width, height: 1000 },
         });
-        const canvas = artwork.locator('canvas');
-        expect(await canvas.evaluate((c) => !!c.getContext('webgl2'))).toBe(
-          true,
+        await context.addInitScript(
+          (theme) => localStorage.setItem('revuping-theme', theme),
+          theme,
         );
-        expect(
-          await canvas.evaluate((c) => c.width / c.clientWidth),
-        ).toBeLessThanOrEqual(1.51);
-        const initial = await canvas.getAttribute('data-float');
-        await page.waitForTimeout(600);
-        expect(await canvas.getAttribute('data-float')).not.toBe(initial);
-        const bounds = await artwork.boundingBox();
-        await page.mouse.move(
-          bounds.x + bounds.width * 0.9,
-          bounds.y + bounds.height * 0.2,
+        const page = await context.newPage();
+        const errors = [];
+        const requests = [];
+        page.on('pageerror', (error) => errors.push(error.message));
+        page.on('request', (request) => requests.push(request.url()));
+        await page.goto(base);
+        const scene = page.locator('.feedback-composition');
+        await expect(scene).toBeVisible();
+        await expect(page.locator('canvas')).toHaveCount(0);
+        await expect(scene).toContainText(
+          'Sophie made my day. Love my new colour!',
         );
-        await page.waitForTimeout(500);
-        const rotated = JSON.parse(await canvas.getAttribute('data-rotation'));
-        expect(Math.abs(rotated[1])).toBeGreaterThan(0.04);
-        expect(Math.abs(rotated[1])).toBeLessThanOrEqual(0.11);
-        expect(Math.abs(rotated[0])).toBeLessThanOrEqual(0.055);
-        await page.mouse.move(10, 10);
-        await page.waitForTimeout(1000);
+        await expect(scene).toContainText('Review request ready');
+        await expect(scene).toContainText('Editable reply draft');
+        await expect(
+          page.getByRole('link', { name: 'Try the demo', exact: true }).last(),
+        ).toBeVisible();
+        const nodes = await scene
+          .locator('.floating-card')
+          .evaluateAll((cards) =>
+            cards.map((card) => {
+              const box = card.getBoundingClientRect();
+              return {
+                x: box.x,
+                y: box.y,
+                right: box.right,
+                bottom: box.bottom,
+                width: box.width,
+                client: card.clientWidth,
+                scroll: card.scrollWidth,
+              };
+            }),
+          );
+        for (const node of nodes) {
+          if (
+            node.x < 0 ||
+            node.right > width + 1 ||
+            node.scroll > node.client + 1
+          )
+            throw new Error('Clipped or overflowing card');
+        }
+        for (let i = 0; i < nodes.length; i++)
+          for (let j = i + 1; j < nodes.length; j++) {
+            const a = nodes[i],
+              b = nodes[j];
+            if (
+              a.x < b.right &&
+              a.right > b.x &&
+              a.y < b.bottom &&
+              a.bottom > b.y
+            )
+              throw new Error('Overlapping cards');
+          }
         expect(
-          Math.max(
-            ...JSON.parse(await canvas.getAttribute('data-rotation')).map(
-              Math.abs,
-            ),
+          await page.evaluate(
+            () => document.documentElement.scrollWidth <= innerWidth,
           ),
-        ).toBeLessThan(0.005);
-        const after = await artwork.boundingBox();
-        expect(after).toEqual(before);
-        expect(
-          await page.evaluate(() =>
-            window.heroShifts.reduce((a, b) => a + b, 0),
-          ),
-        ).toBeLessThan(0.01);
-        await page.evaluate(() => {
-          Object.defineProperty(document, 'hidden', {
-            configurable: true,
-            get: () => true,
-          });
-          document.dispatchEvent(new Event('visibilitychange'));
-        });
-        await expect(artwork).toHaveAttribute('data-rendering', 'paused');
-        // Let the single already queued WebGL frame drain before asserting idle.
-        await page.waitForTimeout(120);
-        const frames = await canvas.getAttribute('data-frames');
-        await page.waitForTimeout(400);
-        expect(await canvas.getAttribute('data-frames')).toBe(frames);
-        // Capture a stable rendered frame; this also avoids software-GPU capture races.
-        await page.screenshot({
-          path: `${artifacts}/${theme}-${width}-hero.png`,
-        });
-        await page.evaluate(() => {
-          delete document.hidden;
-          document.dispatchEvent(new Event('visibilitychange'));
-        });
-        await expect(artwork).toHaveAttribute('data-rendering', 'running');
-        await page.mouse.move(
-          bounds.x + bounds.width / 2,
-          bounds.y + bounds.height / 2,
-        );
-        await page.mouse.wheel(0, 900);
-        await expect
-          .poll(() => page.evaluate(() => scrollY))
-          .toBeGreaterThan(100);
-        await expect(artwork).toHaveAttribute('data-rendering', 'paused');
-        await page.waitForTimeout(120);
-        const stopped = await canvas.getAttribute('data-frames');
-        await page.waitForTimeout(400);
-        expect(await canvas.getAttribute('data-frames')).toBe(stopped);
+        ).toBe(true);
+        if (width === 1440) {
+          const copy = page.locator('.hero-copy');
+          const before = await copy.boundingBox();
+          const start = await scene
+            .locator('.feedback-float')
+            .evaluate((node) => getComputedStyle(node).translate);
+          await page.waitForTimeout(1100);
+          expect(
+            await scene
+              .locator('.feedback-float')
+              .evaluate((node) => getComputedStyle(node).translate),
+          ).not.toBe(start);
+          expect(await copy.boundingBox()).toEqual(before);
+          const durations = await scene
+            .locator('.floating-card')
+            .evaluateAll((nodes) =>
+              nodes.map((node) => getComputedStyle(node).animationDuration),
+            );
+          expect(new Set(durations).size).toBe(3);
+          const bounds = await scene
+            .locator('.feedback-float')
+            .evaluate((node) =>
+              node
+                .getAnimations()[0]
+                .effect.getKeyframes()
+                .map((frame) => frame.translate),
+            );
+          expect(bounds).toContain('0px -6px');
+        }
         await page.evaluate(() => scrollTo({ top: 0, behavior: 'instant' }));
-        await expect(artwork).toHaveAttribute('data-rendering', 'running');
-      } else {
-        await page.waitForLoadState('networkidle');
-        await expect(artwork).toHaveAttribute('data-scene', 'static');
-        await expect(page.locator('canvas')).toHaveCount(0);
-        expect(
-          requested.some((url) => /three_build|fiber_dist/.test(url)),
-        ).toBe(false);
         await page.screenshot({
           path: `${artifacts}/${theme}-${width}-hero.png`,
         });
-      }
-      expect(
-        await page.evaluate(
-          () => document.documentElement.scrollWidth <= innerWidth,
-        ),
-      ).toBe(true);
-      for (const route of ['/login', '/signup']) {
-        await page.goto(base + route);
-        await expect(page.locator('canvas')).toHaveCount(0);
-        expect(
-          requested.some((url) => /three_build|fiber_dist/.test(url)),
-        ).toBe(false);
         await page.screenshot({
-          path: `${artifacts}/${theme}-${width}-${route.slice(1)}.png`,
+          path: `${artifacts}/${theme}-${width}.png`,
+          fullPage: true,
         });
+        await page.emulateMedia({ reducedMotion: 'reduce' });
+        await expect(scene.locator('.feedback-float')).toHaveCSS(
+          'animation-name',
+          'none',
+        );
+        await page.goto(base + '/dashboard/qr');
+        await expect(
+          page.getByRole('button', { name: 'Download SVG card', exact: true }),
+        ).toBeEnabled();
+        const downloaded = page.waitForEvent('download');
+        await page
+          .getByRole('button', { name: 'Download SVG card', exact: true })
+          .click();
+        await downloaded;
+        expect(errors).toEqual([]);
+        expect(requests.some((url) => /hero-scene/.test(url))).toBe(false);
+        await context.close();
       }
-      expect(errors).toEqual([]);
-      const video = page.video();
-      await context.close();
-      if (video) await video.saveAs(`${artifacts}/${theme}-scene.webm`);
-    }
-  }
-  for (const mode of [
-    'reduced',
-    'coarse',
-    'webgl-unavailable',
-    'chunk-failure',
-  ]) {
-    console.log(`Checking ${mode} fallback`);
-    const context = await browser.newContext({
-      viewport: { width: 1440, height: 1000 },
-      ...(mode === 'reduced' ? { reducedMotion: 'reduce' } : {}),
-      ...(mode === 'coarse' ? { hasTouch: true } : {}),
-    });
-    if (mode === 'webgl-unavailable')
-      await context.addInitScript(() => {
-        const get = HTMLCanvasElement.prototype.getContext;
-        HTMLCanvasElement.prototype.getContext = function (type, ...args) {
-          return /webgl/.test(type) ? null : get.call(this, type, ...args);
-        };
-      });
-    const page = await context.newPage();
-    if (mode === 'chunk-failure')
-      await page.route('**/_next/static/chunks/*.js', async (route) => {
-        const response = await route.fetch();
-        const body = await response.text();
-        // Fail only the isolated renderer body, not framework/loader metadata.
-        if (body.includes('RevuPing procedural scene')) await route.abort();
-        else await route.fulfill({ response });
-      });
-    await page.goto(base);
-    await page.waitForLoadState('networkidle');
-    await expect(page.locator('.hero-artwork')).toHaveAttribute(
-      'data-scene',
-      mode === 'reduced' || mode === 'coarse' ? 'static' : 'failed',
-      { timeout: 45000 },
+    console.log(
+      'PASS: original feedback/request/reply cards, no hero canvas, no overlapping/clipped cards or horizontal overflow, distinct bounded 6px floating, stationary hero copy, reduced motion, both themes at 390/768/1440 and functional QR download.',
     );
-    await expect(page.locator('canvas')).toHaveCount(0);
-    await page
-      .locator('.hero-actions')
-      .getByRole('link', { name: 'Try the demo' })
-      .click();
-    await expect(page).toHaveURL(/\/dashboard$/);
-    await context.close();
+  } finally {
+    await browser.close();
   }
-  // Losing a live context also restores the fallback without losing the CTA.
-  const context = await browser.newContext({
-      viewport: { width: 1440, height: 1000 },
-    }),
-    page = await context.newPage();
-  await page.goto(base);
-  await expect(page.locator('.hero-artwork')).toHaveAttribute(
-    'data-scene',
-    'ready',
-    { timeout: 45000 },
-  );
-  await page
-    .locator('canvas')
-    .evaluate((c) =>
-      c.getContext('webgl2').getExtension('WEBGL_lose_context').loseContext(),
-    );
-  await expect(page.locator('.hero-artwork')).toHaveAttribute(
-    'data-scene',
-    'failed',
-  );
-  await expect(
-    page.locator('.hero-actions').getByRole('link', { name: 'Try the demo' }),
-  ).toBeVisible();
-  await context.close();
-  await browser.close();
-  console.log(
-    'PASS: actual WebGL, bounded pointer/float/rest, 1.5 DPR cap, stable hero dimensions/CLS, hidden/offscreen pause, scroll-through, static tablet/mobile/coarse/reduced fallback, WebGL/chunk/context-loss fallback, CTA, and no auth canvases. Both themes at all three widths.',
-  );
-})().catch((e) => {
-  console.error(e);
+})().catch((error) => {
+  console.error(error);
   process.exit(1);
 });

@@ -19,28 +19,17 @@ module.exports = async function checkMotion(browser, base) {
     if (m.type() === 'error') errors.push(m.text());
   });
   await page.goto(base);
-  const scene = page.locator('.hero-artwork');
-  await expect(scene).toHaveAttribute('data-scene', 'ready', {
-    timeout: 30000,
-  });
-  await expect(scene).toHaveAttribute('data-rendering', 'running');
-  const canvas = scene.locator('canvas');
-  const start = await canvas.getAttribute('data-float');
-  await page.waitForTimeout(900);
-  expect(await canvas.getAttribute('data-float')).not.toBe(start);
-  const bounds = await scene.boundingBox();
-  await page.mouse.move(
-    bounds.x + bounds.width * 0.85,
-    bounds.y + bounds.height * 0.3,
+  const scene = page.locator('.feedback-composition');
+  await expect(scene).toHaveAttribute('data-floating', 'running');
+  await expect(page.locator('canvas')).toHaveCount(0);
+  const card = scene.locator('.feedback-float');
+  const start = await card.evaluate(
+    (element) => getComputedStyle(element).translate,
   );
-  await page.waitForTimeout(350);
-  const rotated = JSON.parse(await canvas.getAttribute('data-rotation'));
-  expect(Math.abs(rotated[1])).toBeGreaterThan(0.025);
-  expect(Math.abs(rotated[1])).toBeLessThanOrEqual(0.11);
-  await page.mouse.move(10, 10);
   await page.waitForTimeout(900);
-  const resting = JSON.parse(await canvas.getAttribute('data-rotation'));
-  expect(Math.max(...resting.map(Math.abs))).toBeLessThan(0.005);
+  expect(
+    await card.evaluate((element) => getComputedStyle(element).translate),
+  ).not.toBe(start);
   await page.evaluate(() => {
     Object.defineProperty(document, 'hidden', {
       configurable: true,
@@ -48,19 +37,14 @@ module.exports = async function checkMotion(browser, base) {
     });
     document.dispatchEvent(new Event('visibilitychange'));
   });
-  await expect(scene).toHaveAttribute('data-rendering', 'paused');
-  // Canvas commits asynchronously; an already queued frame may finish once.
-  await page.waitForTimeout(120);
-  const paused = await canvas.getAttribute('data-frames');
-  await page.waitForTimeout(350);
-  expect(await canvas.getAttribute('data-frames')).toBe(paused);
+  await expect(scene).toHaveAttribute('data-floating', 'paused');
   await page.evaluate(() => {
     delete document.hidden;
     document.dispatchEvent(new Event('visibilitychange'));
   });
-  await expect(scene).toHaveAttribute('data-rendering', 'running');
+  await expect(scene).toHaveAttribute('data-floating', 'running');
   await page.locator('#features').scrollIntoViewIfNeeded();
-  await expect(scene).toHaveAttribute('data-rendering', 'paused');
+  await expect(scene).toHaveAttribute('data-floating', 'paused');
   await page.getByRole('tab', { name: 'Reply drafts', exact: true }).click();
   await expect(page.getByRole('tabpanel')).toContainText('Edit this reply');
   await expect(page.locator('.showcase-tab-indicator')).toBeVisible();
@@ -111,7 +95,7 @@ module.exports = async function checkMotion(browser, base) {
   await expect(page.locator('#marketing-mobile-menu')).toHaveCount(0);
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto(base);
-  await expect(scene).toHaveAttribute('data-scene', 'static');
+  await expect(scene).toHaveAttribute('data-floating', 'paused');
   await expect(scene.locator('canvas')).toHaveCount(0);
   await question.scrollIntoViewIfNeeded();
   await question.click();
@@ -125,13 +109,13 @@ module.exports = async function checkMotion(browser, base) {
   });
   const touchPage = await touch.newPage();
   await touchPage.goto(base);
-  await expect(touchPage.locator('.hero-artwork')).toHaveAttribute(
-    'data-scene',
-    'static',
+  await expect(touchPage.locator('.feedback-float')).toHaveCSS(
+    'animation-name',
+    'none',
   );
   await expect(touchPage.locator('canvas')).toHaveCount(0);
   await touch.close();
   console.log(
-    'PASS: live procedural 3D floating, bounded rotation/reset, visibility/offscreen pause, showcase indicator, one-time curve drawing, animated FAQ, mobile menu focus/Escape and static reduced motion.',
+    'PASS: restored feedback-card floating, visibility/offscreen pause, showcase indicator, one-time curve drawing, animated FAQ, mobile menu focus/Escape and static reduced motion.',
   );
 };

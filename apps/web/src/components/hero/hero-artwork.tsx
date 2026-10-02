@@ -1,127 +1,109 @@
 'use client';
-import dynamic from 'next/dynamic';
-import { Component, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useInView, useReducedMotion } from 'motion/react';
+import {
+  ArrowRight,
+  ArrowUpRight,
+  Check,
+  Leaf,
+  MessageSquare,
+  Send,
+  Sparkles,
+} from 'lucide-react';
+import { Stars, Badge } from '../shared';
+import { QrCode } from '../qr-code';
 import { ConversationCurves } from '../conversation-curves';
-import { HeroStatic } from './hero-static';
-const Scene = dynamic(() => import('./hero-scene'), { ssr: false });
-class SceneBoundary extends Component<
-  { children: React.ReactNode; onError: () => void },
-  { failed: boolean }
-> {
-  override state = { failed: false };
-  static getDerivedStateFromError() {
-    return { failed: true };
-  }
-  override componentDidCatch() {
-    this.props.onError();
-  }
-  override render() {
-    return this.state.failed ? null : this.props.children;
-  }
-}
+/** Recovered from the pre-WebGL landing composition in commit 9a59e5c. */
 export function HeroArtwork() {
   const ref = useRef<HTMLDivElement>(null);
-  const pointer = useRef({ x: 0, y: 0 });
   const inView = useInView(ref, { amount: 0.15 });
   const reduced = useReducedMotion();
-  const [eligible, setEligible] = useState(false);
   const [visible, setVisible] = useState(true);
-  const [loaded, setLoaded] = useState(false);
-  const [ready, setReady] = useState(false);
-  const [failed, setFailed] = useState(false);
   useEffect(() => {
-    const media = matchMedia(
-      '(min-width: 1024px) and (hover: hover) and (pointer: fine)',
-    );
-    const update = () => setEligible(media.matches);
-    const visibility = () => setVisible(!document.hidden);
+    const update = () => setVisible(!document.hidden);
     update();
-    visibility();
-    media.addEventListener('change', update);
-    document.addEventListener('visibilitychange', visibility);
-    return () => {
-      media.removeEventListener('change', update);
-      document.removeEventListener('visibilitychange', visibility);
-    };
+    document.addEventListener('visibilitychange', update);
+    return () => document.removeEventListener('visibilitychange', update);
   }, []);
-  useEffect(() => {
-    if (!eligible || reduced || !inView || failed || loaded) return;
-    try {
-      const probe = document.createElement('canvas');
-      const gl = probe.getContext('webgl2');
-      if (!gl) {
-        setFailed(true);
-        return;
-      }
-      gl.getExtension('WEBGL_lose_context')?.loseContext();
-      setLoaded(true);
-    } catch {
-      setFailed(true);
-    }
-  }, [eligible, reduced, inView, failed, loaded]);
-  const renderScene = loaded && eligible && !reduced && !failed;
-  const active = renderScene && inView && visible;
-  useEffect(() => {
-    if (!renderScene) setReady(false);
-  }, [renderScene]);
   return (
-    <figure className="relative m-0 w-full min-w-0 self-center">
+    <figure className="hero-feedback-art m-0 min-w-0 self-center">
       <div
         ref={ref}
-        aria-hidden="true"
-        className="hero-artwork relative isolate aspect-[600/560] w-full overflow-hidden rounded-[32px]"
-        data-scene={
-          failed
-            ? 'failed'
-            : renderScene
-              ? ready
-                ? 'ready'
-                : 'loading'
-              : 'static'
-        }
-        data-rendering={active ? 'running' : 'paused'}
-        onPointerMove={(event) => {
-          if (!active) return;
-          const r = event.currentTarget.getBoundingClientRect();
-          pointer.current = {
-            x: Math.max(
-              -1,
-              Math.min(1, ((event.clientX - r.left) / r.width - 0.5) * 2),
-            ),
-            y: Math.max(
-              -1,
-              Math.min(1, ((event.clientY - r.top) / r.height - 0.5) * 2),
-            ),
-          };
-        }}
-        onPointerLeave={() => {
-          pointer.current = { x: 0, y: 0 };
-        }}
+        className="hero-composition feedback-composition"
+        data-floating={!reduced && inView && visible ? 'running' : 'paused'}
+        aria-label="Illustrative customer feedback, review request and reply previews"
       >
         <ConversationCurves variant="hero" className="inset-0 size-full" />
-        <div className="pointer-events-none absolute inset-[12%] -z-10 rounded-full bg-violet/5 blur-3xl" />
-        <HeroStatic
-          className={`pointer-events-none absolute inset-0 size-full transition-opacity duration-500 motion-reduce:transition-none ${renderScene && ready ? 'opacity-0' : 'opacity-100'}`}
-        />
-        {renderScene && (
-          <SceneBoundary onError={() => setFailed(true)}>
-            <div
-              className={`pointer-events-none absolute inset-0 transition-opacity duration-500 ${ready ? 'opacity-100' : 'opacity-0'}`}
-            >
-              <Scene
-                active={active}
-                pointer={pointer}
-                onReady={() => setReady(true)}
-                onFailure={() => setFailed(true)}
-              />
-            </div>
-          </SceneBoundary>
-        )}
+
+        <span className="composition-label">
+          An illustrative customer journey
+        </span>
+        <div className="salon-qr">
+          <div className="salon-emblem">
+            <Leaf size={27} />
+          </div>
+          <span className="salon-wordmark">bloom & co.</span>
+          <span className="salon-sub">Salon & beauty</span>
+          <div className="hero-qr">
+            <QrCode decorative />
+          </div>
+          <h3>How was your visit?</h3>
+          <p>We’d love to hear about it.</p>
+          <div className="qr-card-footer">
+            Illustrative card · Demo preview <ArrowUpRight size={13} />
+          </div>
+        </div>
+        <div className="floating-card feedback-float">
+          <span className="float-icon mint">
+            <MessageSquare size={18} />
+          </span>
+          <div>
+            <small>NEW PRIVATE FEEDBACK</small>
+            <Stars />
+            <p>“Sophie made my day. Love my new colour!”</p>
+            <span className="muted">
+              Olivia M. <span>·</span> Just now
+            </span>
+          </div>
+          <span className="live-dot" />
+        </div>
+        <div className="floating-card request-float">
+          <span className="float-icon violet">
+            <Send size={17} />
+          </span>
+          <div>
+            <strong>Review request ready</strong>
+            <p>Olivia Martin · Sample request</p>
+            <Badge mint>
+              <Check size={11} /> Consent confirmed
+            </Badge>
+          </div>
+        </div>
+        <div className="floating-card reply-float">
+          <div className="reply-heading">
+            <Sparkles size={16} />
+            <strong>Editable reply draft</strong>
+          </div>
+          <p>“Thank you, Olivia! We’re so happy you love your new look…”</p>
+          <div className="reply-bottom">
+            <span>Review before approving</span>
+            <Check size={14} />
+          </div>
+        </div>
+        <span className="composition-star ping-mark" aria-hidden="true" />
+        <div
+          className="mini-journey"
+          aria-label="Product journey: scan, share feedback, prepare reply"
+        >
+          {['Scan', 'Share', 'Reply'].map((step, index) => (
+            <span key={step}>
+              <i>{index + 1}</i>
+              {step}
+              {index < 2 && <ArrowRight size={12} />}
+            </span>
+          ))}
+        </div>
       </div>
-      <figcaption className="relative mt-0 text-center text-xs leading-5 text-muted">
-        An illustrative feedback journey · QR artwork is not scannable
-      </figcaption>
     </figure>
   );
 }

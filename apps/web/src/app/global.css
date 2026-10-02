@@ -313,3 +313,150 @@
   transform: none;
   box-shadow: none;
 }
+
+/* Original pre-WebGL cards, with clear spacing and quiet brand curves. */
+.feedback-composition.hero-composition {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+  gap: 18px;
+  align-items: center;
+  width: 100%;
+  height: auto;
+  min-height: 540px;
+  margin: 0;
+  padding: 40px 8px 24px;
+  transform: none;
+}
+.feedback-composition > svg {
+  z-index: -1;
+  opacity: 0.55;
+  pointer-events: none;
+}
+.feedback-composition .composition-label {
+  position: absolute;
+  top: 0;
+  left: 8px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.feedback-composition .salon-qr {
+  position: relative;
+  grid-column: 1;
+  grid-row: 1 / 4;
+  top: auto;
+  left: auto;
+  width: 100%;
+  padding: 24px 14px 0;
+  transform: none;
+  background: var(--surface-work);
+  color: var(--ink);
+  border: 1px solid var(--border);
+  box-shadow: 0 16px 40px var(--shadow-color);
+}
+.feedback-composition .salon-wordmark {
+  font-size: 27px;
+}
+.feedback-composition .hero-qr {
+  width: 100%;
+  max-width: 220px;
+  margin: 18px auto;
+}
+.feedback-composition .hero-qr .qr-code {
+  background: white;
+  border-radius: 8px;
+}
+.feedback-composition .salon-qr h3 {
+  font-size: 20px;
+}
+.feedback-composition .salon-qr p {
+  font-size: 14px;
+}
+.feedback-composition .floating-card {
+  position: relative;
+  grid-column: 2;
+  top: auto;
+  bottom: auto;
+  left: auto;
+  right: auto;
+  width: 100%;
+  margin: 0;
+  padding: 18px;
+  transform: none;
+  background: var(--surface-work);
+  color: var(--ink);
+  border: 1px solid var(--border);
+  box-shadow: 0 10px 28px var(--shadow-color);
+}
+.feedback-composition .feedback-float {
+  grid-row: 1;
+  gap: 10px;
+}
+.feedback-composition .request-float {
+  grid-row: 2;
+}
+.feedback-composition .reply-float {
+  grid-row: 3;
+}
+.feedback-composition .floating-card p {
+  font-size: 14px;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+.feedback-composition .floating-card strong {
+  font-size: 15px;
+}
+.feedback-composition .floating-card small {
+  font-size: 11px;
+  letter-spacing: 0.6px;
+}
+.feedback-composition .reply-bottom {
+  gap: 8px;
+  font-size: 12px;
+}
+.feedback-composition .stars svg {
+  width: 15px;
+  height: 15px;
+}
+.feedback-composition .composition-star {
+  display: none;
+}
+.feedback-composition .mini-journey {
+  position: relative;
+  grid-column: 1 / -1;
+  top: auto;
+  bottom: auto;
+  left: auto;
+  justify-self: center;
+  margin-top: 8px;
+}
+@media (max-width: 1100px) {
+  .feedback-composition.hero-composition {
+    grid-template-columns: minmax(0, 1fr);
+    min-height: 0;
+    padding-top: 36px;
+    gap: 16px;
+  }
+  .feedback-composition .salon-qr {
+    display: none;
+  }
+  .feedback-composition .floating-card {
+    grid-column: 1;
+  }
+  .feedback-composition .mini-journey {
+    grid-column: 1;
+  }
+}
+@media (max-width: 600px) {
+  .feedback-composition .floating-card {
+    animation: none;
+    translate: none;
+  }
+  .feedback-composition .floating-card small {
+    font-size: 12px;
+  }
+  .feedback-composition > svg {
+    opacity: 0.25;
+  }
+}
