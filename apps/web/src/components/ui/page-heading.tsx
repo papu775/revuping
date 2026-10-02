@@ -20,7 +20,11 @@ export function PageHeading({
           {text}
         </p>
       </div>
-      {children}
+      {children && (
+        <div className="page-heading-actions flex flex-wrap items-center gap-3">
+          {children}
+        </div>
+      )}
     </div>
   );
 }

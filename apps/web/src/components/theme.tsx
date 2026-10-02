@@ -1,7 +1,8 @@
 'use client';
 import { ThemeProvider as Provider, useTheme } from 'next-themes';
 import { useSyncExternalStore } from 'react';
-import { SunMoon } from 'lucide-react';
+import { Sun, Moon, SunMoon } from 'lucide-react';
+import { motion, useReducedMotion } from 'motion/react';
 import { Select } from '@/components/ui/select';
 const subscribe = () => () => undefined;
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
@@ -19,6 +20,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 }
 export function ThemeControl() {
   const { theme, setTheme } = useTheme();
+  const reduced = useReducedMotion();
   const mounted = useSyncExternalStore(
     subscribe,
     () => true,
@@ -30,7 +32,22 @@ export function ThemeControl() {
       value={mounted ? theme || 'system' : 'system'}
       onValueChange={setTheme}
       compact
-      icon={<SunMoon size={19} />}
+      icon={
+        <motion.span
+          key={mounted ? theme : 'system'}
+          initial={{ opacity: reduced ? 1 : 0, rotate: reduced ? 0 : -20 }}
+          animate={{ opacity: 1, rotate: 0 }}
+          transition={{ duration: reduced ? 0 : 0.16 }}
+        >
+          {mounted && theme === 'light' ? (
+            <Sun size={19} />
+          ) : mounted && theme === 'dark' ? (
+            <Moon size={19} />
+          ) : (
+            <SunMoon size={19} />
+          )}
+        </motion.span>
+      }
       options={[
         { value: 'light', label: 'Light', description: 'Warm cream surfaces' },
         { value: 'dark', label: 'Dark', description: 'Deep navy surfaces' },

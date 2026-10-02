@@ -998,6 +998,15 @@
     flex: 1;
     gap: 10px;
   }
+  .search-field:focus-within {
+    outline: 3px solid var(--violet);
+    outline-offset: 3px;
+    border-color: var(--violet);
+  }
+  .search-field input:focus-visible {
+    outline: none;
+    box-shadow: none;
+  }
   .search-field input {
     background: none;
     border: 0;
@@ -2635,6 +2644,7 @@
   }
   .page-heading .button {
     font-size: 14px;
+    font-weight: 400;
     min-height: 46px;
     padding: 12px 18px;
   }
@@ -2945,7 +2955,10 @@
   .search-field input {
     color: var(--ink);
     font-size: 14px;
-    min-height: 48px;
+    font-weight: 400;
+    min-height: 46px;
+    height: 46px;
+    padding-block: 0;
   }
   .filter-select {
     padding-inline: 14px;
@@ -3122,6 +3135,7 @@
   .reviews-toolbar select {
     color: var(--violet);
     font-size: 14px;
+    font-weight: 400;
     min-height: 46px;
   }
   .review-card {
@@ -5776,6 +5790,7 @@
   }
   .overview-welcome .text-link {
     font-size: 14px;
+    font-weight: 400;
     min-height: 46px;
   }
   .metric > div {

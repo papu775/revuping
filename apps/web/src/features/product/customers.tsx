@@ -20,6 +20,7 @@ import {
   Field,
   Button,
   PageHeading,
+  FilterToolbar,
   Picker,
   SearchBox,
   SampleTable,
@@ -214,7 +215,7 @@ export function CustomerDirectory({ selectedId }: { selectedId?: number }) {
         Use fictional example-domain contacts only. Customer changes are shared
         with request and campaign screens in this session.
       </DemoBanner>
-      <div className="product-filter-row">
+      <FilterToolbar>
         <SearchBox label="Search customers" value={query} onChange={setQuery} />
         <Picker
           label="Consent filter"
@@ -233,7 +234,7 @@ export function CustomerDirectory({ selectedId }: { selectedId?: number }) {
             ),
           ]}
         />
-      </div>
+      </FilterToolbar>
       <div className="product-split">
         <Panel>
           <h2>

@@ -3,6 +3,7 @@ import { useState, useRef } from 'react';
 import { withDeadline } from '@/lib/async-actions';
 import { InlineSpinner } from '@/components/ui/loading';
 import { Copy, ChevronLeft, ChevronRight } from 'lucide-react';
+import { BrandColour } from '@/components/ui/brand-colour';
 import { useDemoWorkspace } from '@/data-access/demo-workspace';
 import { useToast } from '@/components/ui/toaster';
 import { reviews } from '@/data-access/mock-data';
@@ -119,18 +120,13 @@ export function Widgets() {
             }
             options={['Light', 'Dark']}
           />
-          <Field>
-            Accent colour
-            <input
-              type="color"
-              value={widget.colour}
-              onChange={(event) =>
-                updateProduct({
-                  widget: { ...widget, colour: event.target.value },
-                })
-              }
-            />
-          </Field>
+          <BrandColour
+            label="Accent colour"
+            value={widget.colour}
+            onChange={(colour) =>
+              updateProduct({ widget: { ...widget, colour } })
+            }
+          />
           <h3>Choose sample reviews</h3>
           {reviews.map((review) => (
             <label key={review.id} className="consent-checkbox">

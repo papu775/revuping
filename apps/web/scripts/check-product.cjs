@@ -79,11 +79,18 @@ async function verifyControls(browser, errors) {
         ['surveys', 'View survey', 'surveys-detail'],
       ]) {
         await page.goto(base + '/dashboard/' + section);
-        await page.getByRole('button', { name: button, exact: true }).first().click();
+        await page
+          .getByRole('button', { name: button, exact: true })
+          .first()
+          .click();
         if (width <= 1100) {
           await expect(page.locator('#' + panel)).toBeFocused();
-          await expect.poll(async () => (await page.locator('#' + panel).boundingBox()).y).toBeGreaterThanOrEqual(90);
-          await expect.poll(async () => (await page.locator('#' + panel).boundingBox()).y).toBeLessThan(250);
+          await expect
+            .poll(async () => (await page.locator('#' + panel).boundingBox()).y)
+            .toBeGreaterThanOrEqual(90);
+          await expect
+            .poll(async () => (await page.locator('#' + panel).boundingBox()).y)
+            .toBeLessThan(250);
         }
       }
       await page.goto(base + '/dashboard/customers');
@@ -446,8 +453,10 @@ async function verifyControls(browser, errors) {
     await expect(page.locator('.product-message')).toContainText(
       'No email was sent',
     );
-    await page.locator('.chart-bars button').first().focus();
-    await expect(page.locator('.chart-bars button').first()).toBeFocused();
+    await page.locator('.sample-chart-bars button').first().focus();
+    await expect(
+      page.locator('.sample-chart-bars button').first(),
+    ).toBeFocused();
     await nav(page, 'surveys');
     await page.getByRole('button', { name: 'Edit survey' }).click();
     await dialog.getByLabel('Survey name').fill('October listening survey');
@@ -516,9 +525,11 @@ async function verifyControls(browser, errors) {
       'Fictional review sample',
     );
     await nav(page, 'competitors');
-    const counts = await page.locator('.chart-bars').innerText();
+    const counts = await page.locator('.sample-chart-bars').innerText();
     await select(page, 'Comparison period', 'September sample');
-    expect(await page.locator('.chart-bars').innerText()).not.toBe(counts);
+    expect(await page.locator('.sample-chart-bars').innerText()).not.toBe(
+      counts,
+    );
     await nav(page, 'integrations');
     await page
       .getByRole('button', { name: 'Open Google setup preview' })
@@ -538,9 +549,11 @@ async function verifyControls(browser, errors) {
     await dialog
       .getByRole('button', { name: 'Record demo connection' })
       .click();
-    await expect(page.locator('.product-card-grid')).toContainText(
-      'Demo-connected',
-    );
+    await expect(
+      page.locator('.product-panel').filter({
+        has: page.getByRole('heading', { name: 'Google', exact: true }),
+      }),
+    ).toContainText('Demo-connected');
     await nav(page, 'onboarding');
     await page.getByRole('button', { name: 'Continue setup' }).click();
     await page.getByRole('button', { name: 'Continue setup' }).click();

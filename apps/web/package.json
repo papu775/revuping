@@ -81,6 +81,13 @@
           "command": "next start --port 3000"
         },
         "cache": false
+      },
+      "design-check": {
+        "executor": "nx:run-commands",
+        "cache": false,
+        "options": {
+          "command": "node apps/web/scripts/check-design.cjs"
+        }
       }
     },
     "tags": [

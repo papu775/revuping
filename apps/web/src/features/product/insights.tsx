@@ -13,6 +13,7 @@ import {
   Badge,
   Button,
   PageHeading,
+  FilterToolbar,
   Picker,
   SampleTable,
   SampleChart,
@@ -66,7 +67,7 @@ export function StaffInsights() {
         Counts and distributions derive from the shared fictional feedback
         inbox. Assignment changes appear here immediately.
       </DemoBanner>
-      <div className="product-filter-row">
+      <FilterToolbar>
         <Picker
           label="Staff member"
           value={staff}
@@ -79,7 +80,7 @@ export function StaffInsights() {
           onChange={setService}
           options={['All services', 'Colour', 'Cut & finish', 'Treatments']}
         />
-      </div>
+      </FilterToolbar>
       {compare ? (
         <Panel>
           <h2>Sample comparison, alphabetically</h2>
@@ -287,7 +288,7 @@ export function Reports() {
         change this sample dataset; the live-session counters below are shown
         separately.
       </DemoBanner>
-      <div className="product-filter-row">
+      <FilterToolbar>
         <Picker
           label="Report date range"
           value={range}
@@ -311,7 +312,7 @@ export function Reports() {
             'Confirmed sample reviews',
           ]}
         />
-      </div>
+      </FilterToolbar>
       <MetricCards
         items={[
           {

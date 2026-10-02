@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import Link from 'next/link';
 import { ArrowRight, CheckCircle2, Download, Search } from 'lucide-react';
 import { PageHeading } from '@/components/ui/page-heading';
@@ -16,12 +16,22 @@ export function Panel({
 }
 export function DemoBanner({ children }: { children?: React.ReactNode }) {
   return (
-    <div className="info-banner product-demo-banner">
-      <CheckCircle2 size={19} />
-      <p>
-        {children ||
-          'Fictional demo data. Changes stay in this browser session. No messages, payments or integrations are live.'}
+    <details className="demo-context mb-6 text-[13px] leading-6 text-muted">
+      <summary className="flex min-h-9 cursor-pointer items-center gap-2 rounded-md focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-accent">
+        <CheckCircle2 size={16} className="text-positive-ink" />
+        Demo data · No live messages or connections
+        <span className="ml-1 text-accent">Details</span>
+      </summary>
+      <p className="mt-2 max-w-[760px] border-l-2 border-line pl-6">
+        {children || 'Changes stay in this demo and reset on reload.'}
       </p>
+    </details>
+  );
+}
+export function FilterToolbar({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="filter-toolbar my-6 flex flex-wrap items-end gap-4 [&>*]:min-w-[min(100%,200px)] [&>*]:flex-1 [&>.field]:!m-0">
+      {children}
     </div>
   );
 }
@@ -61,18 +71,24 @@ export function SearchBox({
   value: string;
   onChange: (value: string) => void;
 }) {
+  const id = useId();
   return (
-    <label className="search-field">
-      <Search size={18} />
-      <input
-        aria-label={label}
-        placeholder={label}
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-      />
-    </label>
+    <div className="flex min-w-0 flex-col gap-2 text-sm font-semibold text-ink">
+      <label htmlFor={id}>{label}</label>
+      <div className="search-field">
+        <Search size={18} />
+        <input
+          id={id}
+          aria-label={label}
+          placeholder={label}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+        />
+      </div>
+    </div>
   );
 }
+
 export function MetricCards({
   items,
 }: {
@@ -189,11 +205,26 @@ export function SampleChart({
   return (
     <section className="sample-chart" aria-label={title}>
       <h3>{title}</h3>
-      <p className="field-help">
-        Fictional data · Focus a bar for its value. The table below provides the
-        same data.
-      </p>
-      <div className="chart-bars">
+      <p className="field-help">Sample {unit} · Hover or focus for values.</p>
+      {!rows.length && (
+        <p className="my-6 rounded-lg border border-line bg-soft p-4 text-sm">
+          No sample data in this selection.
+        </p>
+      )}
+      {!!rows.length && rows.every((row) => row.value === 0) && (
+        <p className="my-4 text-sm text-muted">No sample responses yet.</p>
+      )}
+      {rows.some((row) => row.value > 0) && (
+        <div className="chart-scale" aria-hidden="true">
+          <span>{unit}</span>
+          <div className="flex justify-between">
+            <span>0</span>
+            <span>{Math.round(max / 2)}</span>
+            <span>{max}</span>
+          </div>
+        </div>
+      )}
+      <div className="sample-chart-bars">
         {rows.map((row) => (
           <div className="chart-bar-row" key={row.label}>
             <span>{row.label}</span>

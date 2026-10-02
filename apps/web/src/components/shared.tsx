@@ -56,13 +56,15 @@ export function Reveal({
 export function Badge({
   children,
   mint = false,
+  tone = 'neutral',
 }: {
   children: React.ReactNode;
   mint?: boolean;
+  tone?: 'neutral' | 'accent' | 'danger';
 }) {
   return (
     <span
-      className={`badge inline-flex items-center gap-1.5 whitespace-nowrap rounded-[5px] border px-2 py-1 text-xs font-semibold leading-4 ${mint ? 'mint border-positive-line bg-positive text-positive-ink' : 'border-accent-line bg-canvas text-accent'}`}
+      className={`badge inline-flex self-start items-center gap-1.5 whitespace-nowrap rounded-[5px] border px-2 py-1 text-xs font-semibold leading-4 ${mint ? 'mint border-positive-line bg-positive text-positive-ink' : tone === 'danger' ? 'border-danger bg-danger-soft text-danger' : tone === 'accent' ? 'border-accent-line bg-selected text-accent' : 'border-line bg-soft text-muted'}`}
     >
       {children}
     </span>

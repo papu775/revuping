@@ -16,6 +16,7 @@ import {
   Field,
   Button,
   PageHeading,
+  FilterToolbar,
   Picker,
   SearchBox,
   SampleTable,
@@ -263,7 +264,7 @@ export function Campaigns({
           />
         </Panel>
       )}
-      <div className="product-filter-row">
+      <FilterToolbar>
         <SearchBox label="Search campaigns" value={query} onChange={setQuery} />
         <Picker
           label="Campaign status"
@@ -277,7 +278,7 @@ export function Campaigns({
             'Completed',
           ]}
         />
-      </div>
+      </FilterToolbar>
       <div className="product-split">
         <Panel>
           <h2>Your campaigns</h2>

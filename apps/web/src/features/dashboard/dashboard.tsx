@@ -37,6 +37,7 @@ import { Select } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Dialog } from '@/components/ui/dialog';
 import { Badge, Stars, TextLink } from '@/components/shared';
+import { BrandColour } from '@/components/ui/brand-colour';
 import { printableColor } from '@/lib/print-palette';
 import { qrCardSvg } from '@/lib/qr-card-export';
 import { QrCode } from '@/components/qr-code';
@@ -481,28 +482,12 @@ export function QrStudio() {
               Enter display text before exporting.
             </p>
           )}
-          <Field as="div">
-            Brand colour
-            <div className="color-options">
-              {['#6250b5', '#253c39', '#243650', '#ad5e41'].map((c) => (
-                <button
-                  key={c}
-                  style={{ background: c }}
-                  aria-label={`Select colour ${c}`}
-                  aria-pressed={c === color}
-                  onClick={() => setColor(c)}
-                >
-                  {c === color && <Check size={19} />}
-                </button>
-              ))}
-              <input
-                aria-label="Custom brand colour"
-                type="color"
-                value={color}
-                onChange={(e) => setColor(e.target.value)}
-              />
-            </div>
-          </Field>
+          <BrandColour
+            label="Brand colour"
+            value={color}
+            onChange={setColor}
+            pickerLabel="Custom brand colour"
+          />
           {printColor !== color && (
             <p className="mb-5 text-sm leading-6 text-muted" role="status">
               Light brand colors use navy on the printable card to keep text and

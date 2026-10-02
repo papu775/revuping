@@ -62,13 +62,13 @@ export function MarketingHeader() {
   }, [open]);
   return (
     <header
-      className={`sticky top-0 z-50 border-b transition-[background-color,border-color,box-shadow] duration-200 ${scrolled || open ? 'border-line bg-ivory/95 shadow-[0_8px_24px_var(--shadow-color)] backdrop-blur-sm' : 'border-transparent bg-ivory'}`}
+      className={`sticky top-0 z-50 border-b transition-[background-color,border-color,box-shadow] duration-200 ${scrolled || open ? 'border-line bg-ivory/95 shadow-[0_4px_18px_var(--shadow-color)] backdrop-blur-md' : 'border-transparent bg-ivory'}`}
     >
-      <div className="mx-auto flex h-[76px] max-w-[1320px] items-center justify-between gap-3 px-4 md:gap-5 md:px-8 xl:px-10 [&_.logo]:text-[22px] md:[&_.logo]:text-[26px] [&_.logo-mark]:size-7 md:[&_.logo-mark]:size-8">
+      <div className="mx-auto flex h-[72px] max-w-[1320px] items-center justify-between gap-3 px-4 md:gap-5 md:px-8 xl:px-10 [&_.logo]:text-[22px] md:[&_.logo]:text-[26px] [&_.logo-mark]:size-7 md:[&_.logo-mark]:size-8">
         <Logo />
         <nav
           aria-label="Main navigation"
-          className="hidden items-center gap-7 whitespace-nowrap lg:flex"
+          className="hidden items-center gap-6 whitespace-nowrap lg:flex"
         >
           {links.map(([label, href]) => (
             <SectionLink
@@ -139,7 +139,7 @@ export function MarketingHeader() {
                     setOpen(false);
                     trigger.current?.focus();
                   }}
-                  className="rounded-lg px-3 py-3 text-base font-medium hover:bg-canvas"
+                  className="rounded-lg px-3 py-3 text-base font-medium hover:bg-canvas focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-accent"
                 >
                   {label}
                 </Link>

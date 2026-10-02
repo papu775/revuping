@@ -1,8 +1,16 @@
 'use client';
 import { useState, useRef } from 'react';
-import { Plus, CheckCircle2, Plug, RotateCcw } from 'lucide-react';
+import {
+  Plus,
+  CheckCircle2,
+  MessageCircle,
+  Smartphone,
+  Mail,
+  RotateCcw,
+} from 'lucide-react';
 import { useDemoWorkspace } from '@/data-access/demo-workspace';
 import { useToast } from '@/components/ui/toaster';
+import { BrandColour } from '@/components/ui/brand-colour';
 import { Dialog } from '@/components/ui/dialog';
 import { fictionalEmail } from '@/features/product/customers';
 import { reviews } from '@/data-access/mock-data';
@@ -42,7 +50,7 @@ export function BusinessSettings({
   const [role, setRole] = useState('Staff');
   const [reset, setReset] = useState(false);
   const profile = (
-    <>
+    <div className="grid gap-x-5 sm:grid-cols-2">
       <Field>
         Business name
         <input
@@ -79,17 +87,12 @@ export function BusinessSettings({
           }
         />
       </Field>
-      <Field>
-        Brand accent
-        <input
-          type="color"
-          value={business.branding}
-          onChange={(event) =>
-            setBusiness({ ...business, branding: event.target.value })
-          }
-        />
-      </Field>
-    </>
+      <BrandColour
+        label="Brand accent"
+        value={business.branding}
+        onChange={(branding) => setBusiness({ ...business, branding })}
+      />
+    </div>
   );
   function saveBusiness() {
     setErrorScope('profile');
@@ -137,93 +140,122 @@ export function BusinessSettings({
         sample workspace.
       </DemoBanner>
       {onboarding ? (
-        <Panel>
-          <div className="builder-progress">
-            {['Business', 'Connection preview', 'Finish'].map(
-              (label, index) => (
-                <span
-                  className={step === index + 1 ? 'current' : ''}
+        <Panel className="mx-auto !max-w-[860px] !p-0">
+          <div className="border-b border-line bg-soft p-5 sm:p-7">
+            <ol className="grid grid-cols-3 gap-3" aria-label="Setup progress">
+              {['Business', 'Connections', 'Review'].map((label, index) => (
+                <li
                   key={label}
+                  aria-current={step === index + 1 ? 'step' : undefined}
+                  className={`flex flex-col gap-2 text-[13px] font-medium sm:flex-row sm:items-center sm:gap-3 ${step >= index + 1 ? 'text-ink' : 'text-muted'}`}
                 >
-                  {index + 1}. {label}
-                </span>
-              ),
-            )}
+                  <span
+                    className={`flex size-8 shrink-0 items-center justify-center rounded-full border ${step > index + 1 ? 'border-positive-line bg-positive text-positive-ink' : step === index + 1 ? 'border-accent-line bg-selected text-accent' : 'border-control bg-surface text-muted'}`}
+                  >
+                    {step > index + 1 ? <CheckCircle2 size={17} /> : index + 1}
+                  </span>
+                  {label}
+                </li>
+              ))}
+            </ol>
           </div>
-          {step === 1 ? (
-            profile
-          ) : step === 2 ? (
-            <>
-              <h2>Connect when you are ready</h2>
-              <p>
-                Google, WhatsApp, SMS and email will need real integration work
-                later. Explore their setup previews now or continue without a
-                connection.
-              </p>
-              <ActionLink href="/dashboard/integrations">
-                Inspect integration setup previews
-              </ActionLink>
-              <div className="info-note">
-                <p>
-                  No credentials, tokens or real account access are requested.
+          <div className="p-5 sm:p-7">
+            {step === 1 && (
+              <div className="mb-2">
+                <span className="eyebrow">Step 1 of 3</span>
+                <h2 className="mt-2 text-xl font-semibold">
+                  Make this workspace yours
+                </h2>
+                <p className="mt-2 text-sm">
+                  A few details for your fictional business.
                 </p>
               </div>
-            </>
-          ) : (
-            <>
-              <CheckCircle2 size={32} />
-              <h2>{business.name}</h2>
-              <p>
-                {business.category} · {business.locations}
-              </p>
-              <p>{business.hours}</p>
-              <p>
-                You can explore every module using fictional data. Completion
-                changes the overview setup checklist.
-              </p>
-            </>
-          )}
-          {error && errorScope === 'profile' && <ErrorText>{error}</ErrorText>}
-          <div className="product-actions">
-            {step > 1 && (
-              <Button variant="secondary" onClick={() => setStep(step - 1)}>
-                Back
-              </Button>
             )}
-            {step < 3 ? (
-              <Button
-                onClick={() => {
-                  if (
-                    step === 1 &&
-                    (!business.name.trim() ||
-                      !business.hours.trim() ||
-                      !business.locations.trim())
-                  )
-                    setError(
-                      'Complete the business name, opening hours and locations.',
-                    );
-                  else {
-                    setError('');
-                    setStep(step + 1);
-                  }
-                }}
-              >
-                Continue setup
-              </Button>
+            {step === 1 ? (
+              profile
+            ) : step === 2 ? (
+              <>
+                <h2>Connect when you are ready</h2>
+                <p>
+                  Explore Google, WhatsApp, SMS and email setup previews, or
+                  continue without connecting. Nothing goes live in this demo.
+                </p>
+                <ActionLink href="/dashboard/integrations">
+                  Inspect integration setup previews
+                </ActionLink>
+                <div className="info-note">
+                  <p>
+                    No credentials, tokens or real account access are requested.
+                  </p>
+                </div>
+              </>
             ) : (
-              <Button
-                onClick={() => {
-                  if (saveBusiness()) setStep(4);
-                }}
-                disabled={step === 4}
-              >
-                Finish demo setup
-              </Button>
+              <>
+                <CheckCircle2 size={32} className="mb-4 text-positive-ink" />
+                <h2 className="text-xl font-semibold">
+                  {step === 4
+                    ? 'You’re ready to explore'
+                    : 'Your workspace at a glance'}
+                </h2>
+                <p className="mt-4 font-semibold text-ink">{business.name}</p>
+                <p>
+                  {business.category} · {business.locations}
+                </p>
+                <p>{business.hours}</p>
+                <p>
+                  You can explore every module using fictional data. Your setup
+                  progress is shown on the overview.
+                </p>
+              </>
+            )}
+            {error && errorScope === 'profile' && (
+              <ErrorText>{error}</ErrorText>
+            )}
+            <div className="mt-7 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-5">
+              {step > 1 && step < 4 && (
+                <Button variant="secondary" onClick={() => setStep(step - 1)}>
+                  Back
+                </Button>
+              )}
+              {step < 3 ? (
+                <Button
+                  onClick={() => {
+                    if (
+                      step === 1 &&
+                      (!business.name.trim() ||
+                        !business.hours.trim() ||
+                        !business.locations.trim())
+                    )
+                      setError(
+                        'Complete the business name, opening hours and locations.',
+                      );
+                    else {
+                      setError('');
+                      setStep(step + 1);
+                    }
+                  }}
+                >
+                  Continue setup
+                </Button>
+              ) : step === 3 ? (
+                <Button
+                  onClick={() => {
+                    if (saveBusiness()) setStep(4);
+                  }}
+                >
+                  Finish demo setup
+                </Button>
+              ) : (
+                <span className="flex items-center gap-2 text-sm text-positive-ink">
+                  <CheckCircle2 size={18} />
+                  Demo setup complete
+                </span>
+              )}
+            </div>
+            {step === 4 && (
+              <ActionLink href="/dashboard">Open your demo overview</ActionLink>
             )}
           </div>
-          {step === 4 && (
-            <ActionLink href="/dashboard">Open your demo overview</ActionLink>
-          )}
         </Panel>
       ) : (
         <>
@@ -514,15 +546,42 @@ export function Integrations() {
         Every connection state here is a demo state. No provider APIs are
         called; real integrations are planned for later implementation.
       </DemoBanner>
-      <div className="product-card-grid">
+      <div className="integration-grid my-6 grid gap-5 min-[900px]:grid-cols-2 min-[1700px]:grid-cols-4">
         {['Google', 'WhatsApp', 'SMS', 'Email'].map((name) => (
-          <Panel key={name}>
-            <Plug size={26} />
+          <Panel key={name} className="flex flex-col">
+            <div className="mb-5 flex items-center justify-between gap-3">
+              <span
+                className={`flex size-12 items-center justify-center rounded-xl border ${name === 'WhatsApp' ? 'border-positive-line bg-positive text-positive-ink' : 'border-line bg-soft text-ink'}`}
+                aria-hidden="true"
+              >
+                {name === 'Google' ? (
+                  <span className="text-3xl font-semibold text-[#4285f4] dark:text-[#8ab4f8]">
+                    G
+                  </span>
+                ) : name === 'WhatsApp' ? (
+                  <MessageCircle size={25} />
+                ) : name === 'SMS' ? (
+                  <Smartphone size={25} />
+                ) : (
+                  <Mail size={25} />
+                )}
+              </span>
+              <span className="text-xs text-muted">Demo preview</span>
+            </div>
             <h2>{name}</h2>
-            <Badge mint={product.connections[name] === 'Demo-connected'}>
-              {product.connections[name]} · demo
+            <Badge
+              mint={product.connections[name] === 'Demo-connected'}
+              tone={
+                product.connections[name] === 'Error'
+                  ? 'danger'
+                  : product.connections[name] === 'Setup preview'
+                    ? 'accent'
+                    : 'neutral'
+              }
+            >
+              {product.connections[name]}
             </Badge>
-            <p>
+            <p className="mb-5 mt-4 min-h-[3.5rem] text-sm leading-6">
               {name === 'Google'
                 ? 'Preview business review access, response permissions and location selection.'
                 : `Preview sender identity, recorded permission and ${name.toLowerCase()} message setup.`}
@@ -543,7 +602,7 @@ export function Integrations() {
                 </Button>
               </div>
             )}
-            <div className="product-actions">
+            <div className="mt-auto flex flex-col gap-3 pt-5 [&>.button]:whitespace-normal">
               <Button
                 variant="secondary"
                 onClick={() => {

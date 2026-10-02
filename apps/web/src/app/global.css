@@ -90,13 +90,13 @@
     --disabled-bg: #202433;
     --disabled-ink: #7b8397;
     --disabled-line: #363c4d;
-    --surface-soft: #2b3142;
+    --surface-soft: #1b2030;
     --surface-selected: #392f50;
     --ink: #f0edf6;
     --muted: #c0c3d2;
     --page-ink: #f0edf6;
     --page-muted: #c0c3d2;
-    --border: #485064;
+    --border: #3d4559;
     --accent-line: #6c548f;
     --violet: #c4a9f5;
     --violet-dark: #ae8de6;
@@ -677,7 +677,7 @@
 }
 .product-metric > small {
   color: var(--muted);
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.5;
 }
 .product-filter-row {
@@ -720,6 +720,10 @@
 .product-form-grid > * {
   min-width: 0;
 }
+.product-table th,
+.product-table td {
+  padding: 16px 12px;
+}
 .product-table table {
   width: 100%;
   table-layout: auto;
@@ -743,7 +747,9 @@
   font-size: 12px;
 }
 .product-table .button {
-  white-space: normal;
+  white-space: nowrap;
+  min-height: 40px;
+  padding: 8px 12px;
 }
 .product-person {
   display: flex;
@@ -893,17 +899,23 @@
   font-size: 17px;
   margin-bottom: 12px;
 }
-.chart-bars {
+.sample-chart-bars {
   display: grid;
-  gap: 18px;
-  margin: 24px 0;
+  gap: 16px;
+  margin: 12px 0 20px;
 }
+.chart-scale,
 .chart-bar-row {
   display: grid;
-  grid-template-columns: minmax(85px, 0.7fr) minmax(0, 1.3fr);
+  grid-template-columns: minmax(90px, 0.35fr) minmax(0, 1fr);
   align-items: center;
   gap: 16px;
   font-size: 13px;
+}
+.chart-scale {
+  margin-top: 20px;
+  color: var(--muted);
+  font-size: 12px;
 }
 .chart-bar-row > button {
   position: relative;
@@ -912,6 +924,11 @@
   padding: 0 8px;
   color: var(--ink);
   border-radius: 6px;
+  background: repeating-linear-gradient(
+    to right,
+    var(--border) 0 1px,
+    transparent 1px 50%
+  );
 }
 .chart-bar-row button i {
   position: absolute;
@@ -961,6 +978,8 @@
   font-size: 13px;
 }
 .survey-question {
+  background: var(--surface-soft);
+  scroll-margin: 16px;
   border: 1px solid var(--border);
   padding: 20px;
   border-radius: 12px;
@@ -1299,7 +1318,12 @@
 .product-panel {
   padding: 28px;
 }
-.product-panel > h2 {
+.product-panel > h2,
+.product-panel .product-panel-heading h2 {
+  font-family: inherit;
+  font-size: 21px;
+  line-height: 1.4;
+  letter-spacing: -0.4px;
   margin-bottom: 12px;
 }
 .dashboard-content > .product-panel + .product-panel {

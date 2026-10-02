@@ -1,6 +1,7 @@
 'use client';
 import { focusWorkspacePanel } from '@/lib/workspace-focus';
 import { useState, useEffect, useRef } from 'react';
+import { useReducedMotion } from 'motion/react';
 import { Plus, Trash2, ArrowUp, CheckCircle2 } from 'lucide-react';
 import { useDemoWorkspace } from '@/data-access/demo-workspace';
 import { useToast } from '@/components/ui/toaster';
@@ -39,6 +40,8 @@ export function Surveys({ selectedId }: { selectedId?: number }) {
   );
   const [open, setOpen] = useState(false);
   const saveLock = useRef(false);
+  const addedQuestion = useRef<number | null>(null);
+  const reduced = useReducedMotion();
   const [draft, setDraft] = useState<Survey>({
     id: 0,
     name: '',
@@ -47,6 +50,40 @@ export function Surveys({ selectedId }: { selectedId?: number }) {
   });
   const [error, setError] = useState('');
   const [optionsText, setOptionsText] = useState<Record<number, string>>({});
+  useEffect(() => {
+    if (addedQuestion.current === null) return;
+    const question = document.getElementById(
+      `builder-question-${addedQuestion.current}`,
+    );
+    addedQuestion.current = null;
+    question?.scrollIntoView({
+      block: 'nearest',
+      behavior: reduced ? 'instant' : 'smooth',
+    });
+    question
+      ?.querySelector<HTMLInputElement>('input[type="text"], input:not([type])')
+      ?.focus({ preventScroll: true });
+  }, [draft.questions, reduced]);
+  useEffect(() => {
+    if (error) document.getElementById('survey-builder-error')?.focus();
+  }, [error]);
+  function addQuestion() {
+    const id = Date.now();
+    addedQuestion.current = id;
+    setDraft({
+      ...draft,
+      questions: [
+        ...draft.questions,
+        {
+          id,
+          type: 'Optional text',
+          title: 'Anything else to share?',
+          options: [],
+          required: false,
+        },
+      ],
+    });
+  }
   const active = product.surveys.find((survey) => survey.id === selected);
   const responses = product.responses.filter(
     (response) => response.surveyId === active?.id,
@@ -103,6 +140,36 @@ export function Surveys({ selectedId }: { selectedId?: number }) {
         question.id === id ? { ...question, ...changes } : question,
       ),
     });
+  }
+  function saveSurvey() {
+    if (saveLock.current) return;
+    if (
+      !draft.name.trim() ||
+      !draft.questions.length ||
+      draft.questions.some(
+        (question) =>
+          !question.title.trim() ||
+          (question.type === 'Multiple choice' &&
+            (question.options.length < 2 ||
+              new Set(question.options).size !== question.options.length)),
+      )
+    ) {
+      setError(
+        'Add a survey name and at least one named question. Multiple-choice questions need two distinct options.',
+      );
+      return;
+    }
+    saveLock.current = true;
+    const id = draft.id || Date.now();
+    updateProduct((product) => ({
+      ...product,
+      surveys: draft.id
+        ? product.surveys.map((survey) => (survey.id === id ? draft : survey))
+        : [...product.surveys, { ...draft, id }],
+    }));
+    setSelected(id);
+    setOpen(false);
+    toast('Demo survey saved');
   }
   return (
     <>
@@ -249,31 +316,62 @@ export function Surveys({ selectedId }: { selectedId?: number }) {
         open={open}
         onOpenChange={setOpen}
         title="Survey builder"
+        wide
+        footer={
+          <div className="flex flex-wrap items-center justify-between gap-4 max-sm:flex-col max-sm:items-stretch">
+            <div className="flex items-center gap-3">
+              <Button
+                variant="secondary"
+                disabled={draft.questions.length >= 8}
+                onClick={addQuestion}
+              >
+                <Plus size={17} />
+                Add question
+              </Button>
+              <span className="text-xs text-muted" role="status">
+                {draft.questions.length} of 8 questions
+              </span>
+            </div>
+            <Button onClick={saveSurvey}>Save demo survey</Button>
+          </div>
+        }
         description="Keep the questions short, clear and independent of public review participation."
       >
-        <Field>
-          Survey name
-          <input
-            value={draft.name}
-            onChange={(event) =>
-              setDraft({ ...draft, name: event.target.value })
-            }
-            maxLength={80}
+        <div className="grid gap-x-5 sm:grid-cols-[2fr_1fr] [&>.field]:!mt-0">
+          <Field>
+            Survey name
+            <input
+              value={draft.name}
+              onChange={(event) =>
+                setDraft({ ...draft, name: event.target.value })
+              }
+              maxLength={80}
+            />
+          </Field>
+          <Picker
+            label="Survey status"
+            value={draft.status}
+            onChange={(status) => setDraft({ ...draft, status: status })}
+            options={['Draft', 'Active', 'Paused']}
           />
-        </Field>
-        <Picker
-          label="Survey status"
-          value={draft.status}
-          onChange={(status) => setDraft({ ...draft, status: status })}
-          options={['Draft', 'Active', 'Paused']}
-        />
+        </div>
+        {error && (
+          <div id="survey-builder-error" tabIndex={-1}>
+            <ErrorText>{error}</ErrorText>
+          </div>
+        )}
         {draft.questions.map((question, index) => (
-          <section className="survey-question" key={question.id}>
+          <section
+            className="survey-question"
+            id={`builder-question-${question.id}`}
+            key={question.id}
+          >
             <div className="product-panel-heading">
               <h3>Question {index + 1}</h3>
-              <div className="product-actions">
+              <div className="product-actions !m-0 !gap-2">
                 <Button
                   size="small"
+                  className="!size-10 !min-h-10 !p-2"
                   variant="ghost"
                   disabled={index === 0}
                   aria-label={`Move question ${index + 1} up`}
@@ -290,6 +388,7 @@ export function Surveys({ selectedId }: { selectedId?: number }) {
                 </Button>
                 <Button
                   size="small"
+                  className="!size-10 !min-h-10 !p-2"
                   variant="ghost"
                   aria-label={`Remove question ${index + 1}`}
                   onClick={() =>
@@ -305,44 +404,46 @@ export function Surveys({ selectedId }: { selectedId?: number }) {
                 </Button>
               </div>
             </div>
-            <Picker
-              label={`Question ${index + 1} type`}
-              value={question.type}
-              onChange={(type) => {
-                setOptionsText((previous) => ({
-                  ...previous,
-                  [question.id]:
-                    type === 'Multiple choice'
-                      ? 'Listening, Comfort, Results'
-                      : '',
-                }));
-                changeQuestion(question.id, {
-                  type: type,
-                  required:
-                    type === 'Optional text' ? false : question.required,
-                  options:
-                    type === 'Multiple choice'
-                      ? ['Listening', 'Comfort', 'Results']
-                      : [],
-                });
-              }}
-              options={[
-                'Satisfaction',
-                'NPS',
-                'Multiple choice',
-                'Optional text',
-              ]}
-            />
-            <Field>
-              Question text
-              <input
-                value={question.title}
-                onChange={(event) =>
-                  changeQuestion(question.id, { title: event.target.value })
-                }
-                maxLength={180}
+            <div className="grid gap-x-4 sm:grid-cols-[1fr_2fr] [&>.field]:!m-0">
+              <Picker
+                label={`Question ${index + 1} type`}
+                value={question.type}
+                onChange={(type) => {
+                  setOptionsText((previous) => ({
+                    ...previous,
+                    [question.id]:
+                      type === 'Multiple choice'
+                        ? 'Listening, Comfort, Results'
+                        : '',
+                  }));
+                  changeQuestion(question.id, {
+                    type: type,
+                    required:
+                      type === 'Optional text' ? false : question.required,
+                    options:
+                      type === 'Multiple choice'
+                        ? ['Listening', 'Comfort', 'Results']
+                        : [],
+                  });
+                }}
+                options={[
+                  'Satisfaction',
+                  'NPS',
+                  'Multiple choice',
+                  'Optional text',
+                ]}
               />
-            </Field>
+              <Field>
+                Question text
+                <input
+                  value={question.title}
+                  onChange={(event) =>
+                    changeQuestion(question.id, { title: event.target.value })
+                  }
+                  maxLength={180}
+                />
+              </Field>
+            </div>
             {question.type === 'Multiple choice' && (
               <Field>
                 Options, separated by commas
@@ -381,65 +482,6 @@ export function Surveys({ selectedId }: { selectedId?: number }) {
             )}
           </section>
         ))}
-        <Button
-          variant="secondary"
-          disabled={draft.questions.length >= 8}
-          onClick={() =>
-            setDraft({
-              ...draft,
-              questions: [
-                ...draft.questions,
-                {
-                  id: Date.now(),
-                  type: 'Optional text',
-                  title: 'Anything else to share?',
-                  options: [],
-                  required: false,
-                },
-              ],
-            })
-          }
-        >
-          Add question
-        </Button>
-        {error && <ErrorText>{error}</ErrorText>}
-        <Button
-          onClick={() => {
-            if (saveLock.current) return;
-            if (
-              !draft.name.trim() ||
-              !draft.questions.length ||
-              draft.questions.some(
-                (question) =>
-                  !question.title.trim() ||
-                  (question.type === 'Multiple choice' &&
-                    (question.options.length < 2 ||
-                      new Set(question.options).size !==
-                        question.options.length)),
-              )
-            ) {
-              setError(
-                'Add a survey name and at least one named question. Multiple-choice questions need two distinct options.',
-              );
-              return;
-            }
-            saveLock.current = true;
-            const id = draft.id || Date.now();
-            updateProduct((product) => ({
-              ...product,
-              surveys: draft.id
-                ? product.surveys.map((survey) =>
-                    survey.id === id ? draft : survey,
-                  )
-                : [...product.surveys, { ...draft, id }],
-            }));
-            setSelected(id);
-            setOpen(false);
-            toast('Demo survey saved');
-          }}
-        >
-          Save demo survey
-        </Button>
       </Dialog>
     </>
   );

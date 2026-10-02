@@ -192,12 +192,7 @@ export default function DashboardLayout({
               <div className="demo-sidebar">
                 <span className="live-dot" />
                 <strong>Demo workspace</strong>
-                <p>
-                  You’re exploring a demo.
-                  <br />
-                  Contacts and comments reset on reload. Safe display
-                  preferences stay local.
-                </p>
+                <p>Fictional data. Changes reset on reload.</p>
                 <Link href="/r/demo-salon">
                   See the customer view <ArrowUpRight size={14} />
                 </Link>

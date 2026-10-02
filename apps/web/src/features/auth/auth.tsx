@@ -1,6 +1,5 @@
 'use client';
 import { PasswordField } from '@/components/ui/password-field';
-import { HeroStatic } from '@/components/hero/hero-static';
 import { ConversationCurves } from '@/components/conversation-curves';
 import { FloatingSample } from '@/components/template-motion';
 import { Avatar } from '@/components/ui/avatar';
@@ -20,7 +19,6 @@ export function Auth({ signup = false }: { signup?: boolean }) {
   return (
     <main className="auth-page">
       <section className="auth-story">
-        <HeroStatic className="pointer-events-none absolute -right-16 bottom-0 w-[330px] opacity-[0.14]" />
         <ConversationCurves
           variant="auth"
           className="-right-16 top-5 h-[420px] w-[380px]"
@@ -86,10 +84,13 @@ export function Auth({ signup = false }: { signup?: boolean }) {
         </span>
       </section>
       <section className="auth-form-side">
-        <div className="auth-mobile-logo">
+        <div className="auth-mobile-logo max-[800px]:!block">
           <Logo />
         </div>
-        <Link href="/" className="auth-back">
+        <Link
+          href="/"
+          className="auth-back max-[800px]:absolute max-[800px]:right-6 max-[800px]:top-9"
+        >
           ← Back to RevuPing
         </Link>
         <div className="auth-form">
