@@ -2,6 +2,7 @@
 /// <reference types="node" />
 module.exports = {
   displayName: 'mobile',
+  maxWorkers: 2,
   preset: 'jest-expo',
   moduleFileExtensions: ['ts', 'js', 'html', 'tsx', 'jsx'],
   setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],

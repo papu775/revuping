@@ -1,7 +1,5 @@
-
 import { View, Text, StyleSheet } from 'react-native';
-import { useTheme, avatarTones, type AvatarTone } from 'mobile-tokens';
-
+import { avatarTones, lightColors, type AvatarTone } from 'mobile-tokens';
 
 export function Avatar({
   initials,
@@ -12,7 +10,6 @@ export function Avatar({
   tone?: AvatarTone;
   size?: number;
 }) {
-  const { colors } = useTheme();
   const bgColor = avatarTones[tone];
 
   return (
@@ -29,9 +26,14 @@ export function Avatar({
       accessibilityLabel={`Avatar for ${initials}`}
     >
       <Text
+        maxFontSizeMultiplier={1.3}
         style={[
           styles.initials,
-          { color: colors.ink, fontSize: size * 0.35 },
+          {
+            color: lightColors.ink,
+            fontSize: size * 0.35,
+            includeFontPadding: false,
+          },
         ]}
       >
         {initials}
@@ -42,6 +44,7 @@ export function Avatar({
 
 const styles = StyleSheet.create({
   avatar: {
+    flexShrink: 0,
     justifyContent: 'center',
     alignItems: 'center',
   },

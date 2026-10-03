@@ -1,4 +1,3 @@
-
 import {
   TouchableOpacity,
   Text,
@@ -37,14 +36,16 @@ export function Button({
     variant === 'primary'
       ? colors.actionBg
       : variant === 'danger'
-        ? colors.danger
+        ? colors.dangerSoft
         : 'transparent';
   const textColor =
-    variant === 'primary' || variant === 'danger'
-      ? '#ffffff'
-      : variant === 'secondary'
-        ? colors.ink
-        : colors.violet;
+    variant === 'primary'
+      ? colors.onDark
+      : variant === 'danger'
+        ? colors.danger
+        : variant === 'secondary'
+          ? colors.ink
+          : colors.violet;
   const borderColor =
     variant === 'secondary' ? colors.controlBorder : 'transparent';
 
@@ -55,24 +56,38 @@ export function Button({
       activeOpacity={0.7}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel ?? title}
-      accessibilityState={{ disabled: disabled || loading }}
+      accessibilityState={{ disabled: disabled || loading, busy: loading }}
       style={[
         styles.base,
         {
-          backgroundColor: bgColor,
-          borderColor,
-          opacity: disabled ? 0.5 : 1,
+          backgroundColor: disabled ? colors.disabledBg : bgColor,
+          borderColor: disabled
+            ? colors.disabledLine
+            : variant === 'danger'
+              ? colors.danger
+              : borderColor,
         },
         style,
       ]}
     >
-      {loading ? (
-        <ActivityIndicator color={textColor} size="small" />
-      ) : (
-        <Text style={[styles.text, { color: textColor }, textStyle]}>
+      {loading && (
+        <ActivityIndicator
+          color={textColor}
+          size="small"
+          style={{ marginRight: 8 }}
+        />
+      )}
+      {
+        <Text
+          style={[
+            styles.text,
+            { color: disabled ? colors.disabledInk : textColor },
+            textStyle,
+          ]}
+        >
           {title}
         </Text>
-      )}
+      }
     </TouchableOpacity>
   );
 }
@@ -80,6 +95,8 @@ export function Button({
 const styles = StyleSheet.create({
   base: {
     minHeight: 48,
+    flexDirection: 'row',
+    flexShrink: 1,
     borderRadius: radius.md,
     borderWidth: 1,
     justifyContent: 'center',
@@ -90,5 +107,7 @@ const styles = StyleSheet.create({
   text: {
     fontSize: typography.label,
     fontWeight: '600',
+    flexShrink: 1,
+    textAlign: 'center',
   },
 });

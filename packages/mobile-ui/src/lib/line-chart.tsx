@@ -1,12 +1,7 @@
-
 import { View, Text, StyleSheet } from 'react-native';
 import Svg, { Polyline, Circle } from 'react-native-svg';
 import { useTheme } from 'mobile-tokens';
 import { spacing, typography } from 'mobile-tokens';
-
-const SvgComponent: React.FC<any> = Svg as any;
-const PolylineComponent: React.FC<any> = Polyline as any;
-const CircleComponent: React.FC<any> = Circle as any;
 
 export function LineChart({
   data,
@@ -31,8 +26,13 @@ export function LineChart({
 
   const points = data
     .map((value, index) => {
-      const x = padding + (index / (data.length - 1)) * (width - padding * 2);
-      const y = height - padding - ((value - minValue) / range) * (height - padding * 2);
+      const x =
+        padding +
+        (index / Math.max(1, data.length - 1)) * (width - padding * 2);
+      const y =
+        height -
+        padding -
+        ((value - minValue) / range) * (height - padding * 2);
       return `${x},${y}`;
     })
     .join(' ');
@@ -40,10 +40,15 @@ export function LineChart({
   return (
     <View
       style={styles.container}
-      accessibilityLabel={accessibilityLabel ?? `Line chart with ${data.length} data points`}
+      accessible
+      accessibilityRole="image"
+      accessibilityLabel={
+        accessibilityLabel ??
+        `Line chart. ${data.map((v, i) => `${labels[i]}: ${v}`).join('. ')}`
+      }
     >
-      <SvgComponent width="100%" height={height} viewBox={`0 0 ${width} ${height}`}>
-        <PolylineComponent
+      <Svg width="100%" height={height} viewBox={`0 0 ${width} ${height}`}>
+        <Polyline
           points={points}
           fill="none"
           stroke={lineColor}
@@ -52,19 +57,16 @@ export function LineChart({
           strokeLinejoin="round"
         />
         {data.map((value, index) => {
-          const x = padding + (index / (data.length - 1)) * (width - padding * 2);
-          const y = height - padding - ((value - minValue) / range) * (height - padding * 2);
-          return (
-            <CircleComponent
-              key={index}
-              cx={x}
-              cy={y}
-              r="4"
-              fill={lineColor}
-            />
-          );
+          const x =
+            padding +
+            (index / Math.max(1, data.length - 1)) * (width - padding * 2);
+          const y =
+            height -
+            padding -
+            ((value - minValue) / range) * (height - padding * 2);
+          return <Circle key={index} cx={x} cy={y} r="4" fill={lineColor} />;
         })}
-      </SvgComponent>
+      </Svg>
       <View style={styles.labels}>
         {labels.map((label, index) => (
           <Text key={index} style={[styles.label, { color: colors.muted }]}>

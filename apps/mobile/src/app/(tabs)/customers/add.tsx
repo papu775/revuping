@@ -1,5 +1,12 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import { useState, useRef } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from 'mobile-tokens';
@@ -20,8 +27,10 @@ export default function AddCustomerScreen() {
   const [tags, setTags] = useState('');
   const [consent, setConsent] = useState(false);
   const [error, setError] = useState('');
+  const saving = useRef(false);
 
   const handleSave = () => {
+    if (saving.current) return;
     if (!name.trim()) {
       setError('Customer name is required.');
       return;
@@ -41,7 +50,10 @@ export default function AddCustomerScreen() {
       email: email.trim(),
       consent,
       status: consent ? 'Ready to send' : 'No consent',
-      tags: tags.split(',').map((t) => t.trim()).filter(Boolean),
+      tags: tags
+        .split(',')
+        .map((t) => t.trim())
+        .filter(Boolean),
       source: 'Manual entry · fictional',
       consentDate: consent ? '2026-10-02' : '',
       lastVisit: '2026-10-02',
@@ -50,9 +62,11 @@ export default function AddCustomerScreen() {
       optedOut: false,
     };
 
+    saving.current = true;
     dispatch({ type: 'ADD_CUSTOMER', customer: newCustomer });
     toast.showToast('Customer added');
-    router.back();
+    if (router.canGoBack()) router.back();
+    else router.replace('/(tabs)/customers');
   };
 
   return (
@@ -62,7 +76,11 @@ export default function AddCustomerScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
       >
-        <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 100 }}>
+        <ScrollView
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          contentContainerStyle={{ paddingTop: 16, paddingBottom: 24 }}
+        >
           <Card style={styles.card}>
             <Field
               label="Name"
@@ -78,7 +96,11 @@ export default function AddCustomerScreen() {
               onChangeText={setEmail}
               placeholder="customer@example.com"
               keyboardType="email-address"
-              error={error && email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) ? 'Enter a valid email' : undefined}
+              error={
+                error && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())
+                  ? 'Enter a valid email'
+                  : undefined
+              }
             />
             <Field
               label="Tags (comma separated)"
@@ -91,14 +113,23 @@ export default function AddCustomerScreen() {
           <Card style={styles.card}>
             <View style={styles.consentRow}>
               <View style={styles.consentText}>
-                <View style={[styles.consentDot, { backgroundColor: consent ? colors.positiveInk : colors.border }]} />
-                <View>
-<View style={styles.consentLabelRow}>
-  <Text style={styles.consentLabel}>Consent recorded</Text>
-</View>
-                  <View style={styles.consentDesc}>
+                <View
+                  style={[
+                    styles.consentDot,
+                    {
+                      backgroundColor: consent
+                        ? colors.positiveInk
+                        : colors.border,
+                    },
+                  ]}
+                />
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.consentLabel, { color: colors.ink }]}>
+                    Consent recorded
+                  </Text>
+                  <Text style={[styles.consentDesc, { color: colors.muted }]}>
                     Customer has agreed to receive review requests.
-                  </View>
+                  </Text>
                 </View>
               </View>
               <Button
@@ -110,7 +141,9 @@ export default function AddCustomerScreen() {
           </Card>
         </ScrollView>
 
-        <View style={[styles.footer, { paddingBottom: insets.bottom + spacing.lg }]}>
+        <View
+          style={[styles.footer, { paddingBottom: insets.bottom + spacing.lg }]}
+        >
           <Button title="Save customer" onPress={handleSave} />
         </View>
       </KeyboardAvoidingView>
@@ -127,8 +160,6 @@ const styles = StyleSheet.create({
     marginTop: spacing.lg,
   },
   consentRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
     gap: spacing.md,
   },
   consentText: {

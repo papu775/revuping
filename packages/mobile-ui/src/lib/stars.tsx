@@ -1,4 +1,3 @@
-
 import { View, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from 'mobile-tokens';
@@ -16,7 +15,12 @@ export function Stars({
   const starColor = color ?? colors.warmInk;
 
   return (
-    <View style={styles.container} accessibilityLabel={`${rating} out of 5 stars`}>
+    <View
+      accessible
+      accessibilityRole="image"
+      style={styles.container}
+      accessibilityLabel={`${rating} out of 5 stars`}
+    >
       {[1, 2, 3, 4, 5].map((i) => (
         <Ionicons
           key={i}

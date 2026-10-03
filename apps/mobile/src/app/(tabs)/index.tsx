@@ -1,6 +1,11 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import { useRouter } from 'expo-router';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+} from 'react-native';
+import { useRouter, type Href } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from 'mobile-tokens';
 import { useDemoStore, overviewMetrics, sampleTrend } from 'mobile-data';
@@ -15,79 +20,139 @@ export default function HomeScreen() {
   const { state } = useDemoStore();
 
   const unresolved = state.feedback.filter((f) => !f.resolved);
-  const pendingReplies = state.reviews.filter((r) => !state.approvedReplies.includes(r.id));
-  const scheduledCampaigns = state.campaigns.filter((c) => c.status === 'Scheduled');
+  const pendingReplies = state.reviews.filter(
+    (r) => !state.approvedReplies.includes(r.id),
+  );
+  const scheduledCampaigns = state.campaigns.filter(
+    (c) => c.status === 'Scheduled',
+  );
 
   const setupTasks = [
-    { label: 'Complete business onboarding', done: state.business.onboarded, route: '/(tabs)/more' },
-    { label: 'Record customer consent', done: state.customers.some((c) => c.consent), route: '/(tabs)/customers' },
-    { label: 'Inspect a request schedule', done: scheduledCampaigns.length > 0, route: '/(tabs)/campaigns' },
-    { label: 'Preview a Google connection', done: state.connections.Google === 'Demo connected', route: '/(tabs)/more' },
+    {
+      label: 'Complete business onboarding',
+      done: state.business.onboarded,
+      route: '/onboarding',
+    },
+    {
+      label: 'Record customer consent',
+      done: state.customers.some((c) => c.consent),
+      route: '/(tabs)/customers',
+    },
+    {
+      label: 'Inspect a request schedule',
+      done: scheduledCampaigns.length > 0,
+      route: '/(tabs)/campaigns',
+    },
+    {
+      label: 'Preview a Google connection',
+      done: state.connections.Google === 'Demo connected',
+      route: '/(tabs)/more/integrations',
+    },
   ];
   const completedCount = setupTasks.filter((t) => t.done).length;
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.canvas, paddingTop: insets.top }]}>
-      <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 80 }}>
+    <View
+      style={[
+        styles.container,
+        { backgroundColor: colors.canvas, paddingTop: insets.top },
+      ]}
+    >
+      <ScrollView
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        contentContainerStyle={{ paddingBottom: 24 }}
+      >
         <View style={styles.header}>
           <View>
-            <Text style={[styles.greeting, { color: colors.muted }]}>Good morning</Text>
-            <Text style={[styles.businessName, { color: colors.ink }]}>{state.business.name}</Text>
+            <Text style={[styles.greeting, { color: colors.muted }]}>
+              Good morning
+            </Text>
+            <Text style={[styles.businessName, { color: colors.ink }]}>
+              {state.business.name}
+            </Text>
           </View>
           <Badge label="Demo" tone="violet" />
         </View>
 
         {unresolved.length > 0 && (
           <TouchableOpacity
-            style={[styles.alertBanner, { backgroundColor: colors.surfaceSelected }]}
+            style={[
+              styles.alertBanner,
+              { backgroundColor: colors.surfaceSelected },
+            ]}
             onPress={() => router.push('/(tabs)/feedback')}
             accessibilityRole="button"
             accessibilityLabel={`${unresolved.length} feedback responses need attention`}
           >
             <Ionicons name="sparkles" size={20} color={colors.violet} />
             <Text style={[styles.alertText, { color: colors.ink }]}>
-              {unresolved.length} feedback {unresolved.length === 1 ? 'response needs' : 'responses need'} attention
+              {unresolved.length} feedback{' '}
+              {unresolved.length === 1 ? 'response needs' : 'responses need'}{' '}
+              attention
             </Text>
             <Ionicons name="chevron-forward" size={18} color={colors.violet} />
           </TouchableOpacity>
         )}
 
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.ink }]}>Overview</Text>
+          <Text style={[styles.sectionTitle, { color: colors.ink }]}>
+            Overview
+          </Text>
           <View style={styles.metricGrid}>
             {overviewMetrics.map((metric) => (
               <Card key={metric.label} style={styles.metricCard}>
-                <Text style={[styles.metricLabel, { color: colors.muted }]}>{metric.label}</Text>
-                <Text style={[styles.metricValue, { color: colors.ink }]}>{metric.value}</Text>
-                <Text style={[styles.metricChange, { color: colors.muted }]}>{metric.change}</Text>
+                <Text style={[styles.metricLabel, { color: colors.muted }]}>
+                  {metric.label}
+                </Text>
+                <Text style={[styles.metricValue, { color: colors.ink }]}>
+                  {metric.value}
+                </Text>
+                <Text style={[styles.metricChange, { color: colors.muted }]}>
+                  {metric.change}
+                </Text>
               </Card>
             ))}
           </View>
         </View>
 
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.ink }]}>This week</Text>
+          <Text style={[styles.sectionTitle, { color: colors.ink }]}>
+            This week
+          </Text>
           <Card>
-            <Text style={[styles.chartTitle, { color: colors.ink }]}>QR scans</Text>
-            <BarChart data={sampleTrend.scans} labels={sampleTrend.days} color={colors.violet} />
+            <Text style={[styles.chartTitle, { color: colors.ink }]}>
+              QR scans
+            </Text>
+            <BarChart
+              data={sampleTrend.scans}
+              labels={sampleTrend.days}
+              color={colors.violet}
+            />
           </Card>
         </View>
 
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.ink }]}>Today's tasks</Text>
+          <Text style={[styles.sectionTitle, { color: colors.ink }]}>
+            Today's tasks
+          </Text>
           <Card>
             {unresolved.slice(0, 3).map((item) => (
               <TouchableOpacity
                 key={item.id}
                 style={[styles.taskRow, { borderBottomColor: colors.border }]}
-                onPress={() => router.push('/(tabs)/feedback')}
+                onPress={() => router.push(`/(tabs)/feedback/${item.id}`)}
                 accessibilityRole="button"
                 accessibilityLabel={`Follow up with ${item.name}`}
               >
                 <Avatar initials={item.initials} tone="peach" size={36} />
                 <View style={styles.taskText}>
-                  <Text style={[styles.taskTitle, { color: colors.ink }]}>Follow up with {item.name}</Text>
-                  <Text style={[styles.taskSubtitle, { color: colors.muted }]}>{item.date} · {item.staff}</Text>
+                  <Text style={[styles.taskTitle, { color: colors.ink }]}>
+                    Follow up with {item.name}
+                  </Text>
+                  <Text style={[styles.taskSubtitle, { color: colors.muted }]}>
+                    {item.date} · {item.staff}
+                  </Text>
                 </View>
                 <Stars rating={item.rating} size={14} />
               </TouchableOpacity>
@@ -95,16 +160,25 @@ export default function HomeScreen() {
             {pendingReplies.length > 0 && (
               <TouchableOpacity
                 style={[styles.taskRow, { borderBottomColor: colors.border }]}
-                onPress={() => router.push('/(tabs)/more')}
+                onPress={() => router.push('/(tabs)/more/reviews')}
                 accessibilityRole="button"
                 accessibilityLabel={`Approve ${pendingReplies[0].name}'s reply draft`}
               >
-                <View style={[styles.taskIcon, { backgroundColor: colors.surfaceSelected }]}>
+                <View
+                  style={[
+                    styles.taskIcon,
+                    { backgroundColor: colors.surfaceSelected },
+                  ]}
+                >
                   <Ionicons name="chatbubble" size={18} color={colors.violet} />
                 </View>
                 <View style={styles.taskText}>
-                  <Text style={[styles.taskTitle, { color: colors.ink }]}>Approve {pendingReplies[0].name}'s reply draft</Text>
-                  <Text style={[styles.taskSubtitle, { color: colors.muted }]}>{pendingReplies.length} awaiting approval</Text>
+                  <Text style={[styles.taskTitle, { color: colors.ink }]}>
+                    Approve {pendingReplies[0].name}'s reply draft
+                  </Text>
+                  <Text style={[styles.taskSubtitle, { color: colors.muted }]}>
+                    {pendingReplies.length} awaiting approval
+                  </Text>
                 </View>
               </TouchableOpacity>
             )}
@@ -112,7 +186,9 @@ export default function HomeScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.ink }]}>Setup progress</Text>
+          <Text style={[styles.sectionTitle, { color: colors.ink }]}>
+            Setup progress
+          </Text>
           <Card>
             <Text style={[styles.setupProgress, { color: colors.muted }]}>
               {completedCount} of {setupTasks.length} complete
@@ -121,14 +197,26 @@ export default function HomeScreen() {
               <TouchableOpacity
                 key={task.label}
                 style={[styles.setupRow, { borderBottomColor: colors.border }]}
-                onPress={() => router.push(task.route as any)}
+                onPress={() => router.push(task.route as Href)}
                 accessibilityRole="button"
                 accessibilityLabel={`${task.label}: ${task.done ? 'complete' : 'incomplete'}`}
               >
-                <View style={[styles.checkbox, { borderColor: task.done ? colors.violet : colors.border, backgroundColor: task.done ? colors.violet : 'transparent' }]}>
+                <View
+                  style={[
+                    styles.checkbox,
+                    {
+                      borderColor: task.done ? colors.violet : colors.border,
+                      backgroundColor: task.done
+                        ? colors.actionBg
+                        : 'transparent',
+                    },
+                  ]}
+                >
                   {task.done && <Text style={styles.checkmark}>✓</Text>}
                 </View>
-                <Text style={[styles.setupLabel, { color: colors.ink }]}>{task.label}</Text>
+                <Text style={[styles.setupLabel, { color: colors.ink }]}>
+                  {task.label}
+                </Text>
               </TouchableOpacity>
             ))}
           </Card>
@@ -177,6 +265,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: typography.heading,
     fontWeight: '700',
+    flexShrink: 1,
     marginBottom: spacing.md,
   },
   metricGrid: {

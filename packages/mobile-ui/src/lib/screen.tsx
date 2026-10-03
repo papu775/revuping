@@ -21,6 +21,8 @@ export function Screen({
         styles.container,
         {
           backgroundColor: colors.canvas,
+          paddingLeft: edges.includes('left') ? insets.left : 0,
+          paddingRight: edges.includes('right') ? insets.right : 0,
           paddingTop: edges.includes('top') ? insets.top : 0,
           paddingBottom: edges.includes('bottom') ? insets.bottom : 0,
         },

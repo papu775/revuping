@@ -1,19 +1,46 @@
-import { Tabs } from 'expo-router';
+import { Text, useWindowDimensions } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Tabs, usePathname } from 'expo-router';
 import { useTheme } from 'mobile-tokens';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function TabsLayout() {
   const { colors } = useTheme();
+  const { fontScale } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+  const path = usePathname();
+  const editing = path.endsWith('/builder') || path.endsWith('/add');
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
+        tabBarHideOnKeyboard: true,
+        tabBarAllowFontScaling: true,
+        tabBarLabel: ({ children, color }) => (
+          <Text
+            numberOfLines={2}
+            style={{
+              fontSize: 12,
+              fontWeight: '600',
+              textAlign: 'center',
+              color,
+              marginTop: 4,
+            }}
+          >
+            {children}
+          </Text>
+        ),
+        tabBarItemStyle: { minHeight: 48 },
         tabBarActiveTintColor: colors.violet,
         tabBarInactiveTintColor: colors.muted,
         tabBarStyle: {
+          display: editing ? 'none' : 'flex',
           backgroundColor: colors.surface,
           borderTopColor: colors.border,
+          height: 72 + Math.max(0, fontScale - 1) * 40 + insets.bottom,
+          paddingTop: 8,
+          paddingBottom: Math.max(insets.bottom, 8),
         },
         tabBarLabelStyle: {
           fontSize: 12,

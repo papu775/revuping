@@ -1,10 +1,30 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
+import { useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from 'mobile-tokens';
 import { useDemoStore } from 'mobile-data';
-import { Header, Card, Badge, Avatar, Stars, Button, BottomSheet, useToast } from 'mobile-ui';
+import {
+  Header,
+  Card,
+  Badge,
+  Avatar,
+  Stars,
+  Button,
+  BottomSheet,
+  Select,
+  Field,
+  useToast,
+} from 'mobile-ui';
 import { spacing, typography } from 'mobile-tokens';
 import { followUpFor } from 'mobile-data';
 
@@ -19,12 +39,22 @@ export default function FeedbackDetailScreen() {
   const feedback = state.feedback.find((f) => f.id === Number(id));
   const [note, setNote] = useState(state.notes[Number(id)] ?? '');
   const [showAssign, setShowAssign] = useState(false);
-  const [showFollowUp, setShowFollowUp] = useState(false);
+  const initialFollowUp =
+    state.followUps[Number(id)] ||
+    followUpFor(Number(id), feedback?.resolved ?? false);
+  const [priority, setPriority] = useState(initialFollowUp.priority);
+  const [due, setDue] = useState(initialFollowUp.due);
+  const [summary, setSummary] = useState(initialFollowUp.summary);
 
   if (!feedback) {
     return (
-      <View style={[styles.container, { backgroundColor: colors.canvas, paddingTop: insets.top }]}>
-        <Header title="Feedback" showBack />
+      <View
+        style={[
+          styles.container,
+          { backgroundColor: colors.canvas, paddingTop: insets.top },
+        ]}
+      >
+        <Header title="Feedback" fallbackHref="/(tabs)/feedback" showBack />
         <View style={styles.center}>
           <Text style={{ color: colors.muted }}>Feedback not found.</Text>
         </View>
@@ -32,11 +62,18 @@ export default function FeedbackDetailScreen() {
     );
   }
 
-  const followUp = state.followUps[feedback.id] || followUpFor(feedback.id, feedback.resolved);
+  const followUp =
+    state.followUps[feedback.id] || followUpFor(feedback.id, feedback.resolved);
 
   const handleResolve = () => {
-    dispatch({ type: 'SET_FEEDBACK_RESOLVED', feedbackId: feedback.id, resolved: !feedback.resolved });
-    toast.showToast(feedback.resolved ? 'Feedback marked as unresolved' : 'Feedback resolved');
+    dispatch({
+      type: 'SET_FEEDBACK_RESOLVED',
+      feedbackId: feedback.id,
+      resolved: !feedback.resolved,
+    });
+    toast.showToast(
+      feedback.resolved ? 'Feedback marked as unresolved' : 'Feedback resolved',
+    );
   };
 
   const handleSaveNote = () => {
@@ -56,78 +93,197 @@ export default function FeedbackDetailScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.canvas }]}>
-      <Header title="Feedback" showBack />
+      <Header title="Feedback" fallbackHref="/(tabs)/feedback" showBack />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
       >
-        <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 100 }}>
+        <ScrollView
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          contentContainerStyle={{ paddingTop: 16, paddingBottom: 24 }}
+        >
           <Card style={styles.card}>
             <View style={styles.header}>
-              <Avatar initials={feedback.initials} tone={feedback.rating >= 4 ? 'sage' : feedback.rating === 3 ? 'peach' : 'rose'} size={48} />
+              <Avatar
+                initials={feedback.initials}
+                tone={
+                  feedback.rating >= 4
+                    ? 'sage'
+                    : feedback.rating === 3
+                      ? 'peach'
+                      : 'rose'
+                }
+                size={48}
+              />
               <View style={styles.headerInfo}>
-                <Text style={[styles.name, { color: colors.ink }]}>{feedback.name}</Text>
-                <Text style={[styles.date, { color: colors.muted }]}>{feedback.date} · {feedback.staff}</Text>
+                <Text style={[styles.name, { color: colors.ink }]}>
+                  {feedback.name}
+                </Text>
+                <Text style={[styles.date, { color: colors.muted }]}>
+                  {feedback.date} · {feedback.staff}
+                </Text>
               </View>
               <Stars rating={feedback.rating} size={16} />
             </View>
-            <Text style={[styles.feedbackText, { color: colors.muted }]}>{feedback.text}</Text>
+            <Text style={[styles.feedbackText, { color: colors.muted }]}>
+              {feedback.text}
+            </Text>
             <View style={styles.badgeRow}>
               <Badge
-                label={feedback.resolved ? 'Resolved' : feedback.rating <= 3 ? 'Needs care' : 'New'}
-                tone={feedback.resolved ? 'mint' : feedback.rating <= 3 ? 'warm' : 'violet'}
+                label={
+                  feedback.resolved
+                    ? 'Resolved'
+                    : feedback.rating <= 3
+                      ? 'Needs care'
+                      : 'New'
+                }
+                tone={
+                  feedback.resolved
+                    ? 'mint'
+                    : feedback.rating <= 3
+                      ? 'warm'
+                      : 'violet'
+                }
               />
             </View>
           </Card>
 
           <Card style={styles.card}>
-            <Text style={[styles.sectionTitle, { color: colors.ink }]}>Notes</Text>
+            <Text style={[styles.sectionTitle, { color: colors.ink }]}>
+              Notes
+            </Text>
             <TextInput
               value={note}
               onChangeText={setNote}
               placeholder="Add a private note..."
               placeholderTextColor={colors.disabledInk}
               multiline
-              style={[styles.noteInput, { color: colors.ink, backgroundColor: colors.surfaceInput, borderColor: colors.controlBorder }]}
+              style={[
+                styles.noteInput,
+                {
+                  color: colors.ink,
+                  backgroundColor: colors.surfaceInput,
+                  borderColor: colors.controlBorder,
+                },
+              ]}
               accessibilityLabel="Private note"
             />
-            <Button title="Save note" variant="secondary" onPress={handleSaveNote} style={{ marginTop: spacing.md }} />
+            <Button
+              title="Save note"
+              variant="secondary"
+              onPress={handleSaveNote}
+              style={{ marginTop: spacing.md }}
+            />
           </Card>
 
           <Card style={styles.card}>
-            <Text style={[styles.sectionTitle, { color: colors.ink }]}>Follow-up plan</Text>
+            <Text style={[styles.sectionTitle, { color: colors.ink }]}>
+              Follow-up plan
+            </Text>
             <View style={styles.followUpRow}>
-              <Text style={[styles.followUpLabel, { color: colors.muted }]}>Assigned to</Text>
-              <TouchableOpacity onPress={() => setShowAssign(true)} accessibilityRole="button" accessibilityLabel={`Assign to ${followUp.assignee}`}>
-                <Text style={[styles.followUpValue, { color: colors.violet }]}>{followUp.assignee}</Text>
+              <Text style={[styles.followUpLabel, { color: colors.muted }]}>
+                Assigned to
+              </Text>
+              <TouchableOpacity
+                style={{ minHeight: 48, justifyContent: 'center' }}
+                onPress={() => setShowAssign(true)}
+                accessibilityRole="button"
+                accessibilityLabel={`Assign to ${followUp.assignee}`}
+              >
+                <Text style={[styles.followUpValue, { color: colors.violet }]}>
+                  {followUp.assignee}
+                </Text>
               </TouchableOpacity>
             </View>
+            <Select
+              label="Priority"
+              value={priority}
+              options={['Low', 'Normal', 'High']}
+              onChange={setPriority}
+            />
+            <Field
+              label="Due date"
+              value={due}
+              onChangeText={setDue}
+              placeholder="YYYY-MM-DD"
+            />
+            <Field
+              label="Follow-up summary"
+              value={summary}
+              onChangeText={setSummary}
+              multiline
+            />
+            <Button
+              title="Save follow-up plan"
+              variant="secondary"
+              onPress={() => {
+                if (!/^\d{4}-\d{2}-\d{2}$/.test(due) || !summary.trim()) {
+                  toast.showToast(
+                    'Enter a due date and follow-up summary.',
+                    'error',
+                  );
+                  return;
+                }
+                dispatch({
+                  type: 'SET_FOLLOW_UP',
+                  feedbackId: feedback.id,
+                  followUp: {
+                    ...followUp,
+                    priority,
+                    due,
+                    summary: summary.trim(),
+                  },
+                });
+                toast.showToast('Follow-up plan saved');
+              }}
+            />
             <View style={styles.followUpRow}>
-              <Text style={[styles.followUpLabel, { color: colors.muted }]}>Priority</Text>
-              <Text style={[styles.followUpValue, { color: colors.ink }]}>{followUp.priority}</Text>
-            </View>
-            <View style={styles.followUpRow}>
-              <Text style={[styles.followUpLabel, { color: colors.muted }]}>Due</Text>
-              <Text style={[styles.followUpValue, { color: colors.ink }]}>{followUp.due}</Text>
-            </View>
-            <View style={styles.followUpRow}>
-              <Text style={[styles.followUpLabel, { color: colors.muted }]}>Status</Text>
-              <Badge label={followUp.status} tone={followUp.status === 'Resolved' ? 'mint' : followUp.status === 'In progress' ? 'warm' : 'violet'} />
+              <Text style={[styles.followUpLabel, { color: colors.muted }]}>
+                Status
+              </Text>
+              <Badge
+                label={followUp.status}
+                tone={
+                  followUp.status === 'Resolved'
+                    ? 'mint'
+                    : followUp.status === 'In progress'
+                      ? 'warm'
+                      : 'violet'
+                }
+              />
             </View>
           </Card>
 
           <Card style={styles.card}>
-            <Text style={[styles.sectionTitle, { color: colors.ink }]}>History</Text>
+            <Text style={[styles.sectionTitle, { color: colors.ink }]}>
+              History
+            </Text>
             {followUp.history.map((entry, i) => (
-              <View key={i} style={[styles.historyRow, { borderBottomColor: colors.border }]}>
-                <View style={[styles.historyDot, { backgroundColor: colors.violet }]} />
-                <Text style={[styles.historyText, { color: colors.muted }]}>{entry}</Text>
+              <View
+                key={i}
+                style={[
+                  styles.historyRow,
+                  { borderBottomColor: colors.border },
+                ]}
+              >
+                <View
+                  style={[
+                    styles.historyDot,
+                    { backgroundColor: colors.violet },
+                  ]}
+                />
+                <Text style={[styles.historyText, { color: colors.muted }]}>
+                  {entry}
+                </Text>
               </View>
             ))}
           </Card>
         </ScrollView>
 
-        <View style={[styles.footer, { paddingBottom: insets.bottom + spacing.lg }]}>
+        <View
+          style={[styles.footer, { paddingBottom: insets.bottom + spacing.lg }]}
+        >
           <Button
             title={feedback.resolved ? 'Mark unresolved' : 'Resolve feedback'}
             onPress={handleResolve}
@@ -136,7 +292,11 @@ export default function FeedbackDetailScreen() {
         </View>
       </KeyboardAvoidingView>
 
-      <BottomSheet visible={showAssign} onClose={() => setShowAssign(false)} title="Assign to staff">
+      <BottomSheet
+        visible={showAssign}
+        onClose={() => setShowAssign(false)}
+        title="Assign to staff"
+      >
         {['Unassigned', 'Alex', 'Mia', 'Sophie'].map((staff) => (
           <TouchableOpacity
             key={staff}
@@ -145,7 +305,9 @@ export default function FeedbackDetailScreen() {
             accessibilityRole="button"
             accessibilityLabel={`Assign to ${staff}`}
           >
-            <Text style={[styles.assignText, { color: colors.ink }]}>{staff}</Text>
+            <Text style={[styles.assignText, { color: colors.ink }]}>
+              {staff}
+            </Text>
           </TouchableOpacity>
         ))}
       </BottomSheet>
@@ -168,16 +330,19 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     alignItems: 'center',
     gap: spacing.md,
     marginBottom: spacing.md,
   },
   headerInfo: {
     flex: 1,
+    minWidth: 120,
   },
   name: {
     fontSize: typography.heading,
     fontWeight: '700',
+    flexShrink: 1,
   },
   date: {
     fontSize: typography.caption,

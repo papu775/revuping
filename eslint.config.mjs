@@ -36,6 +36,20 @@ export default [
               ],
             },
             {
+              sourceTag: 'platform:native',
+              onlyDependOnLibsWithTags: ['platform:native', 'platform:neutral'],
+              bannedExternalImports: [
+                'next',
+                'next/*',
+                'react-dom',
+                'react-dom/*',
+                '@nestjs/*',
+                '@prisma/*',
+                'prisma',
+                'node:*',
+              ],
+            },
+            {
               sourceTag: 'platform:neutral',
               onlyDependOnLibsWithTags: ['platform:neutral'],
               bannedExternalImports: [

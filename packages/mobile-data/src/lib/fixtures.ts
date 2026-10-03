@@ -247,13 +247,23 @@ export const initialResponses: SurveyResponse[] = [
     id: 1,
     surveyId: 1,
     date: '2026-10-01',
-    answers: { 1: '5', 2: '9', 3: 'Listening', 4: 'A thoughtful consultation.' },
+    answers: {
+      1: '5',
+      2: '9',
+      3: 'Listening',
+      4: 'A thoughtful consultation.',
+    },
   },
   {
     id: 2,
     surveyId: 1,
     date: '2026-09-29',
-    answers: { 1: '3', 2: '6', 3: 'Comfort', 4: 'The appointment started late.' },
+    answers: {
+      1: '3',
+      2: '6',
+      3: 'Comfort',
+      4: 'The appointment started late.',
+    },
   },
   {
     id: 3,
@@ -285,19 +295,103 @@ export const staffMembers: StaffMember[] = [
 ];
 
 export const reportRows: ReportRow[] = [
-  { date: '2026-09-11', location: 'Notting Hill', requests: 18, clicks: 10, feedback: 5, reviews: 3, replyHours: 10, resolutionHours: 32 },
-  { date: '2026-09-18', location: 'Notting Hill', requests: 22, clicks: 13, feedback: 7, reviews: 4, replyHours: 8, resolutionHours: 28 },
-  { date: '2026-09-25', location: 'Notting Hill', requests: 24, clicks: 14, feedback: 9, reviews: 5, replyHours: 7, resolutionHours: 24 },
-  { date: '2026-10-02', location: 'Notting Hill', requests: 28, clicks: 25, feedback: 17, reviews: 12, replyHours: 6, resolutionHours: 20 },
-  { date: '2026-09-11', location: 'Richmond', requests: 10, clicks: 5, feedback: 3, reviews: 1, replyHours: 14, resolutionHours: 36 },
-  { date: '2026-09-18', location: 'Richmond', requests: 12, clicks: 6, feedback: 4, reviews: 2, replyHours: 12, resolutionHours: 34 },
-  { date: '2026-09-25', location: 'Richmond', requests: 14, clicks: 8, feedback: 6, reviews: 3, replyHours: 10, resolutionHours: 30 },
-  { date: '2026-10-02', location: 'Richmond', requests: 16, clicks: 9, feedback: 7, reviews: 3, replyHours: 8, resolutionHours: 26 },
+  {
+    date: '2026-09-11',
+    location: 'Notting Hill',
+    requests: 18,
+    clicks: 10,
+    feedback: 5,
+    reviews: 3,
+    replyHours: 10,
+    resolutionHours: 32,
+  },
+  {
+    date: '2026-09-18',
+    location: 'Notting Hill',
+    requests: 22,
+    clicks: 13,
+    feedback: 7,
+    reviews: 4,
+    replyHours: 8,
+    resolutionHours: 28,
+  },
+  {
+    date: '2026-09-25',
+    location: 'Notting Hill',
+    requests: 24,
+    clicks: 14,
+    feedback: 9,
+    reviews: 5,
+    replyHours: 7,
+    resolutionHours: 24,
+  },
+  {
+    date: '2026-10-02',
+    location: 'Notting Hill',
+    requests: 28,
+    clicks: 25,
+    feedback: 17,
+    reviews: 12,
+    replyHours: 6,
+    resolutionHours: 20,
+  },
+  {
+    date: '2026-09-11',
+    location: 'Richmond',
+    requests: 10,
+    clicks: 5,
+    feedback: 3,
+    reviews: 1,
+    replyHours: 14,
+    resolutionHours: 36,
+  },
+  {
+    date: '2026-09-18',
+    location: 'Richmond',
+    requests: 12,
+    clicks: 6,
+    feedback: 4,
+    reviews: 2,
+    replyHours: 12,
+    resolutionHours: 34,
+  },
+  {
+    date: '2026-09-25',
+    location: 'Richmond',
+    requests: 14,
+    clicks: 8,
+    feedback: 6,
+    reviews: 3,
+    replyHours: 10,
+    resolutionHours: 30,
+  },
+  {
+    date: '2026-10-02',
+    location: 'Richmond',
+    requests: 16,
+    clicks: 9,
+    feedback: 7,
+    reviews: 3,
+    replyHours: 8,
+    resolutionHours: 26,
+  },
 ];
 
 export const initialTeam: TeamMember[] = [
-  { id: 1, name: 'Demo owner', email: 'owner@example.com', role: 'Owner', status: 'Active · demo' },
-  { id: 2, name: 'Alex', email: 'alex@example.com', role: 'Staff', status: 'Active · demo' },
+  {
+    id: 1,
+    name: 'Demo owner',
+    email: 'owner@example.com',
+    role: 'Owner',
+    status: 'Active · demo',
+  },
+  {
+    id: 2,
+    name: 'Alex',
+    email: 'alex@example.com',
+    role: 'Staff',
+    status: 'Active · demo',
+  },
 ];
 
 export const initialBusiness: BusinessProfile = {
@@ -317,10 +411,30 @@ export const initialWidget: WidgetConfig = {
 };
 
 export const overviewMetrics = [
-  { label: 'QR scans', value: '184', change: '+24 from last period', desc: 'Visits started with your QR' },
-  { label: 'Review-link clicks', value: '62', change: '+12 from last period', desc: 'Clicks, not confirmed reviews' },
-  { label: 'Private feedback', value: '38', change: '3 need your attention', desc: 'Responses shared with your salon' },
-  { label: 'Google reviews', value: '24', change: '4.8 average sample rating', desc: 'Simulated reviews this month' },
+  {
+    label: 'QR scans',
+    value: '184',
+    change: '+24 from last period',
+    desc: 'Visits started with your QR',
+  },
+  {
+    label: 'Review-link clicks',
+    value: '62',
+    change: '+12 from last period',
+    desc: 'Clicks, not confirmed reviews',
+  },
+  {
+    label: 'Private feedback',
+    value: '38',
+    change: '3 need your attention',
+    desc: 'Responses shared with your salon',
+  },
+  {
+    label: 'Google reviews',
+    value: '24',
+    change: '4.8 average sample rating',
+    desc: 'Simulated reviews this month',
+  },
 ];
 
 export const sampleTrend = {
@@ -334,35 +448,90 @@ export const demoPlans = [
     name: 'Essentials',
     price: 'TBD',
     desc: 'For a single business location.',
-    features: ['Single-location concept', 'Branded review QR codes', 'Private feedback inbox', 'Request limits to be confirmed'],
+    features: [
+      'Single-location concept',
+      'Branded review QR codes',
+      'Private feedback inbox',
+      'Request limits to be confirmed',
+    ],
   },
   {
     name: 'Growth',
     price: 'TBD',
     desc: 'For teams exploring outreach and follow-up.',
-    features: ['Everything in Essentials', 'Request limits to be confirmed', 'Reminder previews', 'Reply draft previews'],
+    features: [
+      'Everything in Essentials',
+      'Request limits to be confirmed',
+      'Reminder previews',
+      'Reply draft previews',
+    ],
     featured: true,
   },
   {
     name: 'Multiple locations',
     price: 'TBD',
     desc: 'For owners planning across several locations.',
-    features: ['Everything in Growth', 'Multiple business locations', 'Request limits to be confirmed', 'Location-level insights'],
+    features: [
+      'Everything in Growth',
+      'Multiple business locations',
+      'Request limits to be confirmed',
+      'Location-level insights',
+    ],
   },
 ];
 
 export const competitorData = [
-  { name: 'Bloom & Co.', rating: 4.8, reviews: 24, responseRate: 92, isYou: true },
-  { name: 'The Salon NW', rating: 4.6, reviews: 31, responseRate: 78, isYou: false },
-  { name: 'Richmond Cuts', rating: 4.4, reviews: 18, responseRate: 65, isYou: false },
-  { name: 'Glow Studio', rating: 4.2, reviews: 12, responseRate: 54, isYou: false },
+  {
+    name: 'Bloom & Co.',
+    rating: 4.8,
+    reviews: 24,
+    responseRate: 92,
+    isYou: true,
+  },
+  {
+    name: 'The Salon NW',
+    rating: 4.6,
+    reviews: 31,
+    responseRate: 78,
+    isYou: false,
+  },
+  {
+    name: 'Richmond Cuts',
+    rating: 4.4,
+    reviews: 18,
+    responseRate: 65,
+    isYou: false,
+  },
+  {
+    name: 'Glow Studio',
+    rating: 4.2,
+    reviews: 12,
+    responseRate: 54,
+    isYou: false,
+  },
 ];
 
 export const integrationProviders = [
-  { name: 'Google', icon: 'google', description: 'Sync Google Business reviews and reply from RevuPing.' },
-  { name: 'WhatsApp', icon: 'whatsapp', description: 'Send review requests and reminders via WhatsApp.' },
-  { name: 'SMS', icon: 'sms', description: 'Reach customers with SMS review requests.' },
-  { name: 'Email', icon: 'email', description: 'Send branded email campaigns and follow-ups.' },
+  {
+    name: 'Google',
+    icon: 'google',
+    description: 'Sync Google Business reviews and reply from RevuPing.',
+  },
+  {
+    name: 'WhatsApp',
+    icon: 'whatsapp',
+    description: 'Send review requests and reminders via WhatsApp.',
+  },
+  {
+    name: 'SMS',
+    icon: 'sms',
+    description: 'Reach customers with SMS review requests.',
+  },
+  {
+    name: 'Email',
+    icon: 'email',
+    description: 'Send branded email campaigns and follow-ups.',
+  },
 ];
 
 export const followUpFor = (id: number, resolved = false) => ({
@@ -379,6 +548,15 @@ export const followUpFor = (id: number, resolved = false) => ({
 });
 
 export const initialDemoState: DemoState = {
+  referral: {
+    name: 'Bring a friend to Bloom',
+    message: 'A little time for someone you love. Explore Bloom & Co.: {link}',
+    terms:
+      'Fictional programme. No rewards are offered for reviews or ratings.',
+    eligibility:
+      'Open to all customers who choose to participate. No review required.',
+    paused: false,
+  },
   feedback: initialFeedback,
   customers: initialCustomers,
   reviews: initialReviews,
@@ -391,7 +569,12 @@ export const initialDemoState: DemoState = {
   responses: initialResponses,
   business: initialBusiness,
   team: initialTeam,
-  connections: { Google: 'Disconnected', WhatsApp: 'Disconnected', SMS: 'Disconnected', Email: 'Disconnected' },
+  connections: {
+    Google: 'Disconnected',
+    WhatsApp: 'Disconnected',
+    SMS: 'Disconnected',
+    Email: 'Disconnected',
+  },
   notifications: { weekly: true, feedback: true, reminders: false },
   templates: {
     request: 'Hi {name}, share an honest review or private feedback: {link}',

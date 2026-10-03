@@ -1,8 +1,15 @@
-import { View, Text, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+} from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from 'mobile-tokens';
-import { Screen, Button, Field } from 'mobile-ui';
+import { Screen, Button, Field, Logo } from 'mobile-ui';
 import { useState } from 'react';
 import { spacing, typography } from 'mobile-tokens';
 
@@ -23,17 +30,27 @@ export default function LoginScreen() {
   };
 
   return (
-    <Screen style={{ paddingTop: insets.top }}>
+    <Screen edges={[]} style={{ paddingTop: insets.top }}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
       >
-        <View style={styles.container}>
+        <ScrollView
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          contentContainerStyle={[
+            styles.container,
+            { paddingBottom: insets.bottom + 24 },
+          ]}
+        >
           <View style={styles.header}>
-            <Text style={[styles.logo, { color: colors.violet }]}>RevuPing</Text>
-            <Text style={[styles.title, { color: colors.ink }]}>Welcome back</Text>
+            <Logo />
+            <Text style={[styles.title, { color: colors.ink }]}>
+              Welcome back
+            </Text>
             <Text style={[styles.subtitle, { color: colors.muted }]}>
-              Log in to manage your business reputation.
+              Explore the demo workspace. No authentication or credentials are
+              saved.
             </Text>
           </View>
           <View style={styles.form}>
@@ -43,33 +60,41 @@ export default function LoginScreen() {
               onChangeText={setEmail}
               placeholder="you@example.com"
               keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
               error={error && !email.trim() ? 'Email is required' : undefined}
             />
             <Field
+              secureTextEntry
+              autoCapitalize="none"
+              autoCorrect={false}
               label="Password"
               value={password}
               onChangeText={setPassword}
               placeholder="Your password"
-              error={error && !password.trim() ? 'Password is required' : undefined}
+              error={
+                error && !password.trim() ? 'Password is required' : undefined
+              }
             />
             <Button
-              title="Log in"
+              title="Open demo workspace"
               onPress={handleLogin}
               accessibilityLabel="Log in to RevuPing"
             />
           </View>
-          <View style={[styles.footer, { paddingBottom: insets.bottom + spacing.lg }]}>
-            <Text style={[styles.footerText, { color: colors.muted }]}>
-              Don't have an account?{' '}
-              <Text
-                style={{ color: colors.violet, fontWeight: '600' }}
-                onPress={() => router.push('/signup')}
-              >
-                Sign up
-              </Text>
-            </Text>
+          <View
+            style={[
+              styles.footer,
+              { paddingBottom: insets.bottom + spacing.lg },
+            ]}
+          >
+            <Button
+              title="New to the demo? Set up a workspace"
+              variant="ghost"
+              onPress={() => router.push('/signup')}
+            />
           </View>
-        </View>
+        </ScrollView>
       </KeyboardAvoidingView>
     </Screen>
   );
@@ -77,12 +102,14 @@ export default function LoginScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flexGrow: 1,
     paddingHorizontal: 24,
-    justifyContent: 'space-between',
+    paddingTop: 32,
+    gap: 24,
+    justifyContent: 'center',
   },
   header: {
-    flex: 1,
+    paddingVertical: 24,
     justifyContent: 'center',
     gap: spacing.sm,
   },
@@ -107,5 +134,6 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: typography.caption,
+    flexShrink: 1,
   },
 });

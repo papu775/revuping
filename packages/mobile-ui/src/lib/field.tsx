@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -6,17 +6,19 @@ import {
   StyleSheet,
   type TextInputProps,
 } from 'react-native';
-import { useTheme } from 'mobile-tokens';
-import { radius, spacing, typography } from 'mobile-tokens';
+import { Ionicons } from '@expo/vector-icons';
+import { useTheme, radius, spacing, typography } from 'mobile-tokens';
+import { IconButton } from './icon-button.tsx';
 
 export function Field({
   label,
   value,
   onChangeText,
-  placeholder,
   error,
-  multiline = false,
-  keyboardType,
+  style,
+  secureTextEntry,
+  onFocus,
+  onBlur,
   autoCapitalize = 'none',
   accessibilityLabel,
   ...props
@@ -24,32 +26,18 @@ export function Field({
   label: string;
   value: string;
   onChangeText: (text: string) => void;
-  placeholder?: string;
   error?: string;
-  multiline?: boolean;
-  keyboardType?: TextInputProps['keyboardType'];
-  autoCapitalize?: TextInputProps['autoCapitalize'];
-  accessibilityLabel?: string;
 } & Omit<TextInputProps, 'value' | 'onChangeText'>) {
   const { colors } = useTheme();
   const [focused, setFocused] = useState(false);
-
+  const [revealed, setRevealed] = useState(false);
+  const input = useRef<TextInput>(null);
   return (
     <View style={styles.container}>
-      <Text style={[styles.label, { color: colors.muted }]}>{label}</Text>
-      <TextInput
-        value={value}
-        onChangeText={onChangeText}
-        placeholder={placeholder}
-        placeholderTextColor={colors.disabledInk}
-        multiline={multiline}
-        keyboardType={keyboardType}
-        autoCapitalize={autoCapitalize}
-        accessibilityLabel={accessibilityLabel ?? label}
-        onFocus={() => setFocused(true)}
-        onBlur={() => setFocused(false)}
+      <Text style={[styles.label, { color: colors.ink }]}>{label}</Text>
+      <View
         style={[
-          styles.input,
+          styles.wrapper,
           {
             backgroundColor: colors.surfaceInput,
             borderColor: error
@@ -57,43 +45,77 @@ export function Field({
               : focused
                 ? colors.violet
                 : colors.controlBorder,
-            color: colors.ink,
           },
-          multiline && styles.multiline,
         ]}
-        {...props}
-      />
-      {error ? (
-        <Text style={[styles.error, { color: colors.danger }]} accessibilityLiveRegion="polite">
+      >
+        <TextInput
+          {...props}
+          ref={input}
+          value={value}
+          onChangeText={onChangeText}
+          placeholderTextColor={colors.muted}
+          autoCapitalize={autoCapitalize}
+          secureTextEntry={secureTextEntry && !revealed}
+          accessibilityLabel={accessibilityLabel ?? label}
+          onFocus={(event) => {
+            setFocused(true);
+            onFocus?.(event);
+          }}
+          onBlur={(event) => {
+            setFocused(false);
+            onBlur?.(event);
+          }}
+          style={[
+            styles.input,
+            { color: colors.ink },
+            props.multiline && styles.multiline,
+            style,
+          ]}
+        />
+        {secureTextEntry && (
+          <IconButton
+            accessibilityLabel={revealed ? 'Hide password' : 'Show password'}
+            onPress={() => {
+              setRevealed(!revealed);
+              input.current?.focus();
+            }}
+          >
+            <Ionicons
+              name={revealed ? 'eye-off-outline' : 'eye-outline'}
+              size={20}
+              color={colors.muted}
+            />
+          </IconButton>
+        )}
+      </View>
+      {error && (
+        <Text
+          style={[styles.error, { color: colors.danger }]}
+          accessibilityLiveRegion="polite"
+        >
           {error}
         </Text>
-      ) : null}
+      )}
     </View>
   );
 }
-
 const styles = StyleSheet.create({
-  container: {
-    marginBottom: spacing.lg,
-    gap: spacing.xs,
-  },
-  label: {
-    fontSize: typography.caption,
-    fontWeight: '600',
+  container: { marginBottom: spacing.lg, gap: 8 },
+  label: { fontSize: typography.caption, fontWeight: '600' },
+  wrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderRadius: radius.md,
   },
   input: {
-    borderWidth: 1,
-    borderRadius: radius.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
-    fontSize: typography.body,
+    flex: 1,
+    minWidth: 0,
     minHeight: 48,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    fontSize: typography.body,
   },
-  multiline: {
-    minHeight: 80,
-    textAlignVertical: 'top',
-  },
-  error: {
-    fontSize: typography.caption,
-  },
+  multiline: { minHeight: 100, textAlignVertical: 'top' },
+  error: { fontSize: typography.caption, lineHeight: 20 },
 });

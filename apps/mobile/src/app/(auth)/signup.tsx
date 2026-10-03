@@ -1,13 +1,22 @@
-import { View, Text, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+} from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from 'mobile-tokens';
-import { Screen, Button, Field } from 'mobile-ui';
+import { Screen, Button, Field, Logo } from 'mobile-ui';
 import { useState } from 'react';
+import { useDemoStore } from 'mobile-data';
 import { spacing, typography } from 'mobile-tokens';
 
 export default function SignupScreen() {
   const router = useRouter();
+  const { dispatch } = useDemoStore();
   const insets = useSafeAreaInsets();
   const { colors } = useTheme();
   const [name, setName] = useState('');
@@ -20,21 +29,32 @@ export default function SignupScreen() {
       setError('Please fill in all fields.');
       return;
     }
+    dispatch({ type: 'SET_BUSINESS', business: { name: name.trim() } });
     router.push('/onboarding');
   };
 
   return (
-    <Screen style={{ paddingTop: insets.top }}>
+    <Screen edges={[]} style={{ paddingTop: insets.top }}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
       >
-        <View style={styles.container}>
+        <ScrollView
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          contentContainerStyle={[
+            styles.container,
+            { paddingBottom: insets.bottom + 24 },
+          ]}
+        >
           <View style={styles.header}>
-            <Text style={[styles.logo, { color: colors.violet }]}>RevuPing</Text>
-            <Text style={[styles.title, { color: colors.ink }]}>Create your account</Text>
+            <Logo />
+            <Text style={[styles.title, { color: colors.ink }]}>
+              Create your account
+            </Text>
             <Text style={[styles.subtitle, { color: colors.muted }]}>
-              Start managing your business reputation today.
+              Set up a fictional demo workspace. No account is created or
+              credentials saved.
             </Text>
           </View>
           <View style={styles.form}>
@@ -44,7 +64,9 @@ export default function SignupScreen() {
               onChangeText={setName}
               placeholder="Bloom & Co."
               autoCapitalize="words"
-              error={error && !name.trim() ? 'Business name is required' : undefined}
+              error={
+                error && !name.trim() ? 'Business name is required' : undefined
+              }
             />
             <Field
               label="Email"
@@ -52,33 +74,41 @@ export default function SignupScreen() {
               onChangeText={setEmail}
               placeholder="you@example.com"
               keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
               error={error && !email.trim() ? 'Email is required' : undefined}
             />
             <Field
+              secureTextEntry
+              autoCapitalize="none"
+              autoCorrect={false}
               label="Password"
               value={password}
               onChangeText={setPassword}
               placeholder="Create a password"
-              error={error && !password.trim() ? 'Password is required' : undefined}
+              error={
+                error && !password.trim() ? 'Password is required' : undefined
+              }
             />
             <Button
-              title="Create account"
+              title="Continue demo setup"
               onPress={handleSignup}
               accessibilityLabel="Create RevuPing account"
             />
           </View>
-          <View style={[styles.footer, { paddingBottom: insets.bottom + spacing.lg }]}>
-            <Text style={[styles.footerText, { color: colors.muted }]}>
-              Already have an account?{' '}
-              <Text
-                style={{ color: colors.violet, fontWeight: '600' }}
-                onPress={() => router.push('/login')}
-              >
-                Log in
-              </Text>
-            </Text>
+          <View
+            style={[
+              styles.footer,
+              { paddingBottom: insets.bottom + spacing.lg },
+            ]}
+          >
+            <Button
+              title="Already have a demo? Log in"
+              variant="ghost"
+              onPress={() => router.push('/login')}
+            />
           </View>
-        </View>
+        </ScrollView>
       </KeyboardAvoidingView>
     </Screen>
   );
@@ -86,12 +116,14 @@ export default function SignupScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flexGrow: 1,
     paddingHorizontal: 24,
-    justifyContent: 'space-between',
+    paddingTop: 32,
+    gap: 24,
+    justifyContent: 'center',
   },
   header: {
-    flex: 1,
+    paddingVertical: 24,
     justifyContent: 'center',
     gap: spacing.sm,
   },
@@ -116,5 +148,6 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: typography.caption,
+    flexShrink: 1,
   },
 });

@@ -1,19 +1,20 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from 'mobile-tokens';
 import { useDemoStore, staffMembers } from 'mobile-data';
 import { Header, Card, Avatar, Stars, Select, BarChart } from 'mobile-ui';
 import { spacing, typography } from 'mobile-tokens';
 
 export default function StaffScreen() {
-  const insets = useSafeAreaInsets();
   const { colors } = useTheme();
   const { state } = useDemoStore();
   const [staffFilter, setStaffFilter] = useState('All staff');
   const [serviceFilter, setServiceFilter] = useState('All services');
 
-  const services = ['All services', ...new Set(staffMembers.map((s) => s.service))];
+  const services = [
+    'All services',
+    ...new Set(staffMembers.map((s) => s.service)),
+  ];
 
   const filtered = useMemo(() => {
     return staffMembers.filter(
@@ -25,41 +26,76 @@ export default function StaffScreen() {
 
   const staffInsights = filtered.map((member) => {
     const items = state.feedback.filter((f) => f.staff === member.name);
-    const avg = items.length ? items.reduce((s, f) => s + f.rating, 0) / items.length : 0;
+    const avg = items.length
+      ? items.reduce((s, f) => s + f.rating, 0) / items.length
+      : 0;
     return { ...member, avg, count: items.length };
   });
 
   return (
     <View style={[styles.container, { backgroundColor: colors.canvas }]}>
       <Header title="Staff & services" showBack />
-      <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 40 }}>
+      <ScrollView
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        contentContainerStyle={{ paddingTop: 16, paddingBottom: 24 }}
+      >
         <Card style={styles.card}>
-          <Select label="Staff member" value={staffFilter} options={['All staff', ...staffMembers.map((s) => s.name)]} onChange={setStaffFilter} />
-          <Select label="Service" value={serviceFilter} options={services} onChange={setServiceFilter} />
+          <Select
+            label="Staff member"
+            value={staffFilter}
+            options={['All staff', ...staffMembers.map((s) => s.name)]}
+            onChange={setStaffFilter}
+          />
+          <Select
+            label="Service"
+            value={serviceFilter}
+            options={services}
+            onChange={setServiceFilter}
+          />
         </Card>
 
         {staffInsights.map((member) => (
           <Card key={member.name} style={styles.card}>
             <View style={styles.memberHeader}>
-              <Avatar initials={member.name.split(' ').map((n) => n[0]).join('')} tone="lavender" size={48} />
+              <Avatar
+                initials={member.name
+                  .split(' ')
+                  .map((n) => n[0])
+                  .join('')}
+                tone="lavender"
+                size={48}
+              />
               <View style={styles.memberInfo}>
-                <Text style={[styles.memberName, { color: colors.ink }]}>{member.name}</Text>
-                <Text style={[styles.memberRole, { color: colors.muted }]}>{member.role} · {member.service}</Text>
+                <Text style={[styles.memberName, { color: colors.ink }]}>
+                  {member.name}
+                </Text>
+                <Text style={[styles.memberRole, { color: colors.muted }]}>
+                  {member.role} · {member.service}
+                </Text>
               </View>
               <View style={styles.ratingContainer}>
                 <Stars rating={Math.round(member.avg)} size={14} />
-                <Text style={[styles.ratingText, { color: colors.ink }]}>{member.avg.toFixed(1)}</Text>
+                <Text style={[styles.ratingText, { color: colors.ink }]}>
+                  {member.avg.toFixed(1)}
+                </Text>
               </View>
             </View>
-            <Text style={[styles.memberTheme, { color: colors.muted }]}>{member.theme}</Text>
+            <Text style={[styles.memberTheme, { color: colors.muted }]}>
+              {member.theme}
+            </Text>
             <View style={styles.feedbackRow}>
-              <Text style={[styles.feedbackCount, { color: colors.violet }]}>{member.count} feedback items</Text>
+              <Text style={[styles.feedbackCount, { color: colors.violet }]}>
+                {member.count} feedback items
+              </Text>
             </View>
           </Card>
         ))}
 
         <Card style={styles.card}>
-          <Text style={[styles.sectionTitle, { color: colors.ink }]}>Service distribution</Text>
+          <Text style={[styles.sectionTitle, { color: colors.ink }]}>
+            Service distribution
+          </Text>
           <BarChart
             data={staffInsights.map((m) => m.count)}
             labels={staffInsights.map((m) => m.name)}

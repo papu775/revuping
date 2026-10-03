@@ -26,10 +26,14 @@ export function Select({
         onPress={() => setOpen(true)}
         style={[
           styles.trigger,
-          { backgroundColor: colors.surfaceInput, borderColor: colors.controlBorder },
+          {
+            backgroundColor: colors.surfaceInput,
+            borderColor: colors.controlBorder,
+          },
         ]}
         accessibilityRole="button"
         accessibilityLabel={`${label}: ${value}`}
+        accessibilityState={{ expanded: open }}
       >
         <Text style={[styles.value, { color: colors.ink }]}>{value}</Text>
         <Ionicons name="chevron-down" size={18} color={colors.muted} />
@@ -42,12 +46,23 @@ export function Select({
               onChange(option);
               setOpen(false);
             }}
-            style={styles.option}
+            accessibilityState={{ selected: option === value }}
+            style={[
+              styles.option,
+              {
+                backgroundColor:
+                  option === value ? colors.surfaceSelected : undefined,
+              },
+            ]}
             accessibilityRole="button"
             accessibilityLabel={option}
           >
-            <Text style={[styles.optionText, { color: colors.ink }]}>{option}</Text>
-            {option === value && <Ionicons name="checkmark" size={18} color={colors.violet} />}
+            <Text style={[styles.optionText, { color: colors.ink }]}>
+              {option}
+            </Text>
+            {option === value && (
+              <Ionicons name="checkmark" size={18} color={colors.violet} />
+            )}
           </TouchableOpacity>
         ))}
       </BottomSheet>
@@ -72,15 +87,21 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     paddingHorizontal: spacing.md,
     minHeight: 48,
+    paddingVertical: spacing.md,
+    gap: spacing.sm,
   },
   value: {
     fontSize: typography.body,
+    flex: 1,
   },
   option: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingVertical: spacing.md,
+    paddingHorizontal: spacing.md,
+    borderRadius: radius.sm,
+    gap: spacing.sm,
     minHeight: 48,
   },
   optionText: {

@@ -1,6 +1,14 @@
+import { useEffect, useRef } from 'react';
 
-import { View, Text, Modal, TouchableOpacity, StyleSheet } from 'react-native';
-import { useTheme } from 'mobile-tokens';
+import {
+  View,
+  Text,
+  Modal,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+} from 'react-native';
+import { useTheme, useReducedMotion } from 'mobile-tokens';
 import { radius, spacing, typography } from 'mobile-tokens';
 
 export function Dialog({
@@ -23,15 +31,33 @@ export function Dialog({
   destructive?: boolean;
 }) {
   const { colors } = useTheme();
+  const reduced = useReducedMotion();
+  const confirming = useRef(false);
+  useEffect(() => {
+    if (!visible) confirming.current = false;
+  }, [visible]);
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+    <Modal
+      visible={visible}
+      transparent
+      animationType={reduced ? 'none' : 'fade'}
+      onRequestClose={onClose}
+    >
       <View style={styles.overlay}>
-        <View style={[styles.dialog, { backgroundColor: colors.surface }]}>
-          <Text style={[styles.title, { color: colors.ink }]} accessibilityRole="header">
+        <ScrollView
+          style={[styles.dialog, { backgroundColor: colors.surface }]}
+          contentContainerStyle={{ padding: 24 }}
+        >
+          <Text
+            style={[styles.title, { color: colors.ink }]}
+            accessibilityRole="header"
+          >
             {title}
           </Text>
-          <Text style={[styles.message, { color: colors.muted }]}>{message}</Text>
+          <Text style={[styles.message, { color: colors.muted }]}>
+            {message}
+          </Text>
           <View style={styles.actions}>
             <TouchableOpacity
               onPress={onClose}
@@ -39,26 +65,40 @@ export function Dialog({
               accessibilityRole="button"
               accessibilityLabel={cancelLabel}
             >
-              <Text style={[styles.buttonText, { color: colors.ink }]}>{cancelLabel}</Text>
+              <Text style={[styles.buttonText, { color: colors.ink }]}>
+                {cancelLabel}
+              </Text>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => {
+                if (confirming.current) return;
+                confirming.current = true;
                 onConfirm();
                 onClose();
               }}
               style={[
                 styles.button,
                 {
-                  backgroundColor: destructive ? colors.danger : colors.actionBg,
+                  backgroundColor: destructive
+                    ? colors.dangerSoft
+                    : colors.actionBg,
+                  borderColor: destructive ? colors.danger : colors.actionBg,
                 },
               ]}
               accessibilityRole="button"
               accessibilityLabel={confirmLabel}
             >
-              <Text style={[styles.buttonText, { color: '#ffffff' }]}>{confirmLabel}</Text>
+              <Text
+                style={[
+                  styles.buttonText,
+                  { color: destructive ? colors.danger : colors.onDark },
+                ]}
+              >
+                {confirmLabel}
+              </Text>
             </TouchableOpacity>
           </View>
-        </View>
+        </ScrollView>
       </View>
     </Modal>
   );
@@ -75,7 +115,8 @@ const styles = StyleSheet.create({
   dialog: {
     width: '100%',
     borderRadius: radius.lg,
-    padding: spacing.xl,
+    maxHeight: '85%',
+    flexGrow: 0,
   },
   title: {
     fontSize: typography.heading,
@@ -89,11 +130,14 @@ const styles = StyleSheet.create({
   },
   actions: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: spacing.md,
   },
   button: {
-    flex: 1,
+    flexGrow: 1,
+    flexBasis: 120,
     minHeight: 48,
+    padding: 12,
     borderRadius: radius.md,
     borderWidth: 1,
     borderColor: 'transparent',
@@ -103,5 +147,6 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: typography.label,
     fontWeight: '600',
+    textAlign: 'center',
   },
 });

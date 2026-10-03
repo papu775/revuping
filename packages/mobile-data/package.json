@@ -16,7 +16,7 @@
   "nx": {
     "tags": [
       "scope:mobile",
-      "platform:browser",
+      "platform:native",
       "type:data-access"
     ]
   },

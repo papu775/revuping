@@ -19,3 +19,7 @@ export * from './lib/empty-state.tsx';
 export * from './lib/bar-chart.tsx';
 export * from './lib/line-chart.tsx';
 export * from './lib/qr-code.tsx';
+
+export * from './lib/logo.tsx';
+export * from './lib/filter-chips.tsx';
+export * from './lib/brand-colour.tsx';

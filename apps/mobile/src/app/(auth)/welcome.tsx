@@ -1,8 +1,8 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from 'mobile-tokens';
-import { Button, Screen } from 'mobile-ui';
+import { Button, Screen, Logo } from 'mobile-ui';
 
 export default function WelcomeScreen() {
   const router = useRouter();
@@ -16,29 +16,34 @@ export default function WelcomeScreen() {
         { backgroundColor: colors.canvas, paddingTop: insets.top },
       ])}
     >
-      <View style={styles.hero}>
-        <Text style={[styles.logo, { color: colors.violet }]}>RevuPing</Text>
-        <Text style={[styles.tagline, { color: colors.ink }]}>
-          The work behind a good review
-        </Text>
-        <Text style={[styles.subtitle, { color: colors.muted }]}>
-          Requests, private feedback and thoughtful replies. One place to take
-          the next step.
-        </Text>
-      </View>
-      <View style={[styles.actions, { paddingBottom: insets.bottom + 24 }]}>
-        <Button
-          title="Get started"
-          onPress={() => router.push('/signup')}
-          accessibilityLabel="Get started with RevuPing"
-        />
-        <Button
-          title="I have an account"
-          variant="secondary"
-          onPress={() => router.push('/login')}
-          accessibilityLabel="Log in to existing account"
-        />
-      </View>
+      <ScrollView
+        contentContainerStyle={{ flexGrow: 1, gap: 24 }}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={styles.hero}>
+          <Logo />
+          <Text style={[styles.tagline, { color: colors.ink }]}>
+            The work behind a good review
+          </Text>
+          <Text style={[styles.subtitle, { color: colors.muted }]}>
+            Requests, private feedback and thoughtful replies. One place to take
+            the next step.
+          </Text>
+        </View>
+        <View style={[styles.actions, { paddingBottom: insets.bottom + 24 }]}>
+          <Button
+            title="Set up demo"
+            onPress={() => router.push('/signup')}
+            accessibilityLabel="Get started with RevuPing"
+          />
+          <Button
+            title="Open demo workspace"
+            variant="secondary"
+            onPress={() => router.replace('/(tabs)')}
+            accessibilityLabel="Log in to existing account"
+          />
+        </View>
+      </ScrollView>
     </Screen>
   );
 }
@@ -54,6 +59,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     gap: 16,
+    paddingVertical: 40,
   },
   logo: {
     fontSize: 40,

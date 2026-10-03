@@ -1,10 +1,27 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+} from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from 'mobile-tokens';
 import { useDemoStore } from 'mobile-data';
-import { Header, Card, Badge, Avatar, Button, DetailSection, DetailItem, Dialog, useToast } from 'mobile-ui';
+import {
+  Header,
+  Card,
+  Badge,
+  Avatar,
+  Button,
+  DetailSection,
+  DetailItem,
+  Dialog,
+  BottomSheet,
+  useToast,
+} from 'mobile-ui';
 import { spacing, typography } from 'mobile-tokens';
 
 export default function CustomerDetailScreen() {
@@ -16,12 +33,19 @@ export default function CustomerDetailScreen() {
   const toast = useToast();
   const [showOptOutDialog, setShowOptOutDialog] = useState(false);
 
+  const [showRequest, setShowRequest] = useState(false);
+
   const customer = state.customers.find((c) => c.id === Number(id));
 
   if (!customer) {
     return (
-      <View style={[styles.container, { backgroundColor: colors.canvas, paddingTop: insets.top }]}>
-        <Header title="Customer" showBack />
+      <View
+        style={[
+          styles.container,
+          { backgroundColor: colors.canvas, paddingTop: insets.top },
+        ]}
+      >
+        <Header title="Customer" fallbackHref="/(tabs)/customers" showBack />
         <View style={styles.center}>
           <Text style={{ color: colors.muted }}>Customer not found.</Text>
         </View>
@@ -29,7 +53,10 @@ export default function CustomerDetailScreen() {
     );
   }
 
-  const initials = customer.name.split(' ').map((n) => n[0]).join('');
+  const initials = customer.name
+    .split(' ')
+    .map((n) => n[0])
+    .join('');
 
   const handleToggleConsent = () => {
     dispatch({ type: 'TOGGLE_CONSENT', customerId: customer.id });
@@ -39,25 +66,51 @@ export default function CustomerDetailScreen() {
   const handleToggleOptOut = () => {
     dispatch({ type: 'TOGGLE_OPT_OUT', customerId: customer.id });
     setShowOptOutDialog(false);
-    toast.showToast(customer.optedOut ? 'Opt-out reversed' : 'Customer opted out');
+    toast.showToast(
+      customer.optedOut ? 'Opt-out reversed' : 'Customer opted out',
+    );
   };
 
   return (
     <View style={[styles.container, { backgroundColor: colors.canvas }]}>
-      <Header title="Customer" showBack />
-      <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 100 }}>
+      <Header title="Customer" fallbackHref="/(tabs)/customers" showBack />
+      <ScrollView
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        contentContainerStyle={{ paddingTop: 16, paddingBottom: 24 }}
+      >
         <Card style={styles.card}>
           <View style={styles.profileHeader}>
-            <Avatar initials={initials} tone={customer.consent ? 'sage' : 'peach'} size={56} />
+            <Avatar
+              initials={initials}
+              tone={customer.consent ? 'sage' : 'peach'}
+              size={56}
+            />
             <View style={styles.profileInfo}>
-              <Text style={[styles.name, { color: colors.ink }]}>{customer.name}</Text>
-              <Text style={[styles.email, { color: colors.muted }]}>{customer.email}</Text>
+              <Text style={[styles.name, { color: colors.ink }]}>
+                {customer.name}
+              </Text>
+              <Text style={[styles.email, { color: colors.muted }]}>
+                {customer.email}
+              </Text>
             </View>
           </View>
           <View style={styles.badgeRow}>
             <Badge
-              label={customer.optedOut ? 'Opted out' : customer.consent ? 'Consented' : 'No consent'}
-              tone={customer.optedOut ? 'danger' : customer.consent ? 'mint' : 'warm'}
+              label={
+                customer.optedOut
+                  ? 'Opted out'
+                  : customer.consent
+                    ? 'Consented'
+                    : 'No consent'
+              }
+              tone={
+                customer.optedOut
+                  ? 'danger'
+                  : customer.consent
+                    ? 'mint'
+                    : 'warm'
+              }
             />
             <Badge label={customer.status} tone="muted" />
           </View>
@@ -65,7 +118,10 @@ export default function CustomerDetailScreen() {
 
         <DetailSection title="Details">
           <DetailItem label="Source" value={customer.source} />
-          <DetailItem label="Consent date" value={customer.consentDate || '—'} />
+          <DetailItem
+            label="Consent date"
+            value={customer.consentDate || '—'}
+          />
           <DetailItem label="Last visit" value={customer.lastVisit} />
           <DetailItem label="Preferred staff" value={customer.staff} />
           <DetailItem label="Service" value={customer.service} />
@@ -74,8 +130,13 @@ export default function CustomerDetailScreen() {
         <DetailSection title="Tags">
           <View style={styles.tagRow}>
             {customer.tags.map((tag) => (
-              <View key={tag} style={[styles.tag, { backgroundColor: colors.surfaceSection }]}>
-                <Text style={[styles.tagText, { color: colors.muted }]}>{tag}</Text>
+              <View
+                key={tag}
+                style={[styles.tag, { backgroundColor: colors.surfaceSection }]}
+              >
+                <Text style={[styles.tagText, { color: colors.muted }]}>
+                  {tag}
+                </Text>
               </View>
             ))}
           </View>
@@ -83,22 +144,43 @@ export default function CustomerDetailScreen() {
 
         <DetailSection title="Timeline">
           <View style={styles.timelineItem}>
-            <View style={[styles.timelineDot, { backgroundColor: colors.violet }]} />
-            <Text style={[styles.timelineText, { color: colors.muted }]}>Feedback received · fictional activity</Text>
+            <View
+              style={[styles.timelineDot, { backgroundColor: colors.violet }]}
+            />
+            <Text style={[styles.timelineText, { color: colors.muted }]}>
+              Feedback received · fictional activity
+            </Text>
           </View>
           {customer.consent && (
             <View style={styles.timelineItem}>
-              <View style={[styles.timelineDot, { backgroundColor: colors.positiveInk }]} />
-              <Text style={[styles.timelineText, { color: colors.muted }]}>Consent recorded · {customer.consentDate}</Text>
+              <View
+                style={[
+                  styles.timelineDot,
+                  { backgroundColor: colors.positiveInk },
+                ]}
+              />
+              <Text style={[styles.timelineText, { color: colors.muted }]}>
+                Consent recorded · {customer.consentDate}
+              </Text>
             </View>
           )}
           <View style={styles.timelineItem}>
-            <View style={[styles.timelineDot, { backgroundColor: colors.border }]} />
-            <Text style={[styles.timelineText, { color: colors.muted }]}>Last visit · {customer.lastVisit}</Text>
+            <View
+              style={[styles.timelineDot, { backgroundColor: colors.border }]}
+            />
+            <Text style={[styles.timelineText, { color: colors.muted }]}>
+              Last visit · {customer.lastVisit}
+            </Text>
           </View>
         </DetailSection>
 
         <View style={styles.actions}>
+          <Button
+            title="Preview review request"
+            variant="secondary"
+            onPress={() => setShowRequest(true)}
+            style={{ marginBottom: 12 }}
+          />
           <Button
             title={customer.consent ? 'Remove consent' : 'Record consent'}
             variant={customer.consent ? 'secondary' : 'primary'}
@@ -113,13 +195,35 @@ export default function CustomerDetailScreen() {
         </View>
       </ScrollView>
 
+      <BottomSheet
+        visible={showRequest}
+        onClose={() => setShowRequest(false)}
+        title="Review request preview"
+      >
+        <Text style={{ color: colors.ink }}>
+          {state.templates.request
+            .replaceAll('{name}', customer.name)
+            .replaceAll('{link}', 'revuping://review/demo')}
+        </Text>
+        <Text style={{ color: colors.muted, marginTop: 16 }}>
+          {customer.optedOut
+            ? 'Customer opted out. No request can be sent.'
+            : !customer.consent
+              ? 'Consent is required before sending requests.'
+              : 'Eligible for demo requests. This preview sends no message.'}
+        </Text>
+      </BottomSheet>
       <Dialog
         visible={showOptOutDialog}
         onClose={() => setShowOptOutDialog(false)}
         title={customer.optedOut ? 'Reverse opt-out?' : 'Opt out customer?'}
-        message={customer.optedOut
-          ? 'This customer will become eligible for review requests again.'
-          : 'This customer will no longer be eligible for review requests or campaigns.'}
+        message={
+          customer.optedOut
+            ? customer.consent
+              ? 'This customer will become eligible for demo requests again.'
+              : 'Consent is still required before this customer is eligible for demo requests.'
+            : 'This customer will no longer be eligible for review requests or campaigns.'
+        }
         confirmLabel={customer.optedOut ? 'Reverse' : 'Opt out'}
         onConfirm={handleToggleOptOut}
         destructive={!customer.optedOut}
@@ -153,6 +257,7 @@ const styles = StyleSheet.create({
   name: {
     fontSize: typography.heading,
     fontWeight: '700',
+    flexShrink: 1,
   },
   email: {
     fontSize: typography.caption,
@@ -160,10 +265,12 @@ const styles = StyleSheet.create({
   },
   badgeRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: spacing.sm,
   },
   tagRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: spacing.sm,
     paddingVertical: spacing.sm,
   },

@@ -14,7 +14,10 @@ export function DetailSection({
 
   return (
     <View style={styles.container}>
-      <Text style={[styles.title, { color: colors.muted }]} accessibilityRole="header">
+      <Text
+        style={[styles.title, { color: colors.muted }]}
+        accessibilityRole="header"
+      >
         {title}
       </Text>
       <View style={[styles.content, { borderBottomColor: colors.border }]}>
@@ -24,13 +27,7 @@ export function DetailSection({
   );
 }
 
-export function DetailItem({
-  label,
-  value,
-}: {
-  label: string;
-  value: string;
-}) {
+export function DetailItem({ label, value }: { label: string; value: string }) {
   const { colors } = useTheme();
 
   return (
@@ -44,6 +41,7 @@ export function DetailItem({
 const styles = StyleSheet.create({
   container: {
     marginBottom: spacing.lg,
+    marginHorizontal: spacing.xl,
   },
   title: {
     fontSize: typography.caption,

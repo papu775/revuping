@@ -1,108 +1,105 @@
-import React, { createContext, useContext, useState, useCallback, useRef } from 'react';
-import { View, Text, StyleSheet, Animated } from 'react-native';
-import { useTheme } from 'mobile-tokens';
-import { radius, spacing, typography } from 'mobile-tokens';
+import {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useRef,
+  useEffect,
+} from 'react';
+import { View, Text, StyleSheet } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTheme, radius } from 'mobile-tokens';
 import { Ionicons } from '@expo/vector-icons';
+import { IconButton } from './icon-button.tsx';
 
 interface ToastItem {
-  id: number;
   message: string;
   type: 'success' | 'error';
 }
-
-interface ToastContextValue {
+const ToastContext = createContext<{
   showToast: (message: string, type?: 'success' | 'error') => void;
-}
-
-const ToastContext = createContext<ToastContextValue | null>(null);
-
+} | null>(null);
 export function ToastProvider({ children }: { children: React.ReactNode }) {
-  const [toasts, setToasts] = useState<ToastItem[]>([]);
-  const idRef = useRef(0);
-
-  const showToast = useCallback((message: string, type: 'success' | 'error' = 'success') => {
-    const id = ++idRef.current;
-    setToasts((prev) => [...prev, { id, message, type }]);
-    setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 3000);
+  const [toast, setToast] = useState<ToastItem | null>(null);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
+  const dismiss = useCallback(() => {
+    if (timer.current) clearTimeout(timer.current);
+    setToast(null);
   }, []);
-
+  const showToast = useCallback(
+    (message: string, type: 'success' | 'error' = 'success') => {
+      if (timer.current) clearTimeout(timer.current);
+      setToast({ message, type });
+      timer.current = setTimeout(() => setToast(null), 5000);
+    },
+    [],
+  );
+  useEffect(
+    () => () => {
+      if (timer.current) clearTimeout(timer.current);
+    },
+    [],
+  );
   return (
     <ToastContext.Provider value={{ showToast }}>
       {children}
-      <View style={styles.container} pointerEvents="none">
-        {toasts.map((toast) => (
-          <Toast key={toast.id} message={toast.message} type={toast.type} />
-        ))}
-      </View>
+      {toast && (
+        <View
+          style={[
+            styles.container,
+            {
+              bottom: Math.max(insets.bottom, 8) + 80,
+              backgroundColor: colors.surface,
+              borderColor: colors.border,
+            },
+          ]}
+          accessibilityLiveRegion="polite"
+        >
+          <Ionicons
+            name={
+              toast.type === 'success' ? 'checkmark-circle' : 'alert-circle'
+            }
+            size={22}
+            color={
+              toast.type === 'success' ? colors.positiveInk : colors.danger
+            }
+          />
+          <Text style={[styles.text, { color: colors.ink }]}>
+            {toast.message}
+          </Text>
+          <IconButton
+            onPress={dismiss}
+            accessibilityLabel="Dismiss notification"
+          >
+            <Ionicons name="close" size={20} color={colors.muted} />
+          </IconButton>
+        </View>
+      )}
     </ToastContext.Provider>
   );
 }
-
-function Toast({ message, type }: { message: string; type: 'success' | 'error' }) {
-  const { colors } = useTheme();
-  const opacity = useRef(new Animated.Value(0)).current;
-
-  React.useEffect(() => {
-    Animated.timing(opacity, {
-      toValue: 1,
-      duration: 200,
-      useNativeDriver: true,
-    }).start();
-  }, [opacity]);
-
-  const iconName = type === 'success' ? 'checkmark-circle' : 'alert-circle';
-  const iconColor = type === 'success' ? colors.positiveInk : colors.danger;
-
-  return (
-    <Animated.View
-      style={[
-        styles.toast,
-        {
-          backgroundColor: colors.surface,
-          borderColor: colors.border,
-          opacity,
-        },
-      ]}
-      accessibilityLiveRegion="polite"
-    >
-      <Ionicons name={iconName} size={20} color={iconColor} />
-      <Text style={[styles.text, { color: colors.ink }]}>{message}</Text>
-    </Animated.View>
-  );
-}
-
-export function useToast(): ToastContextValue {
+export function useToast() {
   const ctx = useContext(ToastContext);
   if (!ctx) throw new Error('useToast must be used within ToastProvider');
   return ctx;
 }
-
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',
-    bottom: 100,
-    left: spacing.lg,
-    right: spacing.lg,
-    gap: spacing.sm,
+    left: 16,
+    right: 16,
     zIndex: 9999,
-  },
-  toast: {
+    borderWidth: 1,
+    borderRadius: radius.md,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
-    padding: spacing.md,
-    borderRadius: radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
+    gap: 12,
+    paddingLeft: 16,
+    paddingRight: 4,
+    paddingVertical: 8,
     elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
   },
-  text: {
-    fontSize: typography.caption,
-    flex: 1,
-  },
+  text: { flex: 1, fontSize: 14, lineHeight: 21 },
 });

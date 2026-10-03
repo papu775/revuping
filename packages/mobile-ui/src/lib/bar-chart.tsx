@@ -1,4 +1,3 @@
-
 import { View, Text, StyleSheet } from 'react-native';
 import { useTheme } from 'mobile-tokens';
 import { spacing, typography } from 'mobile-tokens';
@@ -23,7 +22,12 @@ export function BarChart({
   return (
     <View
       style={styles.container}
-      accessibilityLabel={accessibilityLabel ?? `Bar chart with ${data.length} data points`}
+      accessible
+      accessibilityRole="image"
+      accessibilityLabel={
+        accessibilityLabel ??
+        `Bar chart. ${data.map((v, i) => `${labels[i]}: ${v}`).join('. ')}`
+      }
     >
       <View style={[styles.chart, { height }]}>
         {data.map((value, index) => (

@@ -122,7 +122,16 @@ export type WidgetConfig = {
   reviewIds: number[];
 };
 
+export type Referral = {
+  name: string;
+  message: string;
+  terms: string;
+  eligibility: string;
+  paused: boolean;
+};
+
 export type DemoState = {
+  referral: Referral;
   feedback: FeedbackItem[];
   customers: Customer[];
   reviews: Review[];

@@ -1,9 +1,17 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useState, useCallback } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+  BackHandler,
+} from 'react-native';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from 'mobile-tokens';
-import { Screen, Button, Field, Card } from 'mobile-ui';
+import { Screen, Button, Field, Card, Header, BrandColour } from 'mobile-ui';
 import { useDemoStore } from 'mobile-data';
 import { spacing, typography } from 'mobile-tokens';
 import { Ionicons } from '@expo/vector-icons';
@@ -16,15 +24,30 @@ export default function OnboardingScreen() {
   const { colors } = useTheme();
   const { state, dispatch } = useDemoStore();
   const [step, setStep] = useState(0);
-  const [name, setName] = useState(state.business.name === 'Bloom & Co.' ? '' : state.business.name);
-  const [category, setCategory] = useState(state.business.category === 'Salon & beauty' ? '' : state.business.category);
-  const [hours, setHours] = useState(state.business.hours === 'Monday–Saturday · 09:00–18:00' ? '' : state.business.hours);
-  const [locations, setLocations] = useState(state.business.locations === 'Notting Hill, Richmond' ? '' : state.business.locations);
+  const [name, setName] = useState(state.business.name);
+  const [category, setCategory] = useState(state.business.category);
+  const [hours, setHours] = useState(state.business.hours);
+  const [locations, setLocations] = useState(state.business.locations);
   const [branding, setBranding] = useState(state.business.branding);
+  useFocusEffect(
+    useCallback(() => {
+      if (Platform.OS === 'web') return undefined;
+      const subscription = BackHandler.addEventListener(
+        'hardwareBackPress',
+        () => {
+          if (step === 0) return false;
+          setStep((v) => v - 1);
+          return true;
+        },
+      );
+      return () => subscription.remove();
+    }, [step]),
+  );
 
   const canProceed = () => {
     if (step === 0) return name.trim().length > 0 && category.trim().length > 0;
-    if (step === 1) return hours.trim().length > 0 && locations.trim().length > 0;
+    if (step === 1)
+      return hours.trim().length > 0 && locations.trim().length > 0;
     if (step === 2) return /^#[0-9a-fA-F]{6}$/.test(branding);
     return true;
   };
@@ -43,11 +66,21 @@ export default function OnboardingScreen() {
   };
 
   return (
-    <Screen style={{ paddingTop: insets.top }}>
+    <Screen edges={[]}>
+      <Header
+        title="Business onboarding"
+        subtitle="Demo setup · No account is created"
+      />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
       >
+        <Text
+          accessibilityLiveRegion="polite"
+          style={{ paddingHorizontal: 24, paddingTop: 16, color: colors.muted }}
+        >
+          Step {step + 1} of {steps.length} · {steps[step]}
+        </Text>
         <View style={styles.progress}>
           {steps.map((s, i) => (
             <View
@@ -61,47 +94,84 @@ export default function OnboardingScreen() {
             />
           ))}
         </View>
-        <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
-          <Text style={[styles.stepTitle, { color: colors.ink }]}>{steps[step]}</Text>
+        <ScrollView
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          style={styles.scroll}
+          contentContainerStyle={styles.scrollContent}
+        >
+          <Text style={[styles.stepTitle, { color: colors.ink }]}>
+            {steps[step]}
+          </Text>
           {step === 0 && (
             <>
-              <Field label="Business name" value={name} onChangeText={setName} placeholder="Bloom & Co." autoCapitalize="words" />
-              <Field label="Category" value={category} onChangeText={setCategory} placeholder="Salon & beauty" autoCapitalize="words" />
+              <Field
+                label="Business name"
+                value={name}
+                onChangeText={setName}
+                placeholder="Bloom & Co."
+                autoCapitalize="words"
+              />
+              <Field
+                label="Category"
+                value={category}
+                onChangeText={setCategory}
+                placeholder="Salon & beauty"
+                autoCapitalize="words"
+              />
             </>
           )}
           {step === 1 && (
             <>
-              <Field label="Opening hours" value={hours} onChangeText={setHours} placeholder="Monday–Saturday · 09:00–18:00" />
-              <Field label="Locations" value={locations} onChangeText={setLocations} placeholder="Notting Hill, Richmond" autoCapitalize="words" />
+              <Field
+                label="Opening hours"
+                value={hours}
+                onChangeText={setHours}
+                placeholder="Monday–Saturday · 09:00–18:00"
+              />
+              <Field
+                label="Locations"
+                value={locations}
+                onChangeText={setLocations}
+                placeholder="Notting Hill, Richmond"
+                autoCapitalize="words"
+              />
             </>
           )}
           {step === 2 && (
             <>
-              <Field
-                label="Brand color (hex)"
-                value={branding}
-                onChangeText={setBranding}
-                placeholder="#6b52b9"
-                error={branding && !/^#[0-9a-fA-F]{6}$/.test(branding) ? 'Enter a valid hex color' : undefined}
-              />
-              <View style={[styles.colorPreview, { backgroundColor: branding }]} />
+              <BrandColour value={branding} onChange={setBranding} />
             </>
           )}
           {step === 3 && (
             <Card>
               <View style={styles.completeHeader}>
-                <Ionicons name="checkmark" size={32} color={colors.positiveInk} />
-                <Text style={[styles.completeTitle, { color: colors.ink }]}>You're all set!</Text>
+                <Ionicons
+                  name="checkmark"
+                  size={32}
+                  color={colors.positiveInk}
+                />
+                <Text style={[styles.completeTitle, { color: colors.ink }]}>
+                  You're all set!
+                </Text>
               </View>
               <Text style={[styles.completeText, { color: colors.muted }]}>
-                Your business profile is ready. You can update these details anytime in Settings.
+                Your business profile is ready. You can update these details
+                anytime in Settings.
               </Text>
             </Card>
           )}
         </ScrollView>
-        <View style={[styles.footer, { paddingBottom: insets.bottom + spacing.lg }]}>
+        <View
+          style={[styles.footer, { paddingBottom: insets.bottom + spacing.lg }]}
+        >
           {step > 0 && (
-            <Button title="Back" variant="secondary" onPress={() => setStep(step - 1)} style={{ marginBottom: spacing.sm }} />
+            <Button
+              title="Back"
+              variant="secondary"
+              onPress={() => setStep(step - 1)}
+              style={{ marginBottom: spacing.sm }}
+            />
           )}
           <Button
             title={step === steps.length - 1 ? 'Get started' : 'Continue'}
@@ -117,6 +187,7 @@ export default function OnboardingScreen() {
 const styles = StyleSheet.create({
   progress: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: spacing.sm,
     paddingHorizontal: 24,
     paddingVertical: spacing.lg,
@@ -153,6 +224,7 @@ const styles = StyleSheet.create({
   completeTitle: {
     fontSize: typography.heading,
     fontWeight: '700',
+    flexShrink: 1,
   },
   completeText: {
     fontSize: typography.body,

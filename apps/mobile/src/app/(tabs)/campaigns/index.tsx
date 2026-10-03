@@ -1,10 +1,16 @@
-import React, { useState, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { useState, useMemo } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+} from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from 'mobile-tokens';
 import { useDemoStore } from 'mobile-data';
-import { Card, Badge, EmptyState, IconButton } from 'mobile-ui';
+import { FilterChips, Card, Badge, EmptyState, IconButton } from 'mobile-ui';
 import { spacing, typography } from 'mobile-tokens';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -23,45 +29,42 @@ export default function CampaignsScreen() {
   }, [state.campaigns, filter]);
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.canvas, paddingTop: insets.top }]}>
+    <View
+      style={[
+        styles.container,
+        { backgroundColor: colors.canvas, paddingTop: insets.top },
+      ]}
+    >
       <View style={styles.header}>
         <Text style={[styles.title, { color: colors.ink }]}>Campaigns</Text>
-        <IconButton onPress={() => router.push('/(tabs)/campaigns/builder')} accessibilityLabel="Create campaign">
+        <IconButton
+          onPress={() => router.push('/(tabs)/campaigns/builder')}
+          accessibilityLabel="Create campaign"
+        >
           <Ionicons name="add" size={24} color={colors.violet} />
         </IconButton>
       </View>
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
-        {filters.map((f) => (
-          <TouchableOpacity
-            key={f}
-            onPress={() => setFilter(f)}
-            style={[
-              styles.filterChip,
-              {
-                backgroundColor: filter === f ? colors.violet : colors.surface,
-                borderColor: filter === f ? colors.violet : colors.border,
-              },
-            ]}
-            accessibilityRole="button"
-            accessibilityLabel={`Filter: ${f}`}
-          >
-            <Text style={[styles.filterText, { color: filter === f ? '#ffffff' : colors.ink }]}>
-              {f}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+      <FilterChips options={filters} value={filter} onChange={setFilter} />
 
-      <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 80 }}>
+      <ScrollView
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        contentContainerStyle={{ paddingBottom: 24 }}
+      >
         {filtered.length === 0 ? (
           <EmptyState
             icon={<Ionicons name="megaphone" size={40} color={colors.muted} />}
             title="No campaigns"
             message="Create your first campaign to start reaching customers."
             action={
-              <TouchableOpacity onPress={() => router.push('/(tabs)/campaigns/builder')} accessibilityRole="button">
-                <Text style={{ color: colors.violet, fontWeight: '600' }}>Create campaign</Text>
+              <TouchableOpacity
+                onPress={() => router.push('/(tabs)/campaigns/builder')}
+                accessibilityRole="button"
+              >
+                <Text style={{ color: colors.violet, fontWeight: '600' }}>
+                  Create campaign
+                </Text>
               </TouchableOpacity>
             }
           />
@@ -69,19 +72,37 @@ export default function CampaignsScreen() {
           filtered.map((campaign) => (
             <Card key={campaign.id} style={styles.campaignCard}>
               <View style={styles.campaignHeader}>
-                <Text style={[styles.campaignName, { color: colors.ink }]}>{campaign.name}</Text>
+                <Text style={[styles.campaignName, { color: colors.ink }]}>
+                  {campaign.name}
+                </Text>
                 <Badge
                   label={campaign.status}
-                  tone={campaign.status === 'Scheduled' ? 'violet' : campaign.status === 'Completed' ? 'mint' : campaign.status === 'Paused' ? 'warm' : 'muted'}
+                  tone={
+                    campaign.status === 'Scheduled'
+                      ? 'violet'
+                      : campaign.status === 'Completed'
+                        ? 'mint'
+                        : campaign.status === 'Paused'
+                          ? 'warm'
+                          : 'muted'
+                  }
                 />
               </View>
-              <Text style={[styles.campaignKind, { color: colors.muted }]}>{campaign.kind} · {campaign.channel}</Text>
-              <Text style={[styles.campaignAudience, { color: colors.muted }]}>{campaign.audience}</Text>
+              <Text style={[styles.campaignKind, { color: colors.muted }]}>
+                {campaign.kind} · {campaign.channel}
+              </Text>
+              <Text style={[styles.campaignAudience, { color: colors.muted }]}>
+                {campaign.audience}
+              </Text>
               <View style={styles.campaignFooter}>
                 <Text style={[styles.campaignDate, { color: colors.muted }]}>
-                  {campaign.scheduled ? `Scheduled: ${campaign.scheduled}` : 'Not scheduled'}
+                  {campaign.scheduled
+                    ? `Scheduled: ${campaign.scheduled}`
+                    : 'Not scheduled'}
                 </Text>
-                <Text style={[styles.campaignCustomers, { color: colors.violet }]}>
+                <Text
+                  style={[styles.campaignCustomers, { color: colors.violet }]}
+                >
                   {campaign.customerIds.length} customers
                 </Text>
               </View>

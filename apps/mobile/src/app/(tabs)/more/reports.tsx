@@ -1,24 +1,40 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from 'mobile-tokens';
-import { useDemoStore, reportRows } from 'mobile-data';
+import { reportRows } from 'mobile-data';
 import { Header, Card, Select, BarChart, LineChart } from 'mobile-ui';
 import { spacing, typography } from 'mobile-tokens';
 
 export default function ReportsScreen() {
-  const insets = useSafeAreaInsets();
   const { colors } = useTheme();
-  const { state } = useDemoStore();
   const [location, setLocation] = useState('All locations');
-  const [dateRange, setDateRange] = useState('Last 4 weeks');
+  const [dateRange, setDateRange] = useState('Last 30 days');
 
-  const locations = ['All locations', ...new Set(reportRows.map((r) => r.location))];
+  const locations = [
+    'All locations',
+    ...new Set(reportRows.map((r) => r.location)),
+  ];
 
   const filtered = useMemo(() => {
-    if (location === 'All locations') return reportRows;
-    return reportRows.filter((r) => r.location === location);
-  }, [location]);
+    const days = Number(dateRange.split(' ')[1]);
+    const latest = Math.max(...reportRows.map((r) => Date.parse(r.date)));
+    return reportRows.filter(
+      (r) =>
+        (location === 'All locations' || r.location === location) &&
+        Date.parse(r.date) > latest - days * 86400000,
+    );
+  }, [location, dateRange]);
+  const weekly = [...new Set(filtered.map((r) => r.date))]
+    .sort()
+    .map((date) => ({
+      date,
+      requests: filtered
+        .filter((r) => r.date === date)
+        .reduce((n, r) => n + r.requests, 0),
+      feedback: filtered
+        .filter((r) => r.date === date)
+        .reduce((n, r) => n + r.feedback, 0),
+    }));
 
   const totals = filtered.reduce(
     (acc, row) => ({
@@ -30,48 +46,105 @@ export default function ReportsScreen() {
     { requests: 0, clicks: 0, feedback: 0, reviews: 0 },
   );
 
-  const trendData = filtered.map((r) => r.requests);
-  const trendLabels = filtered.map((r) => r.date.slice(5));
+  const trendData = weekly.map((r) => r.requests);
+  const trendLabels = weekly.map((r) => r.date.slice(5));
 
   return (
     <View style={[styles.container, { backgroundColor: colors.canvas }]}>
       <Header title="Reports" showBack />
-      <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 40 }}>
+      <ScrollView
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        contentContainerStyle={{ paddingTop: 16, paddingBottom: 24 }}
+      >
         <Card style={styles.card}>
-          <Select label="Location" value={location} options={locations} onChange={setLocation} />
-          <Select label="Date range" value={dateRange} options={['Last 4 weeks', 'Last 8 weeks', 'Last 12 weeks']} onChange={setDateRange} />
+          <Select
+            label="Location"
+            value={location}
+            options={locations}
+            onChange={setLocation}
+          />
+          <Select
+            label="Date range"
+            value={dateRange}
+            options={['Last 7 days', 'Last 14 days', 'Last 30 days']}
+            onChange={setDateRange}
+          />
         </Card>
 
         <Card style={styles.card}>
-          <Text style={[styles.sectionTitle, { color: colors.ink }]}>Summary</Text>
+          <Text style={[styles.sectionTitle, { color: colors.ink }]}>
+            Summary
+          </Text>
           <View style={styles.summaryGrid}>
             <View style={styles.summaryItem}>
-              <Text style={[styles.summaryValue, { color: colors.ink }]}>{totals.requests}</Text>
-              <Text style={[styles.summaryLabel, { color: colors.muted }]}>Requests</Text>
+              <Text style={[styles.summaryValue, { color: colors.ink }]}>
+                {totals.requests}
+              </Text>
+              <Text style={[styles.summaryLabel, { color: colors.muted }]}>
+                Requests
+              </Text>
             </View>
             <View style={styles.summaryItem}>
-              <Text style={[styles.summaryValue, { color: colors.ink }]}>{totals.clicks}</Text>
-              <Text style={[styles.summaryLabel, { color: colors.muted }]}>Clicks</Text>
+              <Text style={[styles.summaryValue, { color: colors.ink }]}>
+                {totals.clicks}
+              </Text>
+              <Text style={[styles.summaryLabel, { color: colors.muted }]}>
+                Clicks
+              </Text>
             </View>
             <View style={styles.summaryItem}>
-              <Text style={[styles.summaryValue, { color: colors.ink }]}>{totals.feedback}</Text>
-              <Text style={[styles.summaryLabel, { color: colors.muted }]}>Feedback</Text>
+              <Text style={[styles.summaryValue, { color: colors.ink }]}>
+                {totals.feedback}
+              </Text>
+              <Text style={[styles.summaryLabel, { color: colors.muted }]}>
+                Feedback
+              </Text>
             </View>
             <View style={styles.summaryItem}>
-              <Text style={[styles.summaryValue, { color: colors.ink }]}>{totals.reviews}</Text>
-              <Text style={[styles.summaryLabel, { color: colors.muted }]}>Reviews</Text>
+              <Text style={[styles.summaryValue, { color: colors.ink }]}>
+                {totals.reviews}
+              </Text>
+              <Text style={[styles.summaryLabel, { color: colors.muted }]}>
+                Reviews
+              </Text>
             </View>
           </View>
         </Card>
 
         <Card style={styles.card}>
-          <Text style={[styles.sectionTitle, { color: colors.ink }]}>Request trend</Text>
-          <LineChart data={trendData} labels={trendLabels} color={colors.violet} />
+          <Text style={[styles.sectionTitle, { color: colors.ink }]}>
+            Request trend
+          </Text>
+          <LineChart
+            data={trendData}
+            labels={trendLabels}
+            color={colors.violet}
+          />
         </Card>
 
         <Card style={styles.card}>
-          <Text style={[styles.sectionTitle, { color: colors.ink }]}>Weekly comparison</Text>
-          <BarChart data={filtered.map((r) => r.feedback)} labels={trendLabels} color={colors.chartSage} />
+          <Text style={[styles.sectionTitle, { color: colors.ink }]}>
+            Weekly comparison · demo data
+          </Text>
+          <BarChart
+            data={weekly.map((r) => r.feedback)}
+            labels={trendLabels}
+            color={colors.chartSage}
+          />
+        </Card>
+        <Card style={styles.card}>
+          <Text style={[styles.sectionTitle, { color: colors.ink }]}>
+            Chart values
+          </Text>
+          {weekly.map((row) => (
+            <Text
+              key={row.date}
+              style={{ color: colors.muted, marginBottom: 12 }}
+            >
+              {row.date}: {row.requests} requests · {row.feedback} feedback
+            </Text>
+          ))}
         </Card>
       </ScrollView>
     </View>

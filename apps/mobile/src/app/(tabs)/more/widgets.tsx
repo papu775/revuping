@@ -1,78 +1,219 @@
-import React from 'react';
+import { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from 'mobile-tokens';
 import { useDemoStore } from 'mobile-data';
-import { Header, Card, Select, Button, Stars, useToast } from 'mobile-ui';
+import {
+  Header,
+  Card,
+  Select,
+  Button,
+  BrandColour,
+  isBrandColour,
+  Toggle,
+  Stars,
+  BottomSheet,
+} from 'mobile-ui';
 import { spacing, typography } from 'mobile-tokens';
 
 const layouts = ['Compact badge', 'Review cards', 'Carousel', 'Review wall'];
 const themes = ['Light', 'Dark'];
 
 export default function WidgetsScreen() {
-  const insets = useSafeAreaInsets();
   const { colors } = useTheme();
   const { state, dispatch } = useDemoStore();
-  const toast = useToast();
+  const [snippet, setSnippet] = useState(false);
+  const [colour, setColour] = useState(state.widget.colour);
 
-  const selectedReviews = state.reviews.filter((r) => state.widget.reviewIds.includes(r.id));
+  const selectedReviews = state.reviews.filter((r) =>
+    state.widget.reviewIds.includes(r.id),
+  );
 
   return (
     <View style={[styles.container, { backgroundColor: colors.canvas }]}>
       <Header title="Widgets" showBack />
-      <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 40 }}>
+      <ScrollView
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        contentContainerStyle={{ paddingTop: 16, paddingBottom: 24 }}
+      >
         <Card style={styles.card}>
-          <Select label="Layout" value={state.widget.layout} options={layouts} onChange={(v) => dispatch({ type: 'SET_WIDGET', widget: { layout: v } })} />
-          <Select label="Theme" value={state.widget.theme} options={themes} onChange={(v) => dispatch({ type: 'SET_WIDGET', widget: { theme: v } })} />
+          <BrandColour
+            value={colour}
+            onChange={(colour) => {
+              setColour(colour);
+              if (isBrandColour(colour))
+                dispatch({ type: 'SET_WIDGET', widget: { colour } });
+            }}
+          />
+          <Select
+            label="Layout"
+            value={state.widget.layout}
+            options={layouts}
+            onChange={(v) =>
+              dispatch({ type: 'SET_WIDGET', widget: { layout: v } })
+            }
+          />
+          {state.reviews.map((review) => (
+            <Toggle
+              key={review.id}
+              label={`Include ${review.name}`}
+              value={state.widget.reviewIds.includes(review.id)}
+              onValueChange={(include) =>
+                dispatch({
+                  type: 'SET_WIDGET',
+                  widget: {
+                    reviewIds: include
+                      ? [...new Set([...state.widget.reviewIds, review.id])]
+                      : state.widget.reviewIds.filter((id) => id !== review.id),
+                  },
+                })
+              }
+            />
+          ))}
+          <Select
+            label="Theme"
+            value={state.widget.theme}
+            options={themes}
+            onChange={(v) =>
+              dispatch({ type: 'SET_WIDGET', widget: { theme: v } })
+            }
+          />
         </Card>
 
         <Card style={styles.card}>
-          <Text style={[styles.sectionTitle, { color: colors.ink }]}>Preview</Text>
+          <Text style={[styles.sectionTitle, { color: colors.ink }]}>
+            Preview
+          </Text>
           <View
             style={[
               styles.previewBox,
               {
-                backgroundColor: state.widget.theme === 'Dark' ? '#121521' : '#faf8f3',
+                backgroundColor:
+                  state.widget.theme === 'Dark' ? '#121521' : '#faf8f3',
                 borderColor: colors.border,
               },
             ]}
           >
-            {selectedReviews.map((review) => (
-              <View
-                key={review.id}
-                style={[
-                  styles.reviewCard,
-                  {
-                    backgroundColor: state.widget.theme === 'Dark' ? '#222739' : '#ffffff',
-                    borderTopColor: state.widget.colour,
-                  },
-                ]}
+            {selectedReviews.length === 0 && (
+              <Text style={{ color: colors.muted }}>
+                Select reviews above to preview this widget.
+              </Text>
+            )}
+            {state.widget.layout === 'Compact badge' ? (
+              <Text
+                style={{
+                  color: state.widget.theme === 'Dark' ? '#f0edf6' : '#20243c',
+                  fontSize: 18,
+                  fontWeight: '600',
+                }}
               >
-                <Text style={[styles.reviewName, { color: state.widget.theme === 'Dark' ? '#f0edf6' : '#20243c' }]}>
-                  {review.name}
-                </Text>
-                <Stars rating={review.rating} size={14} color={state.widget.colour} />
-                <Text style={[styles.reviewText, { color: state.widget.theme === 'Dark' ? '#c0c3d2' : '#535768' }]}>
-                  {review.text}
-                </Text>
-              </View>
-            ))}
+                {state.business.name} · {selectedReviews.length} featured
+                reviews
+              </Text>
+            ) : (
+              <ScrollView
+                horizontal={state.widget.layout === 'Carousel'}
+                showsHorizontalScrollIndicator
+                contentContainerStyle={{ gap: 12 }}
+                style={{ flexGrow: 0 }}
+              >
+                {selectedReviews.map((review) => (
+                  <View
+                    key={review.id}
+                    style={[
+                      styles.reviewCard,
+                      state.widget.layout === 'Carousel' && { width: 240 },
+                      {
+                        backgroundColor:
+                          state.widget.theme === 'Dark' ? '#222739' : '#ffffff',
+                        borderTopColor: state.widget.colour,
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.reviewName,
+                        {
+                          color:
+                            state.widget.theme === 'Dark'
+                              ? '#f0edf6'
+                              : '#20243c',
+                        },
+                      ]}
+                    >
+                      {review.name}
+                    </Text>
+                    <Stars
+                      rating={review.rating}
+                      size={14}
+                      color={state.widget.colour}
+                    />
+                    <Text
+                      style={[
+                        styles.reviewText,
+                        {
+                          color:
+                            state.widget.theme === 'Dark'
+                              ? '#c0c3d2'
+                              : '#535768',
+                        },
+                      ]}
+                    >
+                      {review.text}
+                    </Text>
+                  </View>
+                ))}
+              </ScrollView>
+            )}
+            {state.widget.layout === 'Review wall' && (
+              <Text style={{ color: colors.muted }}>
+                Reviews stack vertically for a readable phone layout.
+              </Text>
+            )}
           </View>
         </Card>
 
         <Card style={styles.card}>
-          <Text style={[styles.sectionTitle, { color: colors.ink }]}>Embed code</Text>
-          <View style={[styles.codeBox, { backgroundColor: colors.surfaceInput, borderColor: colors.border }]}>
-            <Text style={[styles.codeText, { color: colors.ink }]}>
+          <Text style={[styles.sectionTitle, { color: colors.ink }]}>
+            Embed code
+          </Text>
+          <View
+            style={[
+              styles.codeBox,
+              {
+                backgroundColor: colors.surfaceInput,
+                borderColor: colors.border,
+              },
+            ]}
+          >
+            <Text selectable style={[styles.codeText, { color: colors.ink }]}>
               {`<div id="revuping-widget" data-layout="${state.widget.layout}" data-theme="${state.widget.theme}"></div>`}
             </Text>
           </View>
         </Card>
 
         <View style={styles.actions}>
-          <Button title="Copy embed code" variant="secondary" onPress={() => toast.showToast('Embed code copied (demo)')} />
+          <Button
+            title="Preview embed code"
+            variant="secondary"
+            onPress={() => setSnippet(true)}
+          />
         </View>
       </ScrollView>
+      <BottomSheet
+        visible={snippet}
+        onClose={() => setSnippet(false)}
+        title="Demo embed snippet"
+      >
+        <Text
+          selectable
+          style={{ color: colors.ink, fontFamily: 'monospace' }}
+        >{`<div id="revuping-widget" data-layout="${state.widget.layout}" data-theme="${state.widget.theme}"></div>`}</Text>
+        <Text style={{ color: colors.muted, marginTop: 16 }}>
+          Long press to select and copy this example. No live widget is
+          installed.
+        </Text>
+      </BottomSheet>
     </View>
   );
 }

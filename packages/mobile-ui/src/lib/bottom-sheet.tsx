@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -6,10 +6,15 @@ import {
   StyleSheet,
   Animated,
   Pressable,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+  Easing,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useTheme } from 'mobile-tokens';
-import { radius, spacing, typography } from 'mobile-tokens';
+import { useTheme, useReducedMotion, radius, typography } from 'mobile-tokens';
+import { Ionicons } from '@expo/vector-icons';
+import { IconButton } from './icon-button.tsx';
 
 export function BottomSheet({
   visible,
@@ -22,85 +27,118 @@ export function BottomSheet({
   title: string;
   children: React.ReactNode;
 }) {
-  const insets = useSafeAreaInsets();
   const { colors } = useTheme();
-  const slideAnim = useRef(new Animated.Value(0)).current;
-
+  const insets = useSafeAreaInsets();
+  const reduced = useReducedMotion();
+  const [mounted, setMounted] = useState(visible);
+  const progress = useRef(new Animated.Value(0)).current;
   useEffect(() => {
-    if (visible) {
-      Animated.spring(slideAnim, {
-        toValue: 1,
-        useNativeDriver: true,
-        damping: 20,
-        stiffness: 200,
-      }).start();
-    } else {
-      slideAnim.setValue(0);
-    }
-  }, [visible, slideAnim]);
-
+    progress.stopAnimation();
+    if (visible) setMounted(true);
+    const animation = Animated.timing(progress, {
+      toValue: visible ? 1 : 0,
+      duration: reduced ? 0 : 200,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: Platform.OS !== 'web',
+    });
+    animation.start(({ finished }) => {
+      if (finished && !visible) setMounted(false);
+    });
+    return () => animation.stop();
+  }, [visible, reduced, progress]);
   return (
     <Modal
-      visible={visible}
+      visible={mounted}
       transparent
       animationType="none"
+      statusBarTranslucent
+      navigationBarTranslucent
       onRequestClose={onClose}
     >
-      <Pressable style={styles.overlay} onPress={onClose} accessibilityLabel="Close sheet">
+      <KeyboardAvoidingView
+        style={styles.overlay}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
         <Animated.View
+          style={[
+            StyleSheet.absoluteFill,
+            {
+              backgroundColor: colors.overlay,
+              opacity: reduced ? 1 : progress,
+            },
+          ]}
+        >
+          <Pressable
+            style={StyleSheet.absoluteFill}
+            onPress={onClose}
+            accessibilityRole="button"
+            accessibilityLabel="Close sheet"
+          />
+        </Animated.View>
+        <Animated.View
+          accessibilityViewIsModal
           style={[
             styles.sheet,
             {
               backgroundColor: colors.surface,
-              paddingBottom: insets.bottom + spacing.lg,
+              paddingBottom: Math.max(insets.bottom, 16),
+              opacity: reduced ? 1 : progress,
               transform: [
                 {
-                  translateY: slideAnim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [300, 0],
-                  }),
+                  translateY: reduced
+                    ? 0
+                    : progress.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [24, 0],
+                      }),
                 },
               ],
             },
           ]}
         >
-          <Pressable>
-            <View style={styles.handle} />
-            <Text style={[styles.title, { color: colors.ink }]} accessibilityRole="header">
+          <View
+            style={[styles.handle, { backgroundColor: colors.controlBorder }]}
+          />
+          <View style={styles.header}>
+            <Text
+              accessibilityRole="header"
+              style={[styles.title, { color: colors.ink }]}
+            >
               {title}
             </Text>
+            <IconButton onPress={onClose} accessibilityLabel="Close sheet">
+              <Ionicons name="close" size={22} color={colors.ink} />
+            </IconButton>
+          </View>
+          <ScrollView
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="on-drag"
+            contentContainerStyle={styles.content}
+          >
             {children}
-          </Pressable>
+          </ScrollView>
         </Animated.View>
-      </Pressable>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
-
 const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0,0,0,0.4)',
-  },
+  overlay: { flex: 1, justifyContent: 'flex-end' },
   sheet: {
+    maxHeight: '85%',
+    flexShrink: 1,
     borderTopLeftRadius: radius.xl,
     borderTopRightRadius: radius.xl,
-    paddingHorizontal: spacing.xl,
-    paddingTop: spacing.md,
-    maxHeight: '80%',
+    paddingTop: 12,
   },
-  handle: {
-    width: 40,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: '#ccc',
-    alignSelf: 'center',
-    marginBottom: spacing.md,
+  handle: { width: 40, height: 4, borderRadius: 2, alignSelf: 'center' },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
   },
-  title: {
-    fontSize: typography.heading,
-    fontWeight: '700',
-    marginBottom: spacing.lg,
-  },
+  title: { flex: 1, fontSize: typography.heading, fontWeight: '700' },
+  content: { paddingHorizontal: 24, paddingBottom: 16 },
 });

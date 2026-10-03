@@ -1,6 +1,11 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+} from 'react-native';
 import { useTheme, type ThemePreference } from 'mobile-tokens';
 import { useDemoStore } from 'mobile-data';
 import { Header, Card, Avatar, Button, Dialog, useToast } from 'mobile-ui';
@@ -9,14 +14,17 @@ import { Ionicons } from '@expo/vector-icons';
 
 type ThemeIconName = 'sunny' | 'moon' | 'phone-portrait';
 
-const themeOptions: { label: string; value: ThemePreference; iconName: ThemeIconName }[] = [
+const themeOptions: {
+  label: string;
+  value: ThemePreference;
+  iconName: ThemeIconName;
+}[] = [
   { label: 'Light', value: 'light', iconName: 'sunny' },
   { label: 'Dark', value: 'dark', iconName: 'moon' },
   { label: 'System', value: 'system', iconName: 'phone-portrait' },
 ];
 
 export default function ProfileScreen() {
-  const insets = useSafeAreaInsets();
   const { colors, themePreference, setThemePreference } = useTheme();
   const { resetDemo } = useDemoStore();
   const toast = useToast();
@@ -31,19 +39,29 @@ export default function ProfileScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.canvas }]}>
       <Header title="Profile" showBack />
-      <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 40 }}>
+      <ScrollView
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        contentContainerStyle={{ paddingTop: 16, paddingBottom: 24 }}
+      >
         <Card style={styles.card}>
           <View style={styles.profileRow}>
             <Avatar initials="DO" tone="lavender" size={56} />
             <View style={styles.profileInfo}>
-              <Text style={[styles.name, { color: colors.ink }]}>Demo owner</Text>
-              <Text style={[styles.email, { color: colors.muted }]}>owner@example.com</Text>
+              <Text style={[styles.name, { color: colors.ink }]}>
+                Demo owner
+              </Text>
+              <Text style={[styles.email, { color: colors.muted }]}>
+                owner@example.com
+              </Text>
             </View>
           </View>
         </Card>
 
         <Card style={styles.card}>
-          <Text style={[styles.sectionTitle, { color: colors.ink }]}>Theme</Text>
+          <Text style={[styles.sectionTitle, { color: colors.ink }]}>
+            Theme
+          </Text>
           <View style={styles.themeRow}>
             {themeOptions.map((option) => {
               const isSelected = themePreference === option.value;
@@ -54,15 +72,27 @@ export default function ProfileScreen() {
                   style={[
                     styles.themeOption,
                     {
-                      backgroundColor: isSelected ? colors.violet : colors.surfaceSection,
-                      borderColor: isSelected ? colors.violet : colors.border,
+                      backgroundColor: isSelected
+                        ? colors.actionBg
+                        : colors.surfaceSection,
+                      borderColor: isSelected ? colors.actionBg : colors.border,
                     },
                   ]}
                   accessibilityRole="button"
                   accessibilityLabel={`${option.label} theme`}
+                  accessibilityState={{ selected: isSelected }}
                 >
-                  <Ionicons name={option.iconName} size={20} color={isSelected ? '#ffffff' : colors.ink} />
-                  <Text style={[styles.themeLabel, { color: isSelected ? '#ffffff' : colors.ink }]}>
+                  <Ionicons
+                    name={option.iconName}
+                    size={20}
+                    color={isSelected ? '#ffffff' : colors.ink}
+                  />
+                  <Text
+                    style={[
+                      styles.themeLabel,
+                      { color: isSelected ? '#ffffff' : colors.ink },
+                    ]}
+                  >
                     {option.label}
                   </Text>
                 </TouchableOpacity>
@@ -72,9 +102,12 @@ export default function ProfileScreen() {
         </Card>
 
         <Card style={styles.card}>
-          <Text style={[styles.sectionTitle, { color: colors.ink }]}>Demo data</Text>
+          <Text style={[styles.sectionTitle, { color: colors.ink }]}>
+            Demo data
+          </Text>
           <Text style={[styles.demoText, { color: colors.muted }]}>
-            Reset all demo data to its initial state. This clears all local changes.
+            Reset all demo data to its initial state. This clears all local
+            changes.
           </Text>
           <Button
             title="Reset demo data"
@@ -85,7 +118,9 @@ export default function ProfileScreen() {
         </Card>
 
         <Card style={styles.card}>
-          <Text style={[styles.sectionTitle, { color: colors.ink }]}>About</Text>
+          <Text style={[styles.sectionTitle, { color: colors.ink }]}>
+            About
+          </Text>
           <Text style={[styles.aboutText, { color: colors.muted }]}>
             RevuPing Mobile v1.0.0 · Demo prototype{'\n'}
             No real authentication, payments, or integrations.
@@ -125,6 +160,7 @@ const styles = StyleSheet.create({
   name: {
     fontSize: typography.heading,
     fontWeight: '700',
+    flexShrink: 1,
   },
   email: {
     fontSize: typography.caption,
@@ -137,10 +173,12 @@ const styles = StyleSheet.create({
   },
   themeRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: spacing.sm,
   },
   themeOption: {
-    flex: 1,
+    flexGrow: 1,
+    flexBasis: 90,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',

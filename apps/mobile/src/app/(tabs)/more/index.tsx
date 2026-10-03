@@ -1,25 +1,91 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import { useRouter } from 'expo-router';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+} from 'react-native';
+import { useRouter, type Href } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from 'mobile-tokens';
 import { useDemoStore } from 'mobile-data';
-import { Card, Avatar, Badge } from 'mobile-ui';
+import { Card, Avatar } from 'mobile-ui';
 import { spacing, typography } from 'mobile-tokens';
 import { Ionicons } from '@expo/vector-icons';
 
 const menuItems = [
-  { title: 'QR studio', subtitle: 'Branded QR codes', iconName: 'qr-code' as const, route: '/(tabs)/more/qr-studio' },
-  { title: 'Google reviews', subtitle: 'Review list & replies', iconName: 'star' as const, route: '/(tabs)/more/reviews' },
-  { title: 'Surveys', subtitle: 'Question editor & responses', iconName: 'document-text' as const, route: '/(tabs)/more/surveys' },
-  { title: 'Reports', subtitle: 'Charts & filters', iconName: 'bar-chart' as const, route: '/(tabs)/more/reports' },
-  { title: 'Staff & services', subtitle: 'Team insights', iconName: 'people' as const, route: '/(tabs)/more/staff' },
-  { title: 'Competitors', subtitle: 'Fictional comparison', iconName: 'trending-up' as const, route: '/(tabs)/more/competitors' },
-  { title: 'Widgets', subtitle: 'Social card previews', iconName: 'grid' as const, route: '/(tabs)/more/widgets' },
-  { title: 'Integrations', subtitle: 'Setup previews', iconName: 'plug' as const, route: '/(tabs)/more/integrations' },
-  { title: 'Settings', subtitle: 'Business, team & templates', iconName: 'settings' as const, route: '/(tabs)/more/settings' },
-  { title: 'Billing', subtitle: 'Plan preview', iconName: 'card' as const, route: '/(tabs)/more/billing' },
-  { title: 'Profile', subtitle: 'Theme & reset demo', iconName: 'person' as const, route: '/(tabs)/more/profile' },
+  {
+    title: 'QR studio',
+    subtitle: 'Branded QR codes',
+    iconName: 'qr-code' as const,
+    route: '/(tabs)/more/qr-studio',
+  },
+  {
+    title: 'Google reviews',
+    subtitle: 'Review list & replies',
+    iconName: 'star' as const,
+    route: '/(tabs)/more/reviews',
+  },
+  {
+    title: 'Referrals',
+    subtitle: 'Invitation programme preview',
+    iconName: 'gift' as const,
+    route: '/(tabs)/more/referrals',
+  },
+  {
+    title: 'Surveys',
+    subtitle: 'Question editor & responses',
+    iconName: 'document-text' as const,
+    route: '/(tabs)/more/surveys',
+  },
+  {
+    title: 'Reports',
+    subtitle: 'Charts & filters',
+    iconName: 'bar-chart' as const,
+    route: '/(tabs)/more/reports',
+  },
+  {
+    title: 'Staff & services',
+    subtitle: 'Team insights',
+    iconName: 'people' as const,
+    route: '/(tabs)/more/staff',
+  },
+  {
+    title: 'Competitors',
+    subtitle: 'Fictional comparison',
+    iconName: 'trending-up' as const,
+    route: '/(tabs)/more/competitors',
+  },
+  {
+    title: 'Widgets',
+    subtitle: 'Social card previews',
+    iconName: 'grid' as const,
+    route: '/(tabs)/more/widgets',
+  },
+  {
+    title: 'Integrations',
+    subtitle: 'Setup previews',
+    iconName: 'link' as const,
+    route: '/(tabs)/more/integrations',
+  },
+  {
+    title: 'Settings',
+    subtitle: 'Business, team & templates',
+    iconName: 'settings' as const,
+    route: '/(tabs)/more/settings',
+  },
+  {
+    title: 'Billing',
+    subtitle: 'Plan preview',
+    iconName: 'card' as const,
+    route: '/(tabs)/more/billing',
+  },
+  {
+    title: 'Profile',
+    subtitle: 'Theme & reset demo',
+    iconName: 'person' as const,
+    route: '/(tabs)/more/profile',
+  },
 ];
 
 export default function MoreScreen() {
@@ -29,38 +95,63 @@ export default function MoreScreen() {
   const { state } = useDemoStore();
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.canvas, paddingTop: insets.top }]}>
+    <View
+      style={[
+        styles.container,
+        { backgroundColor: colors.canvas, paddingTop: insets.top },
+      ]}
+    >
       <View style={styles.header}>
         <Text style={[styles.title, { color: colors.ink }]}>More</Text>
       </View>
 
-      <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 80 }}>
+      <ScrollView
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        contentContainerStyle={{ paddingBottom: 24 }}
+      >
         <Card style={styles.profileCard}>
           <View style={styles.profileRow}>
             <Avatar initials="DO" tone="lavender" size={48} />
             <View style={styles.profileInfo}>
-              <Text style={[styles.profileName, { color: colors.ink }]}>Demo owner</Text>
-              <Text style={[styles.profileEmail, { color: colors.muted }]}>owner@example.com</Text>
+              <Text style={[styles.profileName, { color: colors.ink }]}>
+                Demo owner
+              </Text>
+              <Text style={[styles.profileEmail, { color: colors.muted }]}>
+                {state.business.name} · Demo workspace
+              </Text>
             </View>
-            <Badge label={state.business.name} tone="violet" />
           </View>
         </Card>
 
         <Card style={styles.menuCard}>
-          {menuItems.map((item, index) => (
+          {menuItems.map((item) => (
             <TouchableOpacity
               key={item.title}
-              onPress={() => router.push(item.route as any)}
+              onPress={() => router.push(item.route as Href)}
               style={[styles.menuRow, { borderBottomColor: colors.border }]}
               accessibilityRole="button"
               accessibilityLabel={item.title}
             >
-              <View style={[styles.menuIcon, { backgroundColor: colors.surfaceSection }]}>
-                <Ionicons name={item.iconName as any} size={20} color={colors.violet} />
+              <View
+                style={[
+                  styles.menuIcon,
+                  { backgroundColor: colors.surfaceSection },
+                ]}
+              >
+                <Ionicons
+                  name={item.iconName}
+                  size={20}
+                  color={colors.violet}
+                />
               </View>
               <View style={styles.menuText}>
-                <Text style={[styles.menuTitle, { color: colors.ink }]}>{item.title}</Text>
-                <Text style={[styles.menuSubtitle, { color: colors.muted }]}>{item.subtitle}</Text>
+                <Text style={[styles.menuTitle, { color: colors.ink }]}>
+                  {item.title}
+                </Text>
+                <Text style={[styles.menuSubtitle, { color: colors.muted }]}>
+                  {item.subtitle}
+                </Text>
               </View>
               <Ionicons name="chevron-forward" size={18} color={colors.muted} />
             </TouchableOpacity>
@@ -98,6 +189,7 @@ const styles = StyleSheet.create({
   profileName: {
     fontSize: typography.heading,
     fontWeight: '700',
+    flexShrink: 1,
   },
   profileEmail: {
     fontSize: typography.caption,

@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
-import { View, StyleSheet, Animated } from 'react-native';
-import { useTheme } from 'mobile-tokens';
+import { View, StyleSheet, Animated, type ViewStyle } from 'react-native';
+import { useTheme, useReducedMotion } from 'mobile-tokens';
 import { radius, spacing } from 'mobile-tokens';
 
 export function Skeleton({
@@ -8,14 +8,19 @@ export function Skeleton({
   height = 20,
   style,
 }: {
-  width: number | string;
+  width: ViewStyle['width'];
   height?: number;
   style?: object;
 }) {
   const { colors } = useTheme();
+  const reduced = useReducedMotion();
   const opacity = useRef(new Animated.Value(0.3)).current;
 
   useEffect(() => {
+    if (reduced) {
+      opacity.setValue(0.5);
+      return;
+    }
     const animation = Animated.loop(
       Animated.sequence([
         Animated.timing(opacity, {
@@ -32,7 +37,7 @@ export function Skeleton({
     );
     animation.start();
     return () => animation.stop();
-  }, [opacity]);
+  }, [opacity, reduced]);
 
   return (
     <Animated.View
@@ -40,7 +45,8 @@ export function Skeleton({
         {
           backgroundColor: colors.surfaceSelected,
           borderRadius: radius.sm,
-          width: width as any,
+          width,
+          opacity,
           height,
         },
         style,

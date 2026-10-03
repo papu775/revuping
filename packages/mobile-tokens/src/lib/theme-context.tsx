@@ -5,11 +5,10 @@ import React, {
   useState,
   useCallback,
 } from 'react';
-import { useColorScheme } from 'react-native';
+import { useColorScheme, View, ActivityIndicator } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import type { AsyncStorageStatic } from '@react-native-async-storage/async-storage';
 
-const storage = AsyncStorage as unknown as AsyncStorageStatic;
+const storage = AsyncStorage;
 
 import { lightColors, darkColors, type ThemeColors } from './tokens.ts';
 
@@ -32,12 +31,14 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    storage.getItem(THEME_KEY)
+    storage
+      .getItem(THEME_KEY)
       .then((raw: string | null) => {
         if (raw === 'light' || raw === 'dark' || raw === 'system') {
           setThemePref(raw);
         }
       })
+      .catch(() => undefined)
       .finally(() => setLoaded(true));
   }, []);
 
@@ -57,7 +58,21 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     setThemePreference,
   };
 
-  if (!loaded) return null;
+  if (!loaded)
+    return (
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: value.colors.canvas,
+          justifyContent: 'center',
+        }}
+      >
+        <ActivityIndicator
+          color={value.colors.violet}
+          accessibilityLabel="Loading appearance"
+        />
+      </View>
+    );
 
   return (
     <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>

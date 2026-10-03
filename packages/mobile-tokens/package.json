@@ -16,8 +16,8 @@
   "nx": {
     "tags": [
       "scope:mobile",
-      "platform:browser",
-      "type:contracts"
+      "platform:native",
+      "type:util"
     ]
   },
   "peerDependencies": {

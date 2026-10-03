@@ -1,15 +1,26 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+} from 'react-native';
 import { useTheme } from 'mobile-tokens';
 import { useDemoStore } from 'mobile-data';
-import { Header, Card, Button, QRCode, Field, useToast } from 'mobile-ui';
+import {
+  Header,
+  Card,
+  Button,
+  QRCode,
+  Field,
+  BrandColour,
+  isBrandColour,
+  useToast,
+} from 'mobile-ui';
 import { spacing, typography } from 'mobile-tokens';
 
-const presetColors = ['#6b52b9', '#20243c', '#3e644e', '#816334', '#a43743'];
-
 export default function QRStudioScreen() {
-  const insets = useSafeAreaInsets();
   const { colors } = useTheme();
   const { state, dispatch } = useDemoStore();
   const toast = useToast();
@@ -21,9 +32,15 @@ export default function QRStudioScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.canvas }]}>
       <Header title="QR studio" showBack />
-      <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 40 }}>
+      <ScrollView
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        contentContainerStyle={{ paddingTop: 16, paddingBottom: 24 }}
+      >
         <Card style={styles.card}>
-          <Text style={[styles.sectionTitle, { color: colors.ink }]}>Branded QR code</Text>
+          <Text style={[styles.sectionTitle, { color: colors.ink }]}>
+            Branded QR code
+          </Text>
           <View style={styles.qrContainer}>
             <QRCode value={qrValue} size={180} color={color} />
           </View>
@@ -31,34 +48,37 @@ export default function QRStudioScreen() {
         </Card>
 
         <Card style={styles.card}>
-          <Text style={[styles.sectionTitle, { color: colors.ink }]}>Brand color</Text>
-          <View style={styles.colorRow}>
-            {presetColors.map((c) => (
-              <TouchableOpacity
-                key={c}
-                onPress={() => setColor(c)}
-                style={[
-                  styles.colorSwatch,
-                  { backgroundColor: c, borderColor: color === c ? colors.ink : 'transparent' },
-                ]}
-                accessibilityRole="button"
-                accessibilityLabel={`Color ${c}`}
-              />
-            ))}
-          </View>
-          <Field label="Custom hex" value={color} onChangeText={setColor} placeholder="#6b52b9" />
+          <BrandColour value={color} onChange={setColor} />
         </Card>
 
         <Card style={styles.card}>
-          <Text style={[styles.sectionTitle, { color: colors.ink }]}>Customer page preview</Text>
-          <TouchableOpacity onPress={() => setShowPreview(!showPreview)} accessibilityRole="button">
+          <Text style={[styles.sectionTitle, { color: colors.ink }]}>
+            Customer page preview
+          </Text>
+          <TouchableOpacity
+            style={{ minHeight: 48, justifyContent: 'center' }}
+            onPress={() => setShowPreview(!showPreview)}
+            accessibilityRole="button"
+            accessibilityState={{ expanded: showPreview }}
+            accessibilityLabel="Customer page preview"
+          >
             <Text style={[styles.previewToggle, { color: colors.violet }]}>
               {showPreview ? 'Hide preview' : 'Show preview'}
             </Text>
           </TouchableOpacity>
           {showPreview && (
-            <View style={[styles.previewBox, { backgroundColor: colors.surfaceSection, borderColor: colors.border }]}>
-              <Text style={[styles.previewTitle, { color: colors.ink }]}>{state.business.name}</Text>
+            <View
+              style={[
+                styles.previewBox,
+                {
+                  backgroundColor: colors.surfaceSection,
+                  borderColor: colors.border,
+                },
+              ]}
+            >
+              <Text style={[styles.previewTitle, { color: colors.ink }]}>
+                {state.business.name}
+              </Text>
               <Text style={[styles.previewText, { color: colors.muted }]}>
                 Scan to share your experience
               </Text>
@@ -70,6 +90,7 @@ export default function QRStudioScreen() {
         <View style={styles.actions}>
           <Button
             title="Save QR style"
+            disabled={!isBrandColour(color)}
             onPress={() => {
               dispatch({ type: 'SET_BUSINESS', business: { branding: color } });
               toast.showToast('QR style saved');
@@ -132,6 +153,7 @@ const styles = StyleSheet.create({
   previewTitle: {
     fontSize: typography.heading,
     fontWeight: '700',
+    flexShrink: 1,
   },
   previewText: {
     fontSize: typography.caption,

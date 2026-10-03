@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useRouter, type Href } from 'expo-router';
 import { useTheme } from 'mobile-tokens';
 import { Ionicons } from '@expo/vector-icons';
 import { spacing, typography } from 'mobile-tokens';
@@ -11,11 +11,13 @@ export function Header({
   subtitle,
   showBack = true,
   right,
+  fallbackHref = '/(tabs)/more',
 }: {
   title: string;
   subtitle?: string;
   showBack?: boolean;
   right?: React.ReactNode;
+  fallbackHref?: Href;
 }) {
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -35,7 +37,9 @@ export function Header({
       <View style={styles.row}>
         {showBack ? (
           <TouchableOpacity
-            onPress={() => router.back()}
+            onPress={() =>
+              router.canGoBack() ? router.back() : router.replace(fallbackHref)
+            }
             style={styles.backButton}
             accessibilityLabel="Go back"
             accessibilityRole="button"
@@ -48,13 +52,13 @@ export function Header({
         <View style={styles.titleContainer}>
           <Text
             style={[styles.title, { color: colors.ink }]}
-            numberOfLines={1}
+
             accessibilityRole="header"
           >
             {title}
           </Text>
           {subtitle ? (
-            <Text style={[styles.subtitle, { color: colors.muted }]} numberOfLines={1}>
+            <Text style={[styles.subtitle, { color: colors.muted }]}>
               {subtitle}
             </Text>
           ) : null}
@@ -77,8 +81,8 @@ const styles = StyleSheet.create({
     minHeight: 48,
   },
   backButton: {
-    width: 40,
-    height: 40,
+    width: 48,
+    minHeight: 48,
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: -spacing.sm,
@@ -90,13 +94,14 @@ const styles = StyleSheet.create({
   title: {
     fontSize: typography.heading,
     fontWeight: '700',
+    flexShrink: 1,
   },
   subtitle: {
     fontSize: typography.caption,
     marginTop: 2,
   },
   right: {
-    minWidth: 40,
+    minWidth: 0,
     alignItems: 'flex-end',
   },
 });

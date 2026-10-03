@@ -11,7 +11,9 @@
     "check:affected": "nx affected -t lint typecheck test --parallel=1",
     "e2e:web": "nx run web-e2e:e2e -- --project=chromium",
     "e2e:admin": "nx run admin-e2e:e2e -- --project=chromium",
-    "e2e:api": "nx run api-e2e:e2e"
+    "e2e:api": "nx run api-e2e:e2e",
+    "dev:mobile": "nx run mobile:start",
+    "android:mobile": "nx run mobile:run-android"
   },
   "private": true,
   "devDependencies": {
@@ -60,7 +62,7 @@
     "jest-util": "~30.3.0",
     "nx": "23.2.0",
     "prettier": "^3.8.1",
-    "react-test-renderer": "^19.2.0",
+    "react-test-renderer": "^19.2.3",
     "ts-jest": "^29.4.7",
     "ts-node": "10.9.1",
     "tslib": "^2.3.0",
