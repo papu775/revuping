@@ -1,0 +1,82 @@
+
+import { View, Text, StyleSheet } from 'react-native';
+import { useTheme } from 'mobile-tokens';
+import { spacing, typography } from 'mobile-tokens';
+
+export function BarChart({
+  data,
+  labels,
+  color,
+  height = 120,
+  accessibilityLabel,
+}: {
+  data: number[];
+  labels: string[];
+  color?: string;
+  height?: number;
+  accessibilityLabel?: string;
+}) {
+  const { colors } = useTheme();
+  const barColor = color ?? colors.violet;
+  const maxValue = Math.max(...data, 1);
+
+  return (
+    <View
+      style={styles.container}
+      accessibilityLabel={accessibilityLabel ?? `Bar chart with ${data.length} data points`}
+    >
+      <View style={[styles.chart, { height }]}>
+        {data.map((value, index) => (
+          <View key={index} style={styles.barContainer}>
+            <View
+              style={[
+                styles.bar,
+                {
+                  height: `${(value / maxValue) * 100}%`,
+                  backgroundColor: barColor,
+                },
+              ]}
+            />
+          </View>
+        ))}
+      </View>
+      <View style={styles.labels}>
+        {labels.map((label, index) => (
+          <Text key={index} style={[styles.label, { color: colors.muted }]}>
+            {label}
+          </Text>
+        ))}
+      </View>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    marginVertical: spacing.md,
+  },
+  chart: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: spacing.sm,
+  },
+  barContainer: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    height: '100%',
+  },
+  bar: {
+    borderRadius: 4,
+    minHeight: 4,
+  },
+  labels: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginTop: spacing.xs,
+  },
+  label: {
+    flex: 1,
+    fontSize: typography.caption,
+    textAlign: 'center',
+  },
+});

@@ -1,0 +1,198 @@
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTheme } from 'mobile-tokens';
+import { useDemoStore } from 'mobile-data';
+import { Header, Card, Badge, Avatar, Button, DetailSection, DetailItem, Dialog, useToast } from 'mobile-ui';
+import { spacing, typography } from 'mobile-tokens';
+
+export default function CustomerDetailScreen() {
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const { colors } = useTheme();
+  const { state, dispatch } = useDemoStore();
+  const toast = useToast();
+  const [showOptOutDialog, setShowOptOutDialog] = useState(false);
+
+  const customer = state.customers.find((c) => c.id === Number(id));
+
+  if (!customer) {
+    return (
+      <View style={[styles.container, { backgroundColor: colors.canvas, paddingTop: insets.top }]}>
+        <Header title="Customer" showBack />
+        <View style={styles.center}>
+          <Text style={{ color: colors.muted }}>Customer not found.</Text>
+        </View>
+      </View>
+    );
+  }
+
+  const initials = customer.name.split(' ').map((n) => n[0]).join('');
+
+  const handleToggleConsent = () => {
+    dispatch({ type: 'TOGGLE_CONSENT', customerId: customer.id });
+    toast.showToast(customer.consent ? 'Consent removed' : 'Consent recorded');
+  };
+
+  const handleToggleOptOut = () => {
+    dispatch({ type: 'TOGGLE_OPT_OUT', customerId: customer.id });
+    setShowOptOutDialog(false);
+    toast.showToast(customer.optedOut ? 'Opt-out reversed' : 'Customer opted out');
+  };
+
+  return (
+    <View style={[styles.container, { backgroundColor: colors.canvas }]}>
+      <Header title="Customer" showBack />
+      <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 100 }}>
+        <Card style={styles.card}>
+          <View style={styles.profileHeader}>
+            <Avatar initials={initials} tone={customer.consent ? 'sage' : 'peach'} size={56} />
+            <View style={styles.profileInfo}>
+              <Text style={[styles.name, { color: colors.ink }]}>{customer.name}</Text>
+              <Text style={[styles.email, { color: colors.muted }]}>{customer.email}</Text>
+            </View>
+          </View>
+          <View style={styles.badgeRow}>
+            <Badge
+              label={customer.optedOut ? 'Opted out' : customer.consent ? 'Consented' : 'No consent'}
+              tone={customer.optedOut ? 'danger' : customer.consent ? 'mint' : 'warm'}
+            />
+            <Badge label={customer.status} tone="muted" />
+          </View>
+        </Card>
+
+        <DetailSection title="Details">
+          <DetailItem label="Source" value={customer.source} />
+          <DetailItem label="Consent date" value={customer.consentDate || '—'} />
+          <DetailItem label="Last visit" value={customer.lastVisit} />
+          <DetailItem label="Preferred staff" value={customer.staff} />
+          <DetailItem label="Service" value={customer.service} />
+        </DetailSection>
+
+        <DetailSection title="Tags">
+          <View style={styles.tagRow}>
+            {customer.tags.map((tag) => (
+              <View key={tag} style={[styles.tag, { backgroundColor: colors.surfaceSection }]}>
+                <Text style={[styles.tagText, { color: colors.muted }]}>{tag}</Text>
+              </View>
+            ))}
+          </View>
+        </DetailSection>
+
+        <DetailSection title="Timeline">
+          <View style={styles.timelineItem}>
+            <View style={[styles.timelineDot, { backgroundColor: colors.violet }]} />
+            <Text style={[styles.timelineText, { color: colors.muted }]}>Feedback received · fictional activity</Text>
+          </View>
+          {customer.consent && (
+            <View style={styles.timelineItem}>
+              <View style={[styles.timelineDot, { backgroundColor: colors.positiveInk }]} />
+              <Text style={[styles.timelineText, { color: colors.muted }]}>Consent recorded · {customer.consentDate}</Text>
+            </View>
+          )}
+          <View style={styles.timelineItem}>
+            <View style={[styles.timelineDot, { backgroundColor: colors.border }]} />
+            <Text style={[styles.timelineText, { color: colors.muted }]}>Last visit · {customer.lastVisit}</Text>
+          </View>
+        </DetailSection>
+
+        <View style={styles.actions}>
+          <Button
+            title={customer.consent ? 'Remove consent' : 'Record consent'}
+            variant={customer.consent ? 'secondary' : 'primary'}
+            onPress={handleToggleConsent}
+          />
+          <Button
+            title={customer.optedOut ? 'Reverse opt-out' : 'Opt out'}
+            variant="danger"
+            onPress={() => setShowOptOutDialog(true)}
+            style={{ marginTop: spacing.md }}
+          />
+        </View>
+      </ScrollView>
+
+      <Dialog
+        visible={showOptOutDialog}
+        onClose={() => setShowOptOutDialog(false)}
+        title={customer.optedOut ? 'Reverse opt-out?' : 'Opt out customer?'}
+        message={customer.optedOut
+          ? 'This customer will become eligible for review requests again.'
+          : 'This customer will no longer be eligible for review requests or campaigns.'}
+        confirmLabel={customer.optedOut ? 'Reverse' : 'Opt out'}
+        onConfirm={handleToggleOptOut}
+        destructive={!customer.optedOut}
+      />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  center: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  card: {
+    marginHorizontal: spacing.xl,
+    marginTop: spacing.lg,
+  },
+  profileHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    marginBottom: spacing.md,
+  },
+  profileInfo: {
+    flex: 1,
+  },
+  name: {
+    fontSize: typography.heading,
+    fontWeight: '700',
+  },
+  email: {
+    fontSize: typography.caption,
+    marginTop: 2,
+  },
+  badgeRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  tagRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    paddingVertical: spacing.sm,
+  },
+  tag: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  tagText: {
+    fontSize: typography.caption,
+    fontWeight: '600',
+  },
+  timelineItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    paddingVertical: spacing.sm,
+  },
+  timelineDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  timelineText: {
+    flex: 1,
+    fontSize: typography.caption,
+  },
+  actions: {
+    paddingHorizontal: spacing.xl,
+    marginTop: spacing.lg,
+  },
+});

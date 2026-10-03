@@ -18,6 +18,13 @@
     "target": "es2022",
     "customConditions": ["@org/source"],
     "noUncheckedSideEffectImports": false,
-    "types": ["*"]
+    "types": ["*"],
+    "baseUrl": ".",
+    "ignoreDeprecations": "6.0",
+    "paths": {
+      "mobile-tokens": ["packages/mobile-tokens/src/index.ts"],
+      "mobile-ui": ["packages/mobile-ui/src/index.ts"],
+      "mobile-data": ["packages/mobile-data/src/index.ts"]
+    }
   }
 }

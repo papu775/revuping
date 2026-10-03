@@ -20,6 +20,18 @@
     },
     {
       "path": "./apps/admin"
+    },
+    {
+      "path": "./apps/mobile"
+    },
+    {
+      "path": "./packages/mobile-tokens"
+    },
+    {
+      "path": "./packages/mobile-ui"
+    },
+    {
+      "path": "./packages/mobile-data"
     }
   ],
   "compilerOptions": {}
