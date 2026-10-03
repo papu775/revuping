@@ -1,4 +1,6 @@
+import { useRef } from 'react';
 import {
+  Animated,
   TouchableOpacity,
   Text,
   StyleSheet,
@@ -6,10 +8,11 @@ import {
   type ViewStyle,
   type TextStyle,
 } from 'react-native';
-import { useTheme } from 'mobile-tokens';
+import { useTheme, useReducedMotion } from 'mobile-tokens';
 import { radius, spacing, typography } from 'mobile-tokens';
 
 type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
+const AnimatedButton = Animated.createAnimatedComponent(TouchableOpacity);
 
 export function Button({
   title,
@@ -31,6 +34,14 @@ export function Button({
   textStyle?: TextStyle;
 }) {
   const { colors } = useTheme();
+  const reduced = useReducedMotion();
+  const scale = useRef(new Animated.Value(1)).current;
+  const press = (pressed: boolean) =>
+    Animated.timing(scale, {
+      toValue: pressed && !reduced ? 0.98 : 1,
+      duration: reduced ? 0 : pressed ? 90 : 140,
+      useNativeDriver: true,
+    }).start();
 
   const bgColor =
     variant === 'primary'
@@ -50,8 +61,10 @@ export function Button({
     variant === 'secondary' ? colors.controlBorder : 'transparent';
 
   return (
-    <TouchableOpacity
+    <AnimatedButton
       onPress={onPress}
+      onPressIn={() => press(true)}
+      onPressOut={() => press(false)}
       disabled={disabled || loading}
       activeOpacity={0.7}
       accessibilityRole="button"
@@ -61,6 +74,7 @@ export function Button({
         styles.base,
         {
           backgroundColor: disabled ? colors.disabledBg : bgColor,
+          transform: [{ scale }],
           borderColor: disabled
             ? colors.disabledLine
             : variant === 'danger'
@@ -88,7 +102,7 @@ export function Button({
           {title}
         </Text>
       }
-    </TouchableOpacity>
+    </AnimatedButton>
   );
 }
 

@@ -137,6 +137,12 @@ export function demoReducer(state: DemoState, action: Action): DemoState {
       return {
         ...state,
         replyDrafts: { ...state.replyDrafts, [action.reviewId]: action.draft },
+        approvedReplies:
+          action.draft ===
+          (state.replyDrafts[action.reviewId] ??
+            state.reviews.find((r) => r.id === action.reviewId)?.draft)
+            ? state.approvedReplies
+            : state.approvedReplies.filter((id) => id !== action.reviewId),
       };
     case 'APPROVE_REPLY':
       return {

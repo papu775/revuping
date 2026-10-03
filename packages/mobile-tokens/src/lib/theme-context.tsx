@@ -5,7 +5,13 @@ import React, {
   useState,
   useCallback,
 } from 'react';
-import { useColorScheme, View, ActivityIndicator } from 'react-native';
+import {
+  Appearance,
+  Platform,
+  useColorScheme,
+  View,
+  ActivityIndicator,
+} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const storage = AsyncStorage;
@@ -29,6 +35,15 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const systemScheme = useColorScheme();
   const [themePreference, setThemePref] = useState<ThemePreference>('system');
   const [loaded, setLoaded] = useState(false);
+
+  // Native system controls (including the calendar) follow the app preference.
+  useEffect(() => {
+    if (Platform.OS !== 'web' && loaded) {
+      Appearance.setColorScheme(
+        themePreference === 'system' ? 'unspecified' : themePreference,
+      );
+    }
+  }, [themePreference, loaded]);
 
   useEffect(() => {
     storage

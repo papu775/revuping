@@ -1,5 +1,7 @@
 # RevuPing mobile review — 3 October 2026
 
+The subsequent design refinement and its latest checks are recorded in [MOBILE_REFINEMENT.md](MOBILE_REFINEMENT.md). This report preserves the earlier setup repair.
+
 This is a frontend setup and design repair of the existing application, not a regenerated app. **Android device verification remains outstanding.** No Java executable, Android SDK, `adb`, emulator or native interaction tool was available in this execution environment. The local APK build was attempted and stopped at `JAVA_HOME is not set and no 'java' command could be found in your PATH.` Browser screenshots and React Native component tests do not establish device correctness.
 
 The existing mobile changes were preserved in checkpoint **3fd3b925dd16120f56db1e0fded3a04fa9262f0f**. The final repair commit follows that checkpoint; it was not pushed.

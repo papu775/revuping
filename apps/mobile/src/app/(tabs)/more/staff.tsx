@@ -1,8 +1,16 @@
 import { useState, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { useTheme } from 'mobile-tokens';
-import { useDemoStore, staffMembers } from 'mobile-data';
-import { Header, Card, Avatar, Stars, Select, BarChart } from 'mobile-ui';
+import { useDemoStore, staffMembers, countLabel } from 'mobile-data';
+import {
+  Header,
+  Card,
+  Avatar,
+  Stars,
+  Select,
+  BarChart,
+  EmptyState,
+} from 'mobile-ui';
 import { spacing, typography } from 'mobile-tokens';
 
 export default function StaffScreen() {
@@ -55,6 +63,12 @@ export default function StaffScreen() {
           />
         </Card>
 
+        {!staffInsights.length && (
+          <EmptyState
+            title="No matching staff"
+            message="Try a different staff member or service."
+          />
+        )}
         {staffInsights.map((member) => (
           <Card key={member.name} style={styles.card}>
             <View style={styles.memberHeader}>
@@ -75,7 +89,7 @@ export default function StaffScreen() {
                 </Text>
               </View>
               <View style={styles.ratingContainer}>
-                <Stars rating={Math.round(member.avg)} size={14} />
+                <Stars rating={member.avg} size={14} />
                 <Text style={[styles.ratingText, { color: colors.ink }]}>
                   {member.avg.toFixed(1)}
                 </Text>
@@ -86,7 +100,7 @@ export default function StaffScreen() {
             </Text>
             <View style={styles.feedbackRow}>
               <Text style={[styles.feedbackCount, { color: colors.violet }]}>
-                {member.count} feedback items
+                {countLabel(member.count, 'feedback item')}
               </Text>
             </View>
           </Card>
@@ -94,13 +108,19 @@ export default function StaffScreen() {
 
         <Card style={styles.card}>
           <Text style={[styles.sectionTitle, { color: colors.ink }]}>
-            Service distribution
+            Private feedback by staff
           </Text>
           <BarChart
             data={staffInsights.map((m) => m.count)}
             labels={staffInsights.map((m) => m.name)}
             color={colors.violet}
           />
+          {staffInsights.map((m) => (
+            <Text key={m.name} style={{ color: colors.muted, marginTop: 8 }}>
+              {m.name}: {countLabel(m.count, 'feedback item')} ·{' '}
+              {m.count ? `${m.avg.toFixed(1)} / 5 average` : 'No ratings yet'}
+            </Text>
+          ))}
         </Card>
       </ScrollView>
     </View>
@@ -117,12 +137,14 @@ const styles = StyleSheet.create({
   },
   memberHeader: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     alignItems: 'center',
     gap: spacing.md,
     marginBottom: spacing.sm,
   },
   memberInfo: {
     flex: 1,
+    minWidth: 120,
   },
   memberName: {
     fontSize: typography.label,

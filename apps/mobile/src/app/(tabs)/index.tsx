@@ -8,7 +8,12 @@ import {
 import { useRouter, type Href } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from 'mobile-tokens';
-import { useDemoStore, overviewMetrics, sampleTrend } from 'mobile-data';
+import {
+  useDemoStore,
+  overviewMetrics,
+  sampleTrend,
+  countLabel,
+} from 'mobile-data';
 import { Card, Badge, BarChart, Avatar, Stars } from 'mobile-ui';
 import { spacing, typography } from 'mobile-tokens';
 import { Ionicons } from '@expo/vector-icons';
@@ -64,7 +69,7 @@ export default function HomeScreen() {
         contentContainerStyle={{ paddingBottom: 24 }}
       >
         <View style={styles.header}>
-          <View>
+          <View style={{ flex: 1, marginRight: 12 }}>
             <Text style={[styles.greeting, { color: colors.muted }]}>
               Good morning
             </Text>
@@ -109,7 +114,9 @@ export default function HomeScreen() {
                   {metric.value}
                 </Text>
                 <Text style={[styles.metricChange, { color: colors.muted }]}>
-                  {metric.change}
+                  {metric.label === 'Private feedback'
+                    ? `${unresolved.length} need your attention`
+                    : metric.change}
                 </Text>
               </Card>
             ))}
@@ -129,6 +136,24 @@ export default function HomeScreen() {
               labels={sampleTrend.days}
               color={colors.violet}
             />
+            <Text
+              style={{
+                color: colors.muted,
+                fontSize: 13,
+                lineHeight: 20,
+                marginTop: 12,
+              }}
+            >
+              {sampleTrend.days
+                .map((day, i) => `${day}: ${sampleTrend.scans[i]}`)
+                .join(' · ')}
+              {'\n'}
+              {countLabel(
+                sampleTrend.scans.reduce((sum, n) => sum + n, 0),
+                'scan',
+              )}{' '}
+              · Scans do not confirm reviews.
+            </Text>
           </Card>
         </View>
 
@@ -153,8 +178,10 @@ export default function HomeScreen() {
                   <Text style={[styles.taskSubtitle, { color: colors.muted }]}>
                     {item.date} · {item.staff}
                   </Text>
+                  <View style={{ marginTop: 6 }}>
+                    <Stars rating={item.rating} size={14} />
+                  </View>
                 </View>
-                <Stars rating={item.rating} size={14} />
               </TouchableOpacity>
             ))}
             {pendingReplies.length > 0 && (

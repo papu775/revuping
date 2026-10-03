@@ -5,7 +5,6 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  TextInput,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -13,6 +12,7 @@ import { useTheme } from 'mobile-tokens';
 import { useDemoStore } from 'mobile-data';
 import {
   FilterChips,
+  SearchField,
   Card,
   Badge,
   Avatar,
@@ -66,26 +66,12 @@ export default function CustomersScreen() {
         </IconButton>
       </View>
 
-      <View style={styles.searchContainer}>
-        <View
-          style={[
-            styles.searchBox,
-            {
-              backgroundColor: colors.surfaceInput,
-              borderColor: colors.controlBorder,
-            },
-          ]}
-        >
-          <Ionicons name="search" size={18} color={colors.muted} />
-          <TextInput
-            value={query}
-            onChangeText={setQuery}
-            placeholder="Search customers..."
-            placeholderTextColor={colors.disabledInk}
-            style={[styles.searchInput, { color: colors.ink }]}
-            accessibilityLabel="Search customers"
-          />
-        </View>
+      <View style={{ paddingHorizontal: 24, marginBottom: 12 }}>
+        <SearchField
+          label="Search customers"
+          value={query}
+          onChange={setQuery}
+        />
       </View>
 
       <FilterChips options={filters} value={filter} onChange={setFilter} />

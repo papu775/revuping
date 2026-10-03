@@ -13,6 +13,7 @@ import {
   Header,
   Card,
   Field,
+  Accordion,
   Button,
   Badge,
   BottomSheet,
@@ -72,18 +73,25 @@ export default function Referrals() {
               onChangeText={(message) => setForm({ ...form, message })}
               multiline
             />
-            <Field
-              label="Terms"
-              value={form.terms}
-              onChangeText={(terms) => setForm({ ...form, terms })}
-              multiline
-            />
-            <Field
-              label="Eligibility"
-              value={form.eligibility}
-              onChangeText={(eligibility) => setForm({ ...form, eligibility })}
-              multiline
-            />
+            <Accordion
+              title="Terms & eligibility"
+              summary="Clear invitation rules, independent of reviews"
+            >
+              <Field
+                label="Terms"
+                value={form.terms}
+                onChangeText={(terms) => setForm({ ...form, terms })}
+                multiline
+              />
+              <Field
+                label="Eligibility"
+                value={form.eligibility}
+                onChangeText={(eligibility) =>
+                  setForm({ ...form, eligibility })
+                }
+                multiline
+              />
+            </Accordion>
             {!!error && (
               <Text
                 style={{ color: colors.danger, marginBottom: 16 }}
@@ -92,7 +100,11 @@ export default function Referrals() {
                 {error}
               </Text>
             )}
-            <Button title="Save referral programme" onPress={save} />
+            <Button
+              title="Save referral programme"
+              onPress={save}
+              style={{ marginTop: 16 }}
+            />
           </Card>
           <Card>
             <Badge
@@ -133,10 +145,10 @@ export default function Referrals() {
               Fictional activity
             </Text>
             <Text style={{ color: colors.muted, marginTop: 12 }}>
-              Sample friend A · Visit interest recorded · 2026-10-01
+              Sample friend A · Visit interest recorded · 1 Oct 2026
             </Text>
             <Text style={{ color: colors.muted, marginTop: 12 }}>
-              Sample friend B · Link opened · 2026-09-29
+              Sample friend B · Link opened · 29 Sep 2026
             </Text>
             <Text style={{ color: colors.muted, marginTop: 12 }}>
               A link opened is not a booking. No reward depends on a review.
@@ -152,14 +164,16 @@ export default function Referrals() {
         <Text style={{ color: colors.ink, fontSize: 20, fontWeight: '600' }}>
           {form.name}
         </Text>
-        <Text style={{ color: colors.muted, marginTop: 16 }}>
+        <Text style={{ color: colors.muted, marginTop: 16, lineHeight: 23 }}>
           {form.message.replaceAll('{link}', 'revuping://referral/demo')}
         </Text>
-        <Text style={{ color: colors.muted, marginTop: 16 }}>
+        <Text style={{ color: colors.muted, marginTop: 16, lineHeight: 23 }}>
           {form.eligibility}
         </Text>
-        <Text style={{ color: colors.muted, marginTop: 16 }}>{form.terms}</Text>
-        <Text style={{ color: colors.muted, marginTop: 16 }}>
+        <Text style={{ color: colors.muted, marginTop: 16, lineHeight: 23 }}>
+          {form.terms}
+        </Text>
+        <Text style={{ color: colors.muted, marginTop: 16, lineHeight: 23 }}>
           Preview only. No invitation is sent.
         </Text>
       </BottomSheet>

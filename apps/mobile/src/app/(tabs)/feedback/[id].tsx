@@ -5,14 +5,13 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  TextInput,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from 'mobile-tokens';
-import { useDemoStore } from 'mobile-data';
+import { useDemoStore, parseLocalDate } from 'mobile-data';
 import {
   Header,
   Card,
@@ -23,6 +22,7 @@ import {
   BottomSheet,
   Select,
   Field,
+  DateField,
   useToast,
 } from 'mobile-ui';
 import { spacing, typography } from 'mobile-tokens';
@@ -30,7 +30,6 @@ import { followUpFor } from 'mobile-data';
 
 export default function FeedbackDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const router = useRouter();
   const insets = useSafeAreaInsets();
   const { colors } = useTheme();
   const { state, dispatch } = useDemoStore();
@@ -123,8 +122,10 @@ export default function FeedbackDetailScreen() {
                 <Text style={[styles.date, { color: colors.muted }]}>
                   {feedback.date} · {feedback.staff}
                 </Text>
+                <View style={{ marginTop: 6 }}>
+                  <Stars rating={feedback.rating} size={16} />
+                </View>
               </View>
-              <Stars rating={feedback.rating} size={16} />
             </View>
             <Text style={[styles.feedbackText, { color: colors.muted }]}>
               {feedback.text}
@@ -153,21 +154,12 @@ export default function FeedbackDetailScreen() {
             <Text style={[styles.sectionTitle, { color: colors.ink }]}>
               Notes
             </Text>
-            <TextInput
+            <Field
+              label="Private note"
               value={note}
               onChangeText={setNote}
-              placeholder="Add a private note..."
-              placeholderTextColor={colors.disabledInk}
+              placeholder="Add a private note…"
               multiline
-              style={[
-                styles.noteInput,
-                {
-                  color: colors.ink,
-                  backgroundColor: colors.surfaceInput,
-                  borderColor: colors.controlBorder,
-                },
-              ]}
-              accessibilityLabel="Private note"
             />
             <Button
               title="Save note"
@@ -202,12 +194,7 @@ export default function FeedbackDetailScreen() {
               options={['Low', 'Normal', 'High']}
               onChange={setPriority}
             />
-            <Field
-              label="Due date"
-              value={due}
-              onChangeText={setDue}
-              placeholder="YYYY-MM-DD"
-            />
+            <DateField label="Due date" value={due} onChange={setDue} />
             <Field
               label="Follow-up summary"
               value={summary}
@@ -218,7 +205,7 @@ export default function FeedbackDetailScreen() {
               title="Save follow-up plan"
               variant="secondary"
               onPress={() => {
-                if (!/^\d{4}-\d{2}-\d{2}$/.test(due) || !summary.trim()) {
+                if (!parseLocalDate(due) || !summary.trim()) {
                   toast.showToast(
                     'Enter a due date and follow-up summary.',
                     'error',

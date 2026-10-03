@@ -72,7 +72,7 @@ export function BottomSheet({
             style={StyleSheet.absoluteFill}
             onPress={onClose}
             accessibilityRole="button"
-            accessibilityLabel="Close sheet"
+            accessibilityLabel="Dismiss sheet"
           />
         </Animated.View>
         <Animated.View

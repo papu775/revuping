@@ -9,7 +9,7 @@ import {
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from 'mobile-tokens';
-import { useDemoStore } from 'mobile-data';
+import { useDemoStore, formatDateTime, countLabel } from 'mobile-data';
 import { FilterChips, Card, Badge, EmptyState, IconButton } from 'mobile-ui';
 import { spacing, typography } from 'mobile-tokens';
 import { Ionicons } from '@expo/vector-icons';
@@ -97,13 +97,13 @@ export default function CampaignsScreen() {
               <View style={styles.campaignFooter}>
                 <Text style={[styles.campaignDate, { color: colors.muted }]}>
                   {campaign.scheduled
-                    ? `Scheduled: ${campaign.scheduled}`
+                    ? `Scheduled: ${formatDateTime(campaign.scheduled)}`
                     : 'Not scheduled'}
                 </Text>
                 <Text
                   style={[styles.campaignCustomers, { color: colors.violet }]}
                 >
-                  {campaign.customerIds.length} customers
+                  {countLabel(campaign.customerIds.length, 'customer')}
                 </Text>
               </View>
             </Card>
@@ -153,11 +153,14 @@ const styles = StyleSheet.create({
   },
   campaignHeader: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: spacing.xs,
   },
   campaignName: {
+    minWidth: 120,
     fontSize: typography.label,
     fontWeight: '700',
     flex: 1,
@@ -172,6 +175,8 @@ const styles = StyleSheet.create({
   },
   campaignFooter: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
     justifyContent: 'space-between',
     alignItems: 'center',
   },

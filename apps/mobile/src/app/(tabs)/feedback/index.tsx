@@ -5,13 +5,20 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  TextInput,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from 'mobile-tokens';
 import { useDemoStore } from 'mobile-data';
-import { FilterChips, Card, Badge, Avatar, Stars, EmptyState } from 'mobile-ui';
+import {
+  FilterChips,
+  SearchField,
+  Card,
+  Badge,
+  Avatar,
+  Stars,
+  EmptyState,
+} from 'mobile-ui';
 import { spacing, typography } from 'mobile-tokens';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -60,26 +67,12 @@ export default function FeedbackScreen() {
         />
       </View>
 
-      <View style={styles.searchContainer}>
-        <View
-          style={[
-            styles.searchBox,
-            {
-              backgroundColor: colors.surfaceInput,
-              borderColor: colors.controlBorder,
-            },
-          ]}
-        >
-          <Ionicons name="search" size={18} color={colors.muted} />
-          <TextInput
-            value={query}
-            onChangeText={setQuery}
-            placeholder="Search feedback..."
-            placeholderTextColor={colors.disabledInk}
-            style={[styles.searchInput, { color: colors.ink }]}
-            accessibilityLabel="Search feedback"
-          />
-        </View>
+      <View style={{ paddingHorizontal: 24, marginBottom: 12 }}>
+        <SearchField
+          label="Search feedback"
+          value={query}
+          onChange={setQuery}
+        />
       </View>
 
       <FilterChips options={filters} value={filter} onChange={setFilter} />
@@ -129,8 +122,10 @@ export default function FeedbackScreen() {
                     >
                       {item.date} · {item.staff}
                     </Text>
+                    <View style={{ marginTop: 6 }}>
+                      <Stars rating={item.rating} size={14} />
+                    </View>
                   </View>
-                  <Stars rating={item.rating} size={14} />
                 </View>
                 <Text
                   style={[styles.feedbackText, { color: colors.muted }]}
@@ -178,6 +173,8 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: spacing.xl,
@@ -251,6 +248,7 @@ const styles = StyleSheet.create({
   },
   feedbackFooter: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     alignItems: 'center',
     gap: spacing.sm,
   },

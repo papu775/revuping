@@ -2,7 +2,7 @@ import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from 'mobile-tokens';
-import { Button, Screen, Logo } from 'mobile-ui';
+import { Button, Screen, Logo, FeedbackPreview } from 'mobile-ui';
 
 export default function WelcomeScreen() {
   const router = useRouter();
@@ -11,13 +11,19 @@ export default function WelcomeScreen() {
 
   return (
     <Screen
+      edges={[]}
       style={StyleSheet.flatten([
         styles.container,
         { backgroundColor: colors.canvas, paddingTop: insets.top },
       ])}
     >
       <ScrollView
-        contentContainerStyle={{ flexGrow: 1, gap: 24 }}
+        contentContainerStyle={{
+          flexGrow: 1,
+          justifyContent: 'center',
+          gap: 24,
+          paddingHorizontal: 24,
+        }}
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.hero}>
@@ -30,17 +36,18 @@ export default function WelcomeScreen() {
             the next step.
           </Text>
         </View>
+        <FeedbackPreview />
         <View style={[styles.actions, { paddingBottom: insets.bottom + 24 }]}>
           <Button
             title="Set up demo"
             onPress={() => router.push('/signup')}
-            accessibilityLabel="Get started with RevuPing"
+            accessibilityLabel="Set up demo"
           />
           <Button
             title="Open demo workspace"
             variant="secondary"
             onPress={() => router.replace('/(tabs)')}
-            accessibilityLabel="Log in to existing account"
+            accessibilityLabel="Open demo workspace"
           />
         </View>
       </ScrollView>
@@ -51,15 +58,15 @@ export default function WelcomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: 24,
     justifyContent: 'space-between',
   },
   hero: {
-    flex: 1,
+    flexGrow: 0,
     justifyContent: 'center',
     alignItems: 'center',
     gap: 16,
-    paddingVertical: 40,
+    paddingTop: 48,
+    paddingBottom: 12,
   },
   logo: {
     fontSize: 40,
@@ -67,7 +74,8 @@ const styles = StyleSheet.create({
     letterSpacing: -1,
   },
   tagline: {
-    fontSize: 22,
+    fontSize: 28,
+    lineHeight: 35,
     fontWeight: '600',
     textAlign: 'center',
   },
@@ -75,7 +83,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 24,
     textAlign: 'center',
-    paddingHorizontal: 16,
+    paddingHorizontal: 0,
   },
   actions: {
     gap: 12,

@@ -47,7 +47,7 @@ export default function CompetitorsScreen() {
             </View>
             <View style={styles.metrics}>
               <View style={styles.metric}>
-                <Stars rating={Math.round(comp.rating)} size={14} />
+                <Stars rating={comp.rating} size={14} />
                 <Text style={[styles.metricValue, { color: colors.ink }]}>
                   {comp.rating}
                 </Text>

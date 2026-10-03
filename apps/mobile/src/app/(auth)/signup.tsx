@@ -9,7 +9,7 @@ import {
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from 'mobile-tokens';
-import { Screen, Button, Field, Logo } from 'mobile-ui';
+import { Screen, Button, Field, Logo, FeedbackPreview } from 'mobile-ui';
 import { useState } from 'react';
 import { useDemoStore } from 'mobile-data';
 import { spacing, typography } from 'mobile-tokens';
@@ -50,13 +50,14 @@ export default function SignupScreen() {
           <View style={styles.header}>
             <Logo />
             <Text style={[styles.title, { color: colors.ink }]}>
-              Create your account
+              Demo setup
             </Text>
             <Text style={[styles.subtitle, { color: colors.muted }]}>
               Set up a fictional demo workspace. No account is created or
               credentials saved.
             </Text>
           </View>
+          <FeedbackPreview compact />
           <View style={styles.form}>
             <Field
               label="Business name"
@@ -85,7 +86,7 @@ export default function SignupScreen() {
               label="Password"
               value={password}
               onChangeText={setPassword}
-              placeholder="Create a password"
+              placeholder="Sample password"
               error={
                 error && !password.trim() ? 'Password is required' : undefined
               }
@@ -93,15 +94,10 @@ export default function SignupScreen() {
             <Button
               title="Continue demo setup"
               onPress={handleSignup}
-              accessibilityLabel="Create RevuPing account"
+              accessibilityLabel="Continue demo setup"
             />
           </View>
-          <View
-            style={[
-              styles.footer,
-              { paddingBottom: insets.bottom + spacing.lg },
-            ]}
-          >
+          <View style={[styles.footer]}>
             <Button
               title="Already have a demo? Log in"
               variant="ghost"
@@ -120,10 +116,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 32,
     gap: 24,
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
   },
   header: {
-    paddingVertical: 24,
+    paddingVertical: 8,
     justifyContent: 'center',
     gap: spacing.sm,
   },

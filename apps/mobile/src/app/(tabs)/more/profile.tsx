@@ -95,6 +95,13 @@ export default function ProfileScreen() {
                   >
                     {option.label}
                   </Text>
+                  {isSelected && (
+                    <Ionicons
+                      name="checkmark-circle"
+                      size={16}
+                      color="#ffffff"
+                    />
+                  )}
                 </TouchableOpacity>
               );
             })}

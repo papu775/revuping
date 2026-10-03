@@ -38,6 +38,7 @@ export function BarChart({
                 {
                   height: `${(value / maxValue) * 100}%`,
                   backgroundColor: barColor,
+                  minHeight: value > 0 ? 4 : 0,
                 },
               ]}
             />
@@ -46,9 +47,14 @@ export function BarChart({
       </View>
       <View style={styles.labels}>
         {labels.map((label, index) => (
-          <Text key={index} style={[styles.label, { color: colors.muted }]}>
-            {label}
-          </Text>
+          <View key={index} style={{ flex: 1, gap: 4 }}>
+            <Text
+              style={[styles.label, { color: colors.ink, fontWeight: '600' }]}
+            >
+              {data[index]}
+            </Text>
+            <Text style={[styles.label, { color: colors.muted }]}>{label}</Text>
+          </View>
         ))}
       </View>
     </View>
@@ -79,7 +85,6 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
   },
   label: {
-    flex: 1,
     fontSize: typography.caption,
     textAlign: 'center',
   },

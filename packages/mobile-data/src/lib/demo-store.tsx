@@ -41,7 +41,9 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
       .then((raw: string | null) => {
         if (raw) {
           try {
-            const saved = JSON.parse(raw) as Partial<DemoState>;
+            const saved = JSON.parse(raw, (key, value) =>
+              key === 'type' && value === 'Optional text' ? 'Text' : value,
+            ) as Partial<DemoState>;
             dispatch({ type: 'HYDRATE', payload: saved });
           } catch {
             // ignore parse errors

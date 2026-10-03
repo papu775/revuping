@@ -1,10 +1,4 @@
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-} from 'react-native';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { useTheme } from 'mobile-tokens';
 import { useDemoStore, demoPlans } from 'mobile-data';
 import { Header, Card, Badge, Button, useToast } from 'mobile-ui';
@@ -42,10 +36,16 @@ export default function BillingScreen() {
             <Card
               key={plan.name}
               style={StyleSheet.flatten(
-                plan.featured
+                plan.featured || isSelected
                   ? [
                       styles.card,
-                      { borderColor: colors.violet, borderWidth: 2 },
+                      {
+                        borderColor: colors.violet,
+                        borderWidth: 2,
+                        backgroundColor: isSelected
+                          ? colors.surfaceSelected
+                          : colors.surface,
+                      },
                     ]
                   : styles.card,
               )}
@@ -54,7 +54,11 @@ export default function BillingScreen() {
                 <Text style={[styles.planName, { color: colors.ink }]}>
                   {plan.name}
                 </Text>
-                {plan.featured && <Badge label="Popular" tone="violet" />}
+                {isSelected ? (
+                  <Badge label="Selected · demo" tone="mint" />
+                ) : plan.featured ? (
+                  <Badge label="Highlighted" tone="violet" />
+                ) : null}
               </View>
               <Text style={[styles.planPrice, { color: colors.violet }]}>
                 {plan.price}
@@ -104,6 +108,8 @@ const styles = StyleSheet.create({
   },
   planHeader: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: spacing.sm,

@@ -11,8 +11,16 @@ import {
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from 'mobile-tokens';
-import { useDemoStore } from 'mobile-data';
-import { Header, Button, Field, Card, Select, useToast } from 'mobile-ui';
+import { useDemoStore, countLabel } from 'mobile-data';
+import {
+  Header,
+  Button,
+  Field,
+  DateField,
+  Card,
+  Select,
+  useToast,
+} from 'mobile-ui';
 import { spacing, typography } from 'mobile-tokens';
 import type { Campaign } from 'mobile-data';
 
@@ -159,8 +167,10 @@ export default function CampaignBuilderScreen() {
                 onChange={setAudience}
               />
               <Text style={{ color: colors.muted, marginBottom: 16 }}>
-                {campaignAudience(state.customers, audience).length} eligible
-                demo customers
+                {countLabel(
+                  campaignAudience(state.customers, audience).length,
+                  'eligible demo customer',
+                )}
               </Text>
               <Select
                 label="Channel"
@@ -189,16 +199,20 @@ export default function CampaignBuilderScreen() {
 
           {step === 3 && (
             <Card style={styles.card}>
-              <Field
-                label="Schedule date & time"
-                error={
-                  scheduled && !validSchedule(scheduled, reminderDays)
-                    ? 'Use YYYY-MM-DDTHH:mm and 0–30 reminder days'
-                    : undefined
+              <DateField
+                label="Schedule date"
+                value={scheduled.split('T')[0]}
+                onChange={(date) =>
+                  setScheduled(`${date}T${scheduled.split('T')[1] || '10:00'}`)
                 }
-                value={scheduled}
-                onChangeText={setScheduled}
-                placeholder="2026-10-03T10:00"
+              />
+              <DateField
+                label="Schedule time"
+                mode="time"
+                value={scheduled.split('T')[1] || '10:00'}
+                onChange={(time) =>
+                  setScheduled(`${scheduled.split('T')[0]}T${time}`)
+                }
               />
               <Field
                 label="Reminder days (0 for none)"

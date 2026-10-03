@@ -1,4 +1,3 @@
-
 import { View, Text, Switch, StyleSheet } from 'react-native';
 import { useTheme } from 'mobile-tokens';
 import { spacing, typography } from 'mobile-tokens';
@@ -21,16 +20,31 @@ export function Toggle({
       <View style={styles.textContainer}>
         <Text style={[styles.label, { color: colors.ink }]}>{label}</Text>
         {description ? (
-          <Text style={[styles.description, { color: colors.muted }]}>{description}</Text>
+          <Text style={[styles.description, { color: colors.muted }]}>
+            {description}
+          </Text>
         ) : null}
       </View>
-      <Switch
-        value={value}
-        onValueChange={onValueChange}
-        trackColor={{ false: colors.controlBorder, true: colors.violet }}
-        thumbColor={colors.surface}
-        accessibilityLabel={label}
-      />
+      <View style={{ alignItems: 'center', gap: 3 }}>
+        <Switch
+          value={value}
+          onValueChange={onValueChange}
+          trackColor={{ false: colors.controlBorder, true: colors.actionBg }}
+          thumbColor="#ffffff"
+          ios_backgroundColor={colors.controlBorder}
+          accessibilityLabel={label}
+        />
+        <Text
+          style={{
+            fontSize: 12,
+            color: value ? colors.violet : colors.muted,
+            fontWeight: '600',
+          }}
+          accessible={false}
+        >
+          {value ? 'On' : 'Off'}
+        </Text>
+      </View>
     </View>
   );
 }

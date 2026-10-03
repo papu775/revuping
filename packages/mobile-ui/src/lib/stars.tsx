@@ -24,9 +24,15 @@ export function Stars({
       {[1, 2, 3, 4, 5].map((i) => (
         <Ionicons
           key={i}
-          name="star"
+          name={
+            rating >= i
+              ? 'star'
+              : rating >= i - 0.5
+                ? 'star-half'
+                : 'star-outline'
+          }
           size={size}
-          color={i <= rating ? starColor : colors.border}
+          color={rating >= i - 0.5 ? starColor : colors.controlBorder}
         />
       ))}
     </View>

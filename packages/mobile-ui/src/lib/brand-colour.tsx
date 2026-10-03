@@ -3,7 +3,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from 'mobile-tokens';
 import { Field } from './field.tsx';
 export const isBrandColour = (value: string) => /^#[0-9a-f]{6}$/i.test(value);
-const presets = ['#6250b5', '#253c39', '#243650', '#ad5e41'];
+const presets = ['#6b52b9', '#253c39', '#243650', '#ad5e41'];
 export function BrandColour({
   value,
   onChange,
@@ -39,7 +39,12 @@ export function BrandColour({
         }
       />
       <View style={styles.presets}>
-        {presets.map((colour) => (
+        {[
+          ...new Set([
+            ...presets,
+            ...(isBrandColour(value) ? [value.toLowerCase()] : []),
+          ]),
+        ].map((colour) => (
           <TouchableOpacity
             key={colour}
             accessibilityRole="button"

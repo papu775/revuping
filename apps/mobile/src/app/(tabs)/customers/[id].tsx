@@ -1,15 +1,9 @@
 import { useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-} from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from 'mobile-tokens';
-import { useDemoStore } from 'mobile-data';
+import { useDemoStore, formatDate } from 'mobile-data';
 import {
   Header,
   Card,
@@ -26,7 +20,6 @@ import { spacing, typography } from 'mobile-tokens';
 
 export default function CustomerDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const router = useRouter();
   const insets = useSafeAreaInsets();
   const { colors } = useTheme();
   const { state, dispatch } = useDemoStore();
@@ -77,7 +70,10 @@ export default function CustomerDetailScreen() {
       <ScrollView
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
-        contentContainerStyle={{ paddingTop: 16, paddingBottom: 24 }}
+        contentContainerStyle={{
+          paddingTop: 16,
+          paddingBottom: 24 + insets.bottom,
+        }}
       >
         <Card style={styles.card}>
           <View style={styles.profileHeader}>
@@ -112,17 +108,29 @@ export default function CustomerDetailScreen() {
                     : 'warm'
               }
             />
-            <Badge label={customer.status} tone="muted" />
           </View>
         </Card>
 
         <DetailSection title="Details">
           <DetailItem label="Source" value={customer.source} />
+          {!['No consent', 'Opted out'].includes(customer.status) && (
+            <DetailItem
+              label="Request activity"
+              value={`${customer.status} · demo`}
+            />
+          )}
           <DetailItem
             label="Consent date"
-            value={customer.consentDate || '—'}
+            value={
+              customer.consent
+                ? formatDate(customer.consentDate)
+                : 'Not recorded'
+            }
           />
-          <DetailItem label="Last visit" value={customer.lastVisit} />
+          <DetailItem
+            label="Last visit"
+            value={formatDate(customer.lastVisit)}
+          />
           <DetailItem label="Preferred staff" value={customer.staff} />
           <DetailItem label="Service" value={customer.service} />
         </DetailSection>
@@ -160,7 +168,7 @@ export default function CustomerDetailScreen() {
                 ]}
               />
               <Text style={[styles.timelineText, { color: colors.muted }]}>
-                Consent recorded · {customer.consentDate}
+                Consent recorded · {formatDate(customer.consentDate)}
               </Text>
             </View>
           )}
@@ -169,7 +177,7 @@ export default function CustomerDetailScreen() {
               style={[styles.timelineDot, { backgroundColor: colors.border }]}
             />
             <Text style={[styles.timelineText, { color: colors.muted }]}>
-              Last visit · {customer.lastVisit}
+              Last visit · {formatDate(customer.lastVisit)}
             </Text>
           </View>
         </DetailSection>
@@ -200,12 +208,27 @@ export default function CustomerDetailScreen() {
         onClose={() => setShowRequest(false)}
         title="Review request preview"
       >
-        <Text style={{ color: colors.ink }}>
-          {state.templates.request
-            .replaceAll('{name}', customer.name)
-            .replaceAll('{link}', 'revuping://review/demo')}
-        </Text>
-        <Text style={{ color: colors.muted, marginTop: 16 }}>
+        <View
+          style={{
+            backgroundColor: colors.surfaceSection,
+            borderRadius: 16,
+            padding: 16,
+            gap: 12,
+          }}
+        >
+          <Text style={{ color: colors.muted, fontSize: 13 }}>
+            To {customer.name} · Preview
+          </Text>
+          <Text
+            selectable
+            style={{ color: colors.ink, fontSize: 16, lineHeight: 25 }}
+          >
+            {state.templates.request
+              .replaceAll('{name}', customer.name)
+              .replaceAll('{link}', 'revuping://review/demo')}
+          </Text>
+        </View>
+        <Text style={{ color: colors.muted, marginTop: 16, lineHeight: 22 }}>
           {customer.optedOut
             ? 'Customer opted out. No request can be sent.'
             : !customer.consent

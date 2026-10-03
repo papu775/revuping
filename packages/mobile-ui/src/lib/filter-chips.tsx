@@ -1,5 +1,60 @@
-import { ScrollView, TouchableOpacity, Text, StyleSheet } from 'react-native';
-import { useTheme, spacing } from 'mobile-tokens';
+import { useEffect, useRef } from 'react';
+import {
+  Animated,
+  ScrollView,
+  TouchableOpacity,
+  StyleSheet,
+} from 'react-native';
+import { useTheme, useReducedMotion, spacing } from 'mobile-tokens';
+
+function Chip({
+  option,
+  selected,
+  onPress,
+}: {
+  option: string;
+  selected: boolean;
+  onPress: () => void;
+}) {
+  const { colors } = useTheme();
+  const reduced = useReducedMotion();
+  const opacity = useRef(new Animated.Value(1)).current;
+  useEffect(() => {
+    opacity.setValue(reduced ? 1 : 0.9);
+    const animation = Animated.timing(opacity, {
+      toValue: 1,
+      duration: reduced ? 0 : 180,
+      useNativeDriver: true,
+    });
+    animation.start();
+    return () => animation.stop();
+  }, [selected, reduced, opacity]);
+  return (
+    <TouchableOpacity
+      accessibilityRole="button"
+      accessibilityLabel={`Filter: ${option}`}
+      accessibilityState={{ selected }}
+      onPress={onPress}
+      activeOpacity={0.7}
+      style={[
+        styles.chip,
+        {
+          backgroundColor: selected ? colors.actionBg : colors.surface,
+          borderColor: selected ? colors.actionBg : colors.border,
+        },
+      ]}
+    >
+      <Animated.Text
+        style={[
+          styles.text,
+          { color: selected ? colors.onDark : colors.ink, opacity },
+        ]}
+      >
+        {option}
+      </Animated.Text>
+    </TouchableOpacity>
+  );
+}
 
 export function FilterChips({
   options,
@@ -10,7 +65,6 @@ export function FilterChips({
   value: string;
   onChange: (value: string) => void;
 }) {
-  const { colors } = useTheme();
   return (
     <ScrollView
       horizontal
@@ -20,30 +74,12 @@ export function FilterChips({
       keyboardShouldPersistTaps="handled"
     >
       {options.map((option) => (
-        <TouchableOpacity
+        <Chip
           key={option}
-          accessibilityRole="button"
-          accessibilityLabel={`Filter: ${option}`}
-          accessibilityState={{ selected: option === value }}
+          option={option}
+          selected={option === value}
           onPress={() => onChange(option)}
-          style={[
-            styles.chip,
-            {
-              backgroundColor:
-                option === value ? colors.actionBg : colors.surface,
-              borderColor: option === value ? colors.actionBg : colors.border,
-            },
-          ]}
-        >
-          <Text
-            style={[
-              styles.text,
-              { color: option === value ? colors.onDark : colors.ink },
-            ]}
-          >
-            {option}
-          </Text>
-        </TouchableOpacity>
+        />
       ))}
     </ScrollView>
   );

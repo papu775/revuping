@@ -8,8 +8,8 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { useTheme } from 'mobile-tokens';
-import { useDemoStore } from 'mobile-data';
-import { Header, Card, Badge, Button, BarChart, useToast } from 'mobile-ui';
+import { useDemoStore, countLabel } from 'mobile-data';
+import { Header, Card, Badge, Button, BarChart } from 'mobile-ui';
 import { spacing, typography } from 'mobile-tokens';
 
 export default function SurveysScreen() {
@@ -84,9 +84,12 @@ export default function SurveysScreen() {
                 />
               </View>
               <Text style={[styles.surveyInfo, { color: colors.muted }]}>
-                {survey.questions.length} questions ·{' '}
-                {state.responses.filter((r) => r.surveyId === survey.id).length}{' '}
-                responses
+                {countLabel(survey.questions.length, 'question')} ·{' '}
+                {countLabel(
+                  state.responses.filter((r) => r.surveyId === survey.id)
+                    .length,
+                  'response',
+                )}
               </Text>
             </Card>
           </TouchableOpacity>
@@ -115,11 +118,11 @@ export default function SurveysScreen() {
             {satisfactionData.length > 0 && (
               <>
                 <Text style={[styles.chartLabel, { color: colors.muted }]}>
-                  Satisfaction scores
+                  Satisfaction · score out of 5
                 </Text>
                 <BarChart
                   data={satisfactionData}
-                  labels={responses.map((_, i) => `R${i + 1}`)}
+                  labels={satisfactionData.map((_, i) => `Answer ${i + 1}`)}
                   color={colors.chartSage}
                   height={80}
                 />
@@ -179,6 +182,8 @@ const styles = StyleSheet.create({
   },
   surveyHeader: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: spacing.xs,

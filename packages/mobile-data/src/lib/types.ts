@@ -60,7 +60,7 @@ export type FollowUp = {
 
 export type Question = {
   id: number;
-  type: 'Satisfaction' | 'NPS' | 'Multiple choice' | 'Optional text';
+  type: 'Satisfaction' | 'NPS' | 'Multiple choice' | 'Text';
   title: string;
   options: string[];
   required: boolean;

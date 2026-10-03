@@ -1,11 +1,5 @@
 import { useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-} from 'react-native';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { useTheme } from 'mobile-tokens';
 import { useDemoStore } from 'mobile-data';
 import {
@@ -14,6 +8,9 @@ import {
   Button,
   QRCode,
   Field,
+  Accordion,
+  BottomSheet,
+  Badge,
   BrandColour,
   isBrandColour,
   useToast,
@@ -26,6 +23,8 @@ export default function QRStudioScreen() {
   const toast = useToast();
   const [color, setColor] = useState(state.business.branding);
   const [showPreview, setShowPreview] = useState(false);
+  const [choice, setChoice] = useState<'public' | 'private' | null>(null);
+  const [comment, setComment] = useState('');
 
   const qrValue = `https://revuping.demo/r/${state.business.name.toLowerCase().replace(/\s+/g, '-')}`;
 
@@ -52,21 +51,12 @@ export default function QRStudioScreen() {
         </Card>
 
         <Card style={styles.card}>
-          <Text style={[styles.sectionTitle, { color: colors.ink }]}>
-            Customer page preview
-          </Text>
-          <TouchableOpacity
-            style={{ minHeight: 48, justifyContent: 'center' }}
-            onPress={() => setShowPreview(!showPreview)}
-            accessibilityRole="button"
-            accessibilityState={{ expanded: showPreview }}
-            accessibilityLabel="Customer page preview"
+          <Accordion
+            title="Customer page preview"
+            summary="Two equal choices, at every rating"
+            open={showPreview}
+            onToggle={setShowPreview}
           >
-            <Text style={[styles.previewToggle, { color: colors.violet }]}>
-              {showPreview ? 'Hide preview' : 'Show preview'}
-            </Text>
-          </TouchableOpacity>
-          {showPreview && (
             <View
               style={[
                 styles.previewBox,
@@ -76,15 +66,43 @@ export default function QRStudioScreen() {
                 },
               ]}
             >
+              <Badge label="Customer preview" tone="violet" />
               <Text style={[styles.previewTitle, { color: colors.ink }]}>
                 {state.business.name}
               </Text>
-              <Text style={[styles.previewText, { color: colors.muted }]}>
-                Scan to share your experience
+              <Text
+                style={[
+                  styles.previewText,
+                  { color: colors.muted, lineHeight: 22, textAlign: 'center' },
+                ]}
+              >
+                How was your visit? Share your honest experience in whichever
+                way you prefer.
               </Text>
-              <QRCode value={qrValue} size={100} color={color} />
+              <View style={{ alignSelf: 'stretch', gap: 12, marginTop: 12 }}>
+                <Button
+                  title="Write a Google review"
+                  variant="secondary"
+                  onPress={() => setChoice('public')}
+                />
+                <Button
+                  title="Share private feedback"
+                  variant="secondary"
+                  onPress={() => setChoice('private')}
+                />
+              </View>
+              <Text
+                style={{
+                  color: colors.muted,
+                  fontSize: 13,
+                  lineHeight: 20,
+                  textAlign: 'center',
+                }}
+              >
+                Both choices remain available to everyone.
+              </Text>
             </View>
-          )}
+          </Accordion>
         </Card>
 
         <View style={styles.actions}>
@@ -101,6 +119,41 @@ export default function QRStudioScreen() {
           </Text>
         </View>
       </ScrollView>
+      <BottomSheet
+        visible={choice !== null}
+        onClose={() => setChoice(null)}
+        title={
+          choice === 'private'
+            ? 'Private feedback preview'
+            : 'Google review preview'
+        }
+      >
+        {choice === 'private' ? (
+          <>
+            <Field
+              label="Your feedback"
+              value={comment}
+              onChangeText={setComment}
+              multiline
+              placeholder="Tell us about your visit…"
+            />
+            <Button
+              title="Preview feedback submission"
+              disabled={!comment.trim()}
+              onPress={() => {
+                setChoice(null);
+                setComment('');
+                toast.showToast('Preview complete. No feedback was sent.');
+              }}
+            />
+          </>
+        ) : (
+          <Text style={{ color: colors.ink, fontSize: 16, lineHeight: 25 }}>
+            This choice opens the business’s Google review page in a live setup.
+            This demo does not open Google or publish a review.
+          </Text>
+        )}
+      </BottomSheet>
     </View>
   );
 }

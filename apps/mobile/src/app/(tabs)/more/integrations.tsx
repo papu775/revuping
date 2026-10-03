@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { useTheme } from 'mobile-tokens';
 import { useDemoStore, integrationProviders } from 'mobile-data';
@@ -5,7 +6,7 @@ import { Header, Card, Badge, Button, useToast } from 'mobile-ui';
 import { spacing, typography } from 'mobile-tokens';
 
 export default function IntegrationsScreen() {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const { state, dispatch } = useDemoStore();
   const toast = useToast();
 
@@ -35,6 +36,48 @@ export default function IntegrationsScreen() {
           const isConnected = status === 'Demo connected';
           return (
             <Card key={provider.name} style={styles.card}>
+              <View
+                style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: 12,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  backgroundColor: colors.surfaceSection,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginBottom: 12,
+                }}
+                accessible={false}
+              >
+                {provider.name === 'Google' ? (
+                  <Text
+                    style={{
+                      color: isDark ? '#8ab4f8' : '#4285f4',
+                      fontSize: 28,
+                      fontWeight: '700',
+                    }}
+                  >
+                    G
+                  </Text>
+                ) : (
+                  <Ionicons
+                    name={
+                      provider.name === 'WhatsApp'
+                        ? 'logo-whatsapp'
+                        : provider.name === 'SMS'
+                          ? 'phone-portrait-outline'
+                          : 'mail-outline'
+                    }
+                    size={26}
+                    color={
+                      provider.name === 'WhatsApp'
+                        ? colors.positiveInk
+                        : colors.ink
+                    }
+                  />
+                )}
+              </View>
               <View style={styles.header}>
                 <Text style={[styles.name, { color: colors.ink }]}>
                   {provider.name}
@@ -75,6 +118,8 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: spacing.sm,
@@ -90,6 +135,6 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   actions: {
-    flexDirection: 'row',
+    flexDirection: 'column',
   },
 });

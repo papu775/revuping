@@ -106,5 +106,6 @@ const styles = StyleSheet.create({
   },
   optionText: {
     fontSize: typography.body,
+    flex: 1,
   },
 });

@@ -17,13 +17,16 @@ import {
   Select,
   Button,
   Toggle,
+  Accordion,
+  IconButton,
   useToast,
 } from 'mobile-ui';
+import { Ionicons } from '@expo/vector-icons';
 const types: Question['type'][] = [
   'Satisfaction',
   'NPS',
   'Multiple choice',
-  'Optional text',
+  'Text',
 ];
 export default function SurveyEditor() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -49,11 +52,17 @@ export default function SurveyEditor() {
       },
     ],
   );
+  const [openQuestion, setOpenQuestion] = useState<number | null>(
+    existing?.questions[0]?.id ?? 1,
+  );
   const [error, setError] = useState('');
   const update = (id: number, patch: Partial<Question>) =>
     setQuestions((qs) => qs.map((q) => (q.id === id ? { ...q, ...patch } : q)));
-  const move = (index: number, delta: number) =>
+  const move = (questionId: number, delta: number) =>
     setQuestions((qs) => {
+      const index = qs.findIndex((q) => q.id === questionId);
+      if (index < 0 || index + delta < 0 || index + delta >= qs.length)
+        return qs;
       const next = [...qs];
       [next[index], next[index + delta]] = [next[index + delta], next[index]];
       return next;
@@ -132,62 +141,82 @@ export default function SurveyEditor() {
           </Card>
           {questions.map((q, index) => (
             <Card key={q.id}>
-              <Text
-                style={{
-                  color: colors.ink,
-                  fontSize: 18,
-                  fontWeight: '600',
-                  marginBottom: 16,
-                }}
+              <Accordion
+                title={`Question ${index + 1}`}
+                summary={`${q.title || 'Untitled question'} · ${q.type} · ${q.required ? 'Required' : 'Optional'}`}
+                open={openQuestion === q.id}
+                onToggle={(open) => setOpenQuestion(open ? q.id : null)}
               >
-                Question {index + 1}
-              </Text>
-              <Field
-                label="Question"
-                value={q.title}
-                onChangeText={(title) => update(q.id, { title })}
-                multiline
-              />
-              <Select
-                label="Question type"
-                value={q.type}
-                options={types}
-                onChange={(v) => update(q.id, { type: v as Question['type'] })}
-              />
-              {q.type === 'Multiple choice' && (
                 <Field
-                  label="Choices (one per line)"
-                  value={q.options.join('\n')}
-                  onChangeText={(v) => update(q.id, { options: v.split('\n') })}
+                  label="Question"
+                  value={q.title}
+                  onChangeText={(title) => update(q.id, { title })}
                   multiline
                 />
-              )}
-              <Toggle
-                label="Required question"
-                value={q.required}
-                onValueChange={(required) => update(q.id, { required })}
-              />
-              <View style={{ gap: 8, marginTop: 16 }}>
-                <Button
-                  title="Move up"
-                  variant="secondary"
-                  disabled={index === 0}
-                  onPress={() => move(index, -1)}
-                />
-                <Button
-                  title="Move down"
-                  variant="secondary"
-                  disabled={index === questions.length - 1}
-                  onPress={() => move(index, 1)}
-                />
-                <Button
-                  title="Remove question"
-                  variant="danger"
-                  disabled={questions.length === 1}
-                  onPress={() =>
-                    setQuestions((qs) => qs.filter((v) => v.id !== q.id))
+                <Select
+                  label="Question type"
+                  value={q.type}
+                  options={types}
+                  onChange={(v) =>
+                    update(q.id, { type: v as Question['type'] })
                   }
                 />
+                {q.type === 'Multiple choice' && (
+                  <Field
+                    label="Choices (one per line)"
+                    value={q.options.join('\n')}
+                    onChangeText={(v) =>
+                      update(q.id, { options: v.split('\n') })
+                    }
+                    multiline
+                  />
+                )}
+                <Toggle
+                  label="Required question"
+                  value={q.required}
+                  onValueChange={(required) => update(q.id, { required })}
+                />
+              </Accordion>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 8,
+                  borderTopWidth: 1,
+                  borderColor: colors.border,
+                  paddingTop: 8,
+                  marginTop: 12,
+                }}
+              >
+                <IconButton
+                  accessibilityLabel={`Move question ${index + 1} up`}
+                  disabled={index === 0}
+                  onPress={() => move(q.id, -1)}
+                >
+                  <Ionicons name="arrow-up" size={20} color={colors.violet} />
+                </IconButton>
+                <IconButton
+                  accessibilityLabel={`Move question ${index + 1} down`}
+                  disabled={index === questions.length - 1}
+                  onPress={() => move(q.id, 1)}
+                >
+                  <Ionicons name="arrow-down" size={20} color={colors.violet} />
+                </IconButton>
+                <View style={{ flex: 1 }} />
+                <IconButton
+                  accessibilityLabel={`Remove question ${index + 1}`}
+                  disabled={questions.length === 1}
+                  onPress={() => {
+                    setQuestions((qs) => qs.filter((v) => v.id !== q.id));
+                    if (openQuestion === q.id) setOpenQuestion(null);
+                  }}
+                >
+                  <Ionicons
+                    name="trash-outline"
+                    size={20}
+                    color={colors.danger}
+                  />
+                </IconButton>
               </View>
             </Card>
           ))}
@@ -195,18 +224,20 @@ export default function SurveyEditor() {
             title="Add question"
             variant="secondary"
             disabled={questions.length >= 8}
-            onPress={() =>
+            onPress={() => {
+              const nextId = Math.max(...questions.map((q) => q.id), 0) + 1;
+              setOpenQuestion(nextId);
               setQuestions((qs) => [
                 ...qs,
                 {
-                  id: Math.max(...qs.map((q) => q.id), 0) + 1,
-                  type: 'Optional text',
+                  id: nextId,
+                  type: 'Text',
                   title: '',
                   options: [],
                   required: false,
                 },
-              ])
-            }
+              ]);
+            }}
           />
           <Text style={{ color: colors.muted }}>
             Up to 8 questions. Your draft stays here while opening selectors.

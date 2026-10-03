@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { useTheme } from 'mobile-tokens';
-import { useDemoStore } from 'mobile-data';
+import { useDemoStore, countLabel } from 'mobile-data';
 import {
   Header,
   Card,
@@ -71,7 +71,7 @@ export default function WidgetsScreen() {
             />
           ))}
           <Select
-            label="Theme"
+            label="Preview theme"
             value={state.widget.theme}
             options={themes}
             onChange={(v) =>
@@ -95,7 +95,11 @@ export default function WidgetsScreen() {
             ]}
           >
             {selectedReviews.length === 0 && (
-              <Text style={{ color: colors.muted }}>
+              <Text
+                style={{
+                  color: state.widget.theme === 'Dark' ? '#c0c3d2' : '#535768',
+                }}
+              >
                 Select reviews above to preview this widget.
               </Text>
             )}
@@ -107,8 +111,8 @@ export default function WidgetsScreen() {
                   fontWeight: '600',
                 }}
               >
-                {state.business.name} · {selectedReviews.length} featured
-                reviews
+                {state.business.name} ·{' '}
+                {countLabel(selectedReviews.length, 'featured review')}
               </Text>
             ) : (
               <ScrollView
@@ -146,7 +150,9 @@ export default function WidgetsScreen() {
                     <Stars
                       rating={review.rating}
                       size={14}
-                      color={state.widget.colour}
+                      color={
+                        state.widget.theme === 'Dark' ? '#e5bd79' : '#816334'
+                      }
                     />
                     <Text
                       style={[
@@ -166,7 +172,11 @@ export default function WidgetsScreen() {
               </ScrollView>
             )}
             {state.widget.layout === 'Review wall' && (
-              <Text style={{ color: colors.muted }}>
+              <Text
+                style={{
+                  color: state.widget.theme === 'Dark' ? '#c0c3d2' : '#535768',
+                }}
+              >
                 Reviews stack vertically for a readable phone layout.
               </Text>
             )}

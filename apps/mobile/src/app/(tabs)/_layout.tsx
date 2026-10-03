@@ -6,10 +6,13 @@ import { Ionicons } from '@expo/vector-icons';
 
 export default function TabsLayout() {
   const { colors } = useTheme();
-  const { fontScale } = useWindowDimensions();
+  const { fontScale, width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const path = usePathname();
-  const editing = path.endsWith('/builder') || path.endsWith('/add');
+  const editing =
+    path.endsWith('/builder') ||
+    path.endsWith('/add') ||
+    /^\/(feedback|customers)\/[^/]+$/.test(path);
 
   return (
     <Tabs
@@ -23,9 +26,13 @@ export default function TabsLayout() {
             style={{
               fontSize: 12,
               fontWeight: '600',
+              letterSpacing: -0.1,
               textAlign: 'center',
               color,
               marginTop: 4,
+              // Allow the full item width despite the navigator's inner padding.
+              width: width / 5,
+              maxWidth: width / 5,
             }}
           >
             {children}

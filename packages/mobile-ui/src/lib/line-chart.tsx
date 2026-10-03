@@ -69,9 +69,14 @@ export function LineChart({
       </Svg>
       <View style={styles.labels}>
         {labels.map((label, index) => (
-          <Text key={index} style={[styles.label, { color: colors.muted }]}>
-            {label}
-          </Text>
+          <View key={index} style={{ flex: 1, gap: 4 }}>
+            <Text
+              style={[styles.label, { color: colors.ink, fontWeight: '600' }]}
+            >
+              {data[index]}
+            </Text>
+            <Text style={[styles.label, { color: colors.muted }]}>{label}</Text>
+          </View>
         ))}
       </View>
     </View>

@@ -23,3 +23,8 @@ export * from './lib/qr-code.tsx';
 export * from './lib/logo.tsx';
 export * from './lib/filter-chips.tsx';
 export * from './lib/brand-colour.tsx';
+
+export * from './lib/accordion.tsx';
+export * from './lib/feedback-preview.tsx';
+export * from './lib/date-field.tsx';
+export * from './lib/search-field.tsx';

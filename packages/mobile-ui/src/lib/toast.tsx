@@ -6,9 +6,9 @@ import {
   useRef,
   useEffect,
 } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { Animated, Text, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useTheme, radius } from 'mobile-tokens';
+import { useTheme, useReducedMotion, radius } from 'mobile-tokens';
 import { Ionicons } from '@expo/vector-icons';
 import { IconButton } from './icon-button.tsx';
 
@@ -24,6 +24,19 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
+  const reduced = useReducedMotion();
+  const opacity = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    if (!toast) return;
+    opacity.setValue(0);
+    const animation = Animated.timing(opacity, {
+      toValue: 1,
+      duration: reduced ? 0 : 160,
+      useNativeDriver: true,
+    });
+    animation.start();
+    return () => animation.stop();
+  }, [toast, opacity, reduced]);
   const dismiss = useCallback(() => {
     if (timer.current) clearTimeout(timer.current);
     setToast(null);
@@ -46,10 +59,11 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     <ToastContext.Provider value={{ showToast }}>
       {children}
       {toast && (
-        <View
+        <Animated.View
           style={[
             styles.container,
             {
+              opacity,
               bottom: Math.max(insets.bottom, 8) + 80,
               backgroundColor: colors.surface,
               borderColor: colors.border,
@@ -75,7 +89,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
           >
             <Ionicons name="close" size={20} color={colors.muted} />
           </IconButton>
-        </View>
+        </Animated.View>
       )}
     </ToastContext.Provider>
   );

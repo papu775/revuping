@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { useTheme } from 'mobile-tokens';
-import { reportRows } from 'mobile-data';
+import { reportRows, formatDate, countLabel } from 'mobile-data';
 import { Header, Card, Select, BarChart, LineChart } from 'mobile-ui';
 import { spacing, typography } from 'mobile-tokens';
 
@@ -47,7 +47,7 @@ export default function ReportsScreen() {
   );
 
   const trendData = weekly.map((r) => r.requests);
-  const trendLabels = weekly.map((r) => r.date.slice(5));
+  const trendLabels = weekly.map((r) => formatDate(r.date, true));
 
   return (
     <View style={[styles.container, { backgroundColor: colors.canvas }]}>
@@ -74,7 +74,7 @@ export default function ReportsScreen() {
 
         <Card style={styles.card}>
           <Text style={[styles.sectionTitle, { color: colors.ink }]}>
-            Summary
+            Summary · {dateRange.toLowerCase()}
           </Text>
           <View style={styles.summaryGrid}>
             <View style={styles.summaryItem}>
@@ -90,7 +90,7 @@ export default function ReportsScreen() {
                 {totals.clicks}
               </Text>
               <Text style={[styles.summaryLabel, { color: colors.muted }]}>
-                Clicks
+                Review-link clicks
               </Text>
             </View>
             <View style={styles.summaryItem}>
@@ -98,7 +98,7 @@ export default function ReportsScreen() {
                 {totals.feedback}
               </Text>
               <Text style={[styles.summaryLabel, { color: colors.muted }]}>
-                Feedback
+                Private feedback
               </Text>
             </View>
             <View style={styles.summaryItem}>
@@ -106,7 +106,7 @@ export default function ReportsScreen() {
                 {totals.reviews}
               </Text>
               <Text style={[styles.summaryLabel, { color: colors.muted }]}>
-                Reviews
+                Google reviews
               </Text>
             </View>
           </View>
@@ -114,7 +114,7 @@ export default function ReportsScreen() {
 
         <Card style={styles.card}>
           <Text style={[styles.sectionTitle, { color: colors.ink }]}>
-            Request trend
+            Requests by week · count
           </Text>
           <LineChart
             data={trendData}
@@ -125,7 +125,7 @@ export default function ReportsScreen() {
 
         <Card style={styles.card}>
           <Text style={[styles.sectionTitle, { color: colors.ink }]}>
-            Weekly comparison · demo data
+            Private feedback by week · count
           </Text>
           <BarChart
             data={weekly.map((r) => r.feedback)}
@@ -142,7 +142,8 @@ export default function ReportsScreen() {
               key={row.date}
               style={{ color: colors.muted, marginBottom: 12 }}
             >
-              {row.date}: {row.requests} requests · {row.feedback} feedback
+              {formatDate(row.date)}: {countLabel(row.requests, 'request')} ·{' '}
+              {countLabel(row.feedback, 'feedback item')}
             </Text>
           ))}
         </Card>

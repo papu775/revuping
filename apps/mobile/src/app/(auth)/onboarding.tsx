@@ -1,3 +1,8 @@
+import {
+  CategorySelect,
+  HoursEditor,
+  LocationsEditor,
+} from '../../features/business-editors';
 import { useState, useCallback } from 'react';
 import {
   View,
@@ -112,36 +117,17 @@ export default function OnboardingScreen() {
                 placeholder="Bloom & Co."
                 autoCapitalize="words"
               />
-              <Field
-                label="Category"
-                value={category}
-                onChangeText={setCategory}
-                placeholder="Salon & beauty"
-                autoCapitalize="words"
-              />
+              <CategorySelect value={category} onChange={setCategory} />
             </>
           )}
           {step === 1 && (
             <>
-              <Field
-                label="Opening hours"
-                value={hours}
-                onChangeText={setHours}
-                placeholder="Monday–Saturday · 09:00–18:00"
-              />
-              <Field
-                label="Locations"
-                value={locations}
-                onChangeText={setLocations}
-                placeholder="Notting Hill, Richmond"
-                autoCapitalize="words"
-              />
+              <HoursEditor value={hours} onChange={setHours} />
+              <LocationsEditor value={locations} onChange={setLocations} />
             </>
           )}
           {step === 2 && (
-            <>
-              <BrandColour value={branding} onChange={setBranding} />
-            </>
+            <BrandColour value={branding} onChange={setBranding} />
           )}
           {step === 3 && (
             <Card>

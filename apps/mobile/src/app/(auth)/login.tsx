@@ -9,7 +9,7 @@ import {
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from 'mobile-tokens';
-import { Screen, Button, Field, Logo } from 'mobile-ui';
+import { Screen, Button, Field, Logo, FeedbackPreview } from 'mobile-ui';
 import { useState } from 'react';
 import { spacing, typography } from 'mobile-tokens';
 
@@ -46,13 +46,14 @@ export default function LoginScreen() {
           <View style={styles.header}>
             <Logo />
             <Text style={[styles.title, { color: colors.ink }]}>
-              Welcome back
+              Demo login
             </Text>
             <Text style={[styles.subtitle, { color: colors.muted }]}>
-              Explore the demo workspace. No authentication or credentials are
-              saved.
+              Explore the demo workspace. Use sample details; passwords are
+              never saved.
             </Text>
           </View>
+          <FeedbackPreview compact />
           <View style={styles.form}>
             <Field
               label="Email"
@@ -71,7 +72,7 @@ export default function LoginScreen() {
               label="Password"
               value={password}
               onChangeText={setPassword}
-              placeholder="Your password"
+              placeholder="Sample password"
               error={
                 error && !password.trim() ? 'Password is required' : undefined
               }
@@ -79,15 +80,10 @@ export default function LoginScreen() {
             <Button
               title="Open demo workspace"
               onPress={handleLogin}
-              accessibilityLabel="Log in to RevuPing"
+              accessibilityLabel="Open demo workspace"
             />
           </View>
-          <View
-            style={[
-              styles.footer,
-              { paddingBottom: insets.bottom + spacing.lg },
-            ]}
-          >
+          <View style={[styles.footer]}>
             <Button
               title="New to the demo? Set up a workspace"
               variant="ghost"
@@ -106,10 +102,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 32,
     gap: 24,
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
   },
   header: {
-    paddingVertical: 24,
+    paddingVertical: 8,
     justifyContent: 'center',
     gap: spacing.sm,
   },

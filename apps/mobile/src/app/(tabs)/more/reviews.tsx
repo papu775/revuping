@@ -4,8 +4,6 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
-  TextInput,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
@@ -18,6 +16,7 @@ import {
   Stars,
   Button,
   Avatar,
+  Field,
   useToast,
 } from 'mobile-ui';
 import { spacing, typography } from 'mobile-tokens';
@@ -27,6 +26,7 @@ export default function ReviewsScreen() {
   const { state, dispatch } = useDemoStore();
   const toast = useToast();
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [expanded, setExpanded] = useState<number[]>([]);
   const [draft, setDraft] = useState('');
 
   const startEdit = (id: number) => {
@@ -53,7 +53,7 @@ export default function ReviewsScreen() {
   const approveReply = (id: number) => {
     if (state.approvedReplies.includes(id)) return;
     dispatch({ type: 'APPROVE_REPLY', reviewId: id });
-    toast.showToast('Reply approved (demo)');
+    toast.showToast('Owner approval saved. Nothing published to Google.');
   };
 
   return (
@@ -108,9 +108,30 @@ export default function ReviewsScreen() {
                   </View>
                   <Stars rating={review.rating} size={14} />
                 </View>
-                <Text style={[styles.reviewText, { color: colors.muted }]}>
+                <Text
+                  numberOfLines={expanded.includes(review.id) ? undefined : 3}
+                  style={[styles.reviewText, { color: colors.muted }]}
+                >
                   {review.text}
                 </Text>
+                {review.text.length > 0 && (
+                  <Button
+                    title={
+                      expanded.includes(review.id)
+                        ? 'Show less'
+                        : 'Read full review'
+                    }
+                    accessibilityLabel={`${expanded.includes(review.id) ? 'Collapse' : 'Read full'} review from ${review.name}`}
+                    variant="ghost"
+                    onPress={() =>
+                      setExpanded((ids) =>
+                        ids.includes(review.id)
+                          ? ids.filter((id) => id !== review.id)
+                          : [...ids, review.id],
+                      )
+                    }
+                  />
+                )}
 
                 <View
                   style={[
@@ -128,19 +149,11 @@ export default function ReviewsScreen() {
                     <KeyboardAvoidingView
                       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                     >
-                      <TextInput
+                      <Field
+                        label="Edit reply draft"
                         value={draft}
                         onChangeText={setDraft}
                         multiline
-                        style={[
-                          styles.draftInput,
-                          {
-                            color: colors.ink,
-                            backgroundColor: colors.surfaceInput,
-                            borderColor: colors.controlBorder,
-                          },
-                        ]}
-                        accessibilityLabel="Edit reply draft"
                       />
                       <View
                         style={[
@@ -165,11 +178,13 @@ export default function ReviewsScreen() {
                         <Button
                           title="Edit draft"
                           variant="secondary"
+                          style={{ flex: 1, minWidth: 130 }}
                           onPress={() => startEdit(review.id)}
                         />
                         {!isApproved && (
                           <Button
                             title="Approve reply"
+                            style={{ flex: 1, minWidth: 130 }}
                             onPress={() => approveReply(review.id)}
                           />
                         )}
@@ -225,6 +240,8 @@ const styles = StyleSheet.create({
   },
   draftHeader: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: spacing.sm,
@@ -252,7 +269,8 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   actions: {
-    flexDirection: 'column',
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: spacing.sm,
   },
 });

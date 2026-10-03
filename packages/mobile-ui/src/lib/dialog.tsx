@@ -44,8 +44,9 @@ export function Dialog({
       animationType={reduced ? 'none' : 'fade'}
       onRequestClose={onClose}
     >
-      <View style={styles.overlay}>
+      <View style={[styles.overlay, { backgroundColor: colors.overlay }]}>
         <ScrollView
+          accessibilityViewIsModal
           style={[styles.dialog, { backgroundColor: colors.surface }]}
           contentContainerStyle={{ padding: 24 }}
         >

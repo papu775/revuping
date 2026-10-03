@@ -1,3 +1,8 @@
+import {
+  CategorySelect,
+  HoursEditor,
+  LocationsEditor,
+} from '../../../features/business-editors';
 import { useState, useRef, useEffect } from 'react';
 import {
   View,
@@ -5,7 +10,6 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  TextInput,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
@@ -145,23 +149,9 @@ export default function SettingsScreen() {
               onChangeText={setBusinessName}
               autoCapitalize="words"
             />
-            <Field
-              label="Category"
-              value={category}
-              onChangeText={setCategory}
-              autoCapitalize="words"
-            />
-            <Field
-              label="Opening hours"
-              value={hours}
-              onChangeText={setHours}
-            />
-            <Field
-              label="Locations"
-              value={locations}
-              onChangeText={setLocations}
-              autoCapitalize="words"
-            />
+            <CategorySelect value={category} onChange={setCategory} />
+            <HoursEditor value={hours} onChange={setHours} />
+            <LocationsEditor value={locations} onChange={setLocations} />
             <BrandColour value={branding} onChange={setBranding} />
             <Button title="Save profile" onPress={handleSaveProfile} />
           </Card>

@@ -10,6 +10,7 @@
     "@expo/metro": "*",
     "@expo/vector-icons": "*",
     "@react-native-async-storage/async-storage": "2.2.0",
+    "@react-native-community/datetimepicker": "9.1.0",
     "@testing-library/react-native": "*",
     "expo": "57.0.26",
     "expo-constants": "57.0.20",
@@ -37,9 +38,9 @@
     "react-native-worklets": "0.10.1"
   },
   "peerDependencies": {
-  "expo-router": "57.0.24",
-  "react-native-qrcode-svg": "^6.3.26",
-  "react-native-safe-area-context": "5.7.0",
-  "react-native-svg": "15.15.4"
-}
+    "expo-router": "57.0.24",
+    "react-native-qrcode-svg": "^6.3.26",
+    "react-native-safe-area-context": "5.7.0",
+    "react-native-svg": "15.15.4"
+  }
 }
