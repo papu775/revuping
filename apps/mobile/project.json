@@ -18,6 +18,8 @@
     "export": {
       "executor": "nx:run-commands",
       "cache": true,
+      "inputs": ["default", "^default", { "env": "EXPO_PUBLIC_API_URL" }],
+      "dependsOn": ["^build"],
       "outputs": ["{projectRoot}/dist"],
       "options": {
         "cwd": "apps/mobile",
@@ -34,6 +36,15 @@
         "env": {
           "CI": "1"
         }
+      }
+    },
+    "api-connectivity-bundle": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": ["api-contracts:build"],
+      "options": {
+        "cwd": "apps/mobile",
+        "command": "expo export:embed --entry-file scripts/api-connectivity-entry.js --platform android --dev false --max-workers 1 --bytecode --bundle-output test-output/api-connectivity/index.android.bundle --assets-dest test-output/api-connectivity/assets"
       }
     },
     "android-build": {

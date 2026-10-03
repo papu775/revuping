@@ -4,9 +4,23 @@
   "private": true,
   "nx": {
     "implicitDependencies": [
-      "api"
+      "api",
+      "web",
+      "mobile"
     ],
     "targets": {
+      "connectivity-check": {
+        "executor": "nx:run-commands",
+        "dependsOn": [
+          "api:build",
+          "api:serve"
+        ],
+        "cache": false,
+        "options": {
+          "cwd": ".",
+          "command": "node apps/api-e2e/scripts/check-connectivity.cjs"
+        }
+      },
       "e2e": {
         "executor": "@nx/jest:jest",
         "outputs": [
@@ -18,7 +32,7 @@
         ],
         "options": {
           "jestConfig": "apps/api-e2e/jest.config.cts",
-          "passWithNoTests": true
+          "runInBand": true
         },
         "cache": false
       }

@@ -1,6 +1,8 @@
 # RevuPing
 
-An organized production-development foundation with a completed interactive customer frontend. Authentication, persistence, tenant isolation and service integrations are not implemented. Admin and API retain their generated starter behavior.
+An Nx/pnpm monorepo with completed web/mobile demo designs and a NestJS backend foundation. PostgreSQL/Prisma schema, Redis infrastructure, validated API configuration and health transport are implemented. Authentication, authorized business persistence, tenant access and external integrations are not implemented. Admin remains a starter.
+
+See [backend setup, architecture and verification](docs/BACKEND_FOUNDATION.md) for exact infrastructure, migration and API commands. Frontend demo data and screens remain unchanged.
 
 ## Setup and commands
 
@@ -10,7 +12,7 @@ Use Node **24.20.x** (see `.node-version`) and pnpm **11.25.0** (pinned in `pack
 pnpm install --frozen-lockfile
 pnpm dev:web                    # localhost:3000
 pnpm dev:admin                  # localhost:3001
-pnpm dev:api                    # localhost:3002/api
+pnpm dev:api                    # configure apps/api/.env first; localhost:3002/api/v1
 pnpm check                      # all lint, typecheck and unit test targets, sequentially
 pnpm build                      # all three production builds, sequentially
 pnpm check:affected --base=main --head=HEAD
@@ -26,12 +28,15 @@ The browser tests start their owning frontend automatically. `BASE_URL` optional
 
 ## Ownership and structure
 
-| Project      | Responsibility                                                                        |
-| ------------ | ------------------------------------------------------------------------------------- |
-| `apps/web`   | Customer Next.js App Router application, marketing, demo authentication and dashboard |
-| `apps/admin` | Platform administration Next.js starter; no administration features yet               |
-| `apps/api`   | NestJS starter module/controller/service; no product APIs yet                         |
-| `apps/*-e2e` | Tests owned by the corresponding application                                          |
+| Project                  | Responsibility                                                                        |
+| ------------------------ | ------------------------------------------------------------------------------------- |
+| `apps/web`               | Customer Next.js App Router application, marketing, demo authentication and dashboard |
+| `apps/admin`             | Platform administration Next.js starter; no administration features yet               |
+| `apps/api`               | NestJS health/transport, Prisma foundation and Redis; no business APIs yet            |
+| `apps/mobile`            | Expo/React Native customer demo, with independent native presentation                 |
+| `packages/api-contracts` | Portable public health/error schemas, validation and typed connectivity               |
+| `packages/mobile-*`      | Existing native tokens, UI and demo data; no DOM sharing                              |
+| `apps/*-e2e`             | Tests owned by the corresponding application                                          |
 
 Web source:
 
@@ -42,13 +47,13 @@ Web source:
 - `src/lib`: focused browser utilities (deadlines, print palette, QR export and panel focus).
 - `specs` and `scripts`: unit tests and existing browser regression tools.
 
-Admin's small starter stays in `src/app`; API composition, transport and service remain in `src/app/app.module.ts`, `app.controller.ts` and `app.service.ts`. Add cohesive Nest feature modules as real backend features arrive. Do not create empty layers merely to match web.
+Admin's small starter stays in `src/app`. API composition stays in `src/app/app.module.ts`; configuration, HTTP transport, health and infrastructure have focused API-local directories. Prisma schema/migrations live in `apps/api/prisma`; generated client code stays server-only. Add cohesive Nest feature modules as real backend features arrive.
 
-There are no shared libraries: current applications have no concrete shared implementation consumers. Extract a library under `packages/` only with clear ownership, a public package export and real consumers. Use pnpm workspace dependencies (`workspace:*`) rather than aliases into another project's source.
+Shared packages have concrete consumers, public exports and platform/type tags. API contracts are neutral; mobile tokens/providers, UI and demo data stay native. Extract further libraries only when needed. Use pnpm workspace dependencies (`workspace:*`) rather than aliases into another project's source.
 
 ## Dependency rules
 
-Nx ESLint tags use `scope:web|admin|api`, `type:app|e2e` and `platform:browser|server|test`. No source project may import another application or e2e project. The e2e projects retain intentional implicit graph edges to their tested apps.
+Nx ESLint tags identify app/shared scope, project type and browser/native/neutral/server/test platform. No source project may import another application or e2e project. The e2e projects retain intentional implicit graph edges to their tested apps.
 
 For future libraries, use meaningful platform/type tags: browser projects can consume only browser or neutral libraries; neutral contracts remain independent of framework/server packages. UI consumes UI/contracts/util libraries, data access consumes data-access/contracts/util, and features consume feature/UI/data-access/contracts/util. Nx checks cycles and cross-project deep imports. All rules are enforced by lint, not just documentation.
 
@@ -56,7 +61,7 @@ Browser source also rejects Node/server packages and imports from `src/server`. 
 
 ## Configuration
 
-No application environment variables are needed for the frontend demo. `.env.example` files describe the actual configuration; they contain no service credentials. Next loads its app-local environment files. Never put a secret in `NEXT_PUBLIC_*`: those values are exposed to browsers. API currently reads only `PORT` from the process environment (default 3002); it does not load dotenv files. Export it in the shell when overriding the default.
+Frontend demos require no API configuration. Their optional connectivity adapters use `NEXT_PUBLIC_API_URL` and `EXPO_PUBLIC_API_URL`; these public values contain no credentials. Next/Expo load app-local files. API requires validated database/Redis URLs and explicit CORS origins, loading `apps/api/.env` with exported variables taking precedence. Local infrastructure has a separate `infra/.env`. See [backend configuration](docs/BACKEND_FOUNDATION.md#configuration-and-addresses); never put secrets in public variables.
 
 Local `.env*` files are ignored except examples. Add configuration only when consumed by implemented behavior, validate server values at startup, and update examples and Nx build inputs when adding environment-dependent build output.
 
@@ -82,4 +87,4 @@ Checked current official guidance on 2026-10-02 and applied it to the installed 
 
 ## Before production deployment
 
-Implement and verify authentication/authorization, tenant data isolation, durable storage, API contracts, real integrations, secret management, operational monitoring and deployment configuration. Web auth, messages, billing, integrations, survey/referral results and dashboard state are fictional/session-local interactions; browser refresh resets demo state. Starter hello routes are not production product APIs.
+Implement and verify authentication/authorization, tenant access, business persistence, real integrations, secret management, operational monitoring and deployment configuration. Web/mobile auth, billing, integrations and dashboard state remain fictional demo interactions. API health and schema infrastructure do not make product features production-ready. The next backend phase is authentication and workspace access.

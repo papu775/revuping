@@ -4,6 +4,98 @@
   "private": true,
   "nx": {
     "targets": {
+      "prisma-generate": {
+        "executor": "nx:run-commands",
+        "cache": true,
+        "inputs": [
+          "{projectRoot}/prisma/schema.prisma",
+          "{projectRoot}/prisma.config.ts",
+          "{workspaceRoot}/pnpm-lock.yaml"
+        ],
+        "outputs": [
+          "{projectRoot}/src/generated/prisma"
+        ],
+        "options": {
+          "cwd": "apps/api",
+          "command": "prisma generate",
+          "env": {
+            "DATABASE_URL": "postgresql://generation.invalid/unused"
+          }
+        }
+      },
+      "prisma-validate": {
+        "executor": "nx:run-commands",
+        "cache": true,
+        "inputs": [
+          "{projectRoot}/prisma/schema.prisma",
+          "{projectRoot}/prisma.config.ts",
+          "{workspaceRoot}/pnpm-lock.yaml"
+        ],
+        "options": {
+          "cwd": "apps/api",
+          "command": "prisma validate",
+          "env": {
+            "DATABASE_URL": "postgresql://generation.invalid/unused"
+          }
+        }
+      },
+      "migrate-deploy": {
+        "executor": "nx:run-commands",
+        "cache": false,
+        "options": {
+          "cwd": "apps/api",
+          "command": "prisma migrate deploy"
+        }
+      },
+      "migrate-dev": {
+        "executor": "nx:run-commands",
+        "cache": false,
+        "options": {
+          "cwd": "apps/api",
+          "command": "prisma migrate dev"
+        }
+      },
+      "migration-status": {
+        "executor": "nx:run-commands",
+        "cache": false,
+        "options": {
+          "cwd": "apps/api",
+          "command": "prisma migrate status"
+        }
+      },
+      "migration-diff": {
+        "executor": "nx:run-commands",
+        "cache": false,
+        "options": {
+          "cwd": "apps/api",
+          "command": "prisma migrate diff"
+        }
+      },
+      "schema-check": {
+        "executor": "nx:run-commands",
+        "cache": false,
+        "options": {
+          "cwd": "apps/api",
+          "command": "node scripts/check-schema.cjs"
+        }
+      },
+      "build": {
+        "dependsOn": [
+          "^build",
+          "prisma-generate"
+        ]
+      },
+      "typecheck": {
+        "dependsOn": [
+          "^typecheck",
+          "prisma-generate"
+        ]
+      },
+      "lint": {
+        "options": {
+          "command": "eslint . --ignore-pattern src/generated/**"
+        }
+      },
       "prune-lockfile": {
         "dependsOn": [
           "build"
@@ -59,6 +151,7 @@
         ],
         "options": {
           "buildTarget": "api:build",
+          "inspect": false,
           "runBuildTargetDependencies": false
         },
         "configurations": {
@@ -71,8 +164,12 @@
         }
       },
       "test": {
+        "dependsOn": [
+          "^build",
+          "prisma-generate"
+        ],
         "options": {
-          "passWithNoTests": true
+          "command": "jest --runInBand"
         }
       }
     },
@@ -86,11 +183,24 @@
     "@nestjs/common": "^11.0.0",
     "@nestjs/core": "^11.0.0",
     "@nestjs/platform-express": "^11.0.0",
+    "@nestjs/swagger": "11.4.7",
+    "@prisma/adapter-pg": "7.10.0",
+    "@prisma/client": "7.10.0",
+    "api-contracts": "workspace:*",
+    "class-transformer": "0.5.1",
+    "class-validator": "0.15.1",
+    "ioredis": "5.11.1",
+    "pg": "8.16.3",
+    "pino": "9.14.0",
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.0",
-    "tslib": "^2.3.0"
+    "tslib": "^2.3.0",
+    "zod": "4.6.5"
   },
   "devDependencies": {
-    "@nestjs/testing": "^11.0.0"
+    "@nestjs/testing": "^11.0.0",
+    "@types/express": "5.0.6",
+    "@types/pg": "8.16.0",
+    "prisma": "7.10.0"
   }
 }

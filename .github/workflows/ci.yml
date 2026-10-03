@@ -9,6 +9,23 @@ permissions:
 jobs:
   checks:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: revuping_ci
+          POSTGRES_PASSWORD: ephemeral_ci_only
+          POSTGRES_DB: revuping_ci
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U revuping_ci -d revuping_ci"
+          --health-interval 5s --health-timeout 3s --health-retries 12
+      redis:
+        image: redis:7-alpine
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s --health-timeout 3s --health-retries 12
     env:
       NX_DAEMON: 'false'
       NEXT_TELEMETRY_DISABLED: '1'
@@ -33,10 +50,37 @@ jobs:
         run: pnpm check
       - name: Sequential production builds
         run: pnpm build
+      - name: Native API adapter bundle
+        env:
+          EXPO_PUBLIC_API_URL: http://10.0.2.2:3002/api/v1
+        run: pnpm nx run mobile:api-connectivity-bundle
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm e2e:web
       - run: pnpm e2e:admin
-      - run: pnpm e2e:api
+      - name: Apply initial API schema
+        env:
+          DATABASE_URL: postgresql://revuping_ci:ephemeral_ci_only@127.0.0.1:5432/revuping_ci
+        run: pnpm nx run api:migrate-deploy
+      - name: API foundation end-to-end checks
+        env:
+          NODE_ENV: test
+          DATABASE_URL: postgresql://revuping_ci:ephemeral_ci_only@127.0.0.1:5432/revuping_ci
+          REDIS_URL: redis://127.0.0.1:6379/0
+          CORS_ORIGINS: http://localhost:3000
+          API_DOCS_ENABLED: 'false'
+        run: pnpm e2e:api
+      - name: Transactional schema integrity checks
+        env:
+          DATABASE_URL: postgresql://revuping_ci:ephemeral_ci_only@127.0.0.1:5432/revuping_ci
+        run: pnpm nx run api:schema-check
+      - name: Public API connectivity checks
+        env:
+          NODE_ENV: test
+          DATABASE_URL: postgresql://revuping_ci:ephemeral_ci_only@127.0.0.1:5432/revuping_ci
+          REDIS_URL: redis://127.0.0.1:6379/0
+          CORS_ORIGINS: http://localhost:3000,http://localhost:19006
+          API_DOCS_ENABLED: 'false'
+        run: pnpm nx run api-e2e:connectivity-check
       - uses: actions/upload-artifact@v4
         if: failure()
         with:

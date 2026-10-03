@@ -3,6 +3,10 @@ packages:
   - 'packages/*'
   - 'apps/*'
 allowBuilds:
+  '@scarf/scarf': false
+  '@prisma/engines': true
+  prisma: false
+  '@prisma/client': false
   '@parcel/watcher': true
   sharp: true
   unrs-resolver: true

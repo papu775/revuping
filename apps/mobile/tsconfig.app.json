@@ -48,6 +48,9 @@
     },
     {
       "path": "../../packages/mobile-data/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/api-contracts/tsconfig.lib.json"
     }
   ]
 }
