@@ -39,8 +39,27 @@ export interface WorkspaceInput {
   key: string;
 }
 
+export const registrationSuccessMessage =
+  'Account created. Check your email to verify it.';
+export const registrationVerificationUnavailableMessage =
+  'Your account was created, but we couldn’t deliver the verification email. Request another verification email or log in with the same details.';
+export const registrationUnconfirmedMessage =
+  'We couldn’t confirm whether your account was created. Check your inbox, try logging in, or request a verification email before registering again.';
+export function registrationVerificationUnavailable(error: unknown): boolean {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'status' in error &&
+    error.status === 503 &&
+    'code' in error &&
+    error.code === 'REGISTRATION_VERIFICATION_UNAVAILABLE'
+  );
+}
+
 // Safe client messages are owned by the client; never display arbitrary server exceptions.
 export function authErrorMessage(error: unknown): string {
+  if (registrationVerificationUnavailable(error))
+    return registrationVerificationUnavailableMessage;
   const status =
     typeof error === 'object' && error !== null && 'status' in error
       ? error.status

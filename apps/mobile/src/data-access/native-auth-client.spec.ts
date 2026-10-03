@@ -41,6 +41,71 @@ function setup(fetcher: jest.Mock) {
   return { client, storage, changed };
 }
 describe('native credential lifecycle', () => {
+  it('calls browser fetch without binding the client as its receiver', async () => {
+    const fetcher = jest.fn(function (this: unknown) {
+      expect(this).not.toBeInstanceOf(NativeAuthClient);
+      return Promise.resolve(
+        reply({ message: 'Account created. Check your email to verify it.' }),
+      );
+    });
+    const { client, storage } = setup(fetcher);
+    await expect(
+      client.register({
+        email: session.user.email,
+        displayName: 'Test',
+        password: 'a test passphrase',
+      }),
+    ).resolves.toEqual({
+      message: 'Account created. Check your email to verify it.',
+    });
+    expect(storage.set).not.toHaveBeenCalled();
+  });
+  it('does not publish or persist a cancelled login response', async () => {
+    let complete!: (value: Response) => void;
+    const fetcher = jest.fn(
+      () =>
+        new Promise<Response>((resolve) => {
+          complete = resolve;
+        }),
+    );
+    const { client, storage, changed } = setup(fetcher);
+    const controller = new AbortController();
+    const login = client.login(
+      { email: session.user.email, password: 'a test passphrase' },
+      controller.signal,
+    );
+    for (let i = 0; i < 10 && !fetcher.mock.calls.length; i++)
+      await Promise.resolve();
+    controller.abort();
+    complete(reply(issued));
+    await expect(login).rejects.toThrow('Action cancelled');
+    expect(storage.set).not.toHaveBeenCalled();
+    expect(changed).not.toHaveBeenCalledWith(session);
+  });
+  it('removes credentials if cancellation occurs while SecureStore is writing', async () => {
+    const { client, storage, changed } = setup(
+      jest.fn(async () => reply(issued)),
+    );
+    let finish!: () => void;
+    storage.set.mockImplementation(
+      () =>
+        new Promise<void>((resolve) => {
+          finish = resolve;
+        }),
+    );
+    const controller = new AbortController();
+    const login = client.login(
+      { email: session.user.email, password: 'a test passphrase' },
+      controller.signal,
+    );
+    for (let i = 0; i < 20 && !storage.set.mock.calls.length; i++)
+      await Promise.resolve();
+    controller.abort();
+    finish();
+    await expect(login).rejects.toThrow('Action cancelled');
+    expect(storage.remove).toHaveBeenCalledTimes(2);
+    expect(changed).not.toHaveBeenCalledWith(session);
+  });
   it('discards an old account response after switching credentials', async () => {
     let complete: (value: Response) => void = () => undefined;
     const delayed = new Promise<Response>((resolve) => {

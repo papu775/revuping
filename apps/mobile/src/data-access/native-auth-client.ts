@@ -36,11 +36,16 @@ export class NativeAuthClient {
     body?: unknown,
     token?: string,
     method = body === undefined ? 'GET' : 'POST',
+    signal?: AbortSignal,
   ): Promise<unknown> {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 15000);
+    const abort = () => controller.abort();
+    if (signal?.aborted) abort();
+    signal?.addEventListener('abort', abort, { once: true });
     try {
-      const response = await this.fetcher(`${this.base}/${path}`, {
+      const fetcher = this.fetcher;
+      const response = await fetcher(`${this.base}/${path}`, {
         method,
         credentials: 'omit',
         headers: {
@@ -57,16 +62,23 @@ export class NativeAuthClient {
         throw new ApiRequestError(
           response.status,
           error.success ? error.data.error.requestId : undefined,
+          error.success ? error.data.error.code : undefined,
         );
       }
       return value;
     } finally {
       clearTimeout(timeout);
+      signal?.removeEventListener('abort', abort);
     }
   }
-  private async accept(value: unknown, epoch: number): Promise<void> {
+  private async accept(
+    value: unknown,
+    epoch: number,
+    signal?: AbortSignal,
+  ): Promise<void> {
     const result = nativeSessionSchema.parse(value);
     if (epoch !== this.epoch) return;
+    if (signal?.aborted) throw new Error('Action cancelled');
     // Persist rotation before publishing new access state. Never fall back to insecure storage.
     try {
       await this.storage.set(result.refreshToken);
@@ -78,6 +90,10 @@ export class NativeAuthClient {
       throw error;
     }
     if (epoch !== this.epoch) return;
+    if (signal?.aborted) {
+      await this.clear();
+      throw new Error('Action cancelled');
+    }
     this.access = {
       token: result.accessToken,
       expiresAt: Date.parse(result.accessExpiresAt),
@@ -94,16 +110,27 @@ export class NativeAuthClient {
     if (await this.storage.get()) await this.refresh();
     else this.onSession(null);
   }
-  async login(input: LoginInput): Promise<void> {
+  async login(input: LoginInput, signal?: AbortSignal): Promise<void> {
     await this.refreshFlight?.catch(() => undefined);
+    if (signal?.aborted) throw new Error('Action cancelled');
     // Check storage before issuing credentials; a missing native module must fail closed.
     await this.storage.get();
+    if (signal?.aborted) throw new Error('Action cancelled');
     await this.clear();
     const epoch = this.epoch;
-    await this.accept(await this.send('auth/native/login', input), epoch);
+    if (signal?.aborted) throw new Error('Action cancelled');
+    const value = await this.send(
+      'auth/native/login',
+      input,
+      undefined,
+      'POST',
+      signal,
+    );
+    if (signal?.aborted) throw new Error('Action cancelled');
+    await this.accept(value, epoch, signal);
   }
-  register(input: RegisterInput) {
-    return this.publicAction('register', input);
+  register(input: RegisterInput, signal?: AbortSignal) {
+    return this.publicAction('register', input, signal);
   }
   async publicAction(
     action:
@@ -113,11 +140,18 @@ export class NativeAuthClient {
       | 'verify-email'
       | 'reset-password',
     input: unknown,
+    signal?: AbortSignal,
   ) {
     if (action === 'reset-password')
       await this.refreshFlight?.catch(() => undefined);
     const result = messageSchema.parse(
-      await this.send(`auth/native/${action}`, input),
+      await this.send(
+        `auth/native/${action}`,
+        input,
+        undefined,
+        'POST',
+        signal,
+      ),
     );
     if (action === 'reset-password') await this.clear();
     return result;

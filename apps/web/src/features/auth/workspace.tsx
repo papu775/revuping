@@ -13,6 +13,9 @@ import { Button } from '@/components/ui/button';
 import { Field, Logo } from '@/components/shared';
 import { ThemeControl } from '@/components/theme';
 import { PageHeading } from '@/components/ui/page-heading';
+import { useAuthAction } from './use-auth-action';
+import { AuthBlocker } from './auth-blocker';
+import { useToast } from '@/components/ui/toaster';
 
 export function Workspace({
   initialSession,
@@ -20,6 +23,8 @@ export function Workspace({
   initialSession: SessionResponse;
 }) {
   const router = useRouter();
+  const authAction = useAuthAction();
+  const toast = useToast();
   const [session, setSession] = useState(initialSession);
   const [workspaces, setWorkspaces] = useState<WorkspaceResponse[]>([]);
   const [selected, setSelected] = useState('');
@@ -106,177 +111,210 @@ export function Workspace({
     setName(workspace?.name ?? '');
   }, [workspace?.id, workspace?.name]);
   return (
-    <div className="dashboard-shell min-h-screen bg-canvas">
-      <header className="dashboard-topbar flex min-h-[77px] items-center justify-between gap-3 border-b border-line px-6 py-3 max-[600px]:px-4">
-        <Logo />
-        <div className="topbar-right !gap-2">
-          <ThemeControl />
-          <Button
-            variant="secondary"
-            disabled={pending}
-            onClick={() =>
-              void run(async () => {
-                await authRequest('auth/logout', 'message', {});
-                generation.current++;
-                setWorkspaces([]);
-                setSelected('');
-                router.replace('/login');
-                router.refresh();
-              })
-            }
-          >
-            Log out
-          </Button>
-        </div>
-      </header>
-      <main className="dashboard-content mx-auto max-w-[780px] break-words p-8 max-[600px]:px-[18px]">
-        <PageHeading
-          eyebrow="Your account"
-          title={
-            session.user.displayName
-              ? `Welcome, ${session.user.displayName}`
-              : 'Your workspace'
-          }
-          text={session.user.email}
-        />
-        {error && (
-          <p className="error-note" role="alert">
-            {error}
-          </p>
-        )}
-        {notice && (
-          <p className="info-banner" role="status">
-            {notice}
-          </p>
-        )}
-        {!session.user.emailVerified ? (
-          <section className="auth-form !py-4">
-            <h2 className="!text-2xl !leading-tight">Verify your email</h2>
-            <p>Check your inbox before opening a workspace.</p>
-            <Button
-              disabled={pending}
-              onClick={() =>
-                void run(async () => {
-                  const result = await authRequest(
-                    'auth/resend-verification',
-                    'message',
-                    { email: session.user.email },
-                  );
-                  setNotice(result.message);
-                })
-              }
-            >
-              Resend verification email
-            </Button>
+    <AuthBlocker label={authAction.label}>
+      <div className="dashboard-shell min-h-screen bg-canvas">
+        <header className="dashboard-topbar flex min-h-[77px] items-center justify-between gap-3 border-b border-line px-6 py-3 max-[600px]:px-4">
+          <Logo />
+          <div className="topbar-right !gap-2">
+            <ThemeControl />
             <Button
               variant="secondary"
               disabled={pending}
-              onClick={() => void load()}
+              onClick={() =>
+                void authAction.run(
+                  'Logging you out…',
+                  (signal) =>
+                    authRequest('auth/logout', 'message', {}, 'POST', signal),
+                  () => {
+                    generation.current++;
+                    setWorkspaces([]);
+                    setSelected('');
+                    router.replace('/login');
+                    router.refresh();
+                    toast('You’re logged out.');
+                  },
+                  (error) => {
+                    fail(error);
+                    toast(authErrorMessage(error), 'error');
+                  },
+                )
+              }
             >
-              I’ve verified my email
+              Log out
             </Button>
-          </section>
-        ) : loading ? (
-          <p role="status">Loading your workspaces…</p>
-        ) : (
-          <section className="auth-form !py-4">
-            <h2 className="!text-2xl !leading-tight">
-              {workspace ? workspace.name : 'Create your workspace'}
-            </h2>
-            <p className="mb-6 mt-3">
-              {workspace
-                ? 'Your workspace is ready. Business setup and review tools will be available in a later phase.'
-                : 'Choose a name for your workspace. No business or sample records will be created.'}
+          </div>
+        </header>
+        <main className="dashboard-content mx-auto max-w-[780px] break-words p-8 max-[600px]:px-[18px]">
+          <PageHeading
+            eyebrow="Your account"
+            title={
+              session.user.displayName
+                ? `Welcome, ${session.user.displayName}`
+                : 'Your workspace'
+            }
+            text={session.user.email}
+          />
+          {error && (
+            <p className="error-note" role="alert">
+              {error}
             </p>
-            {!!workspaces.length && (
-              <Field>
-                Workspace
-                <select
-                  value={selected}
-                  onChange={(event) => setSelected(event.target.value)}
-                >
-                  {workspaces.map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {item.name} · {item.role}
-                    </option>
-                  ))}
-                </select>
-              </Field>
-            )}
-            {(!workspace || workspace.role === 'OWNER') && (
-              <form
-                onSubmit={(event) => {
-                  event.preventDefault();
-                  void run(async () => {
-                    const updated = workspace
-                      ? await authRequest(
-                          `workspaces/${workspace.id}`,
-                          'workspace',
-                          { name },
-                          'PATCH',
-                        )
-                      : await authRequest('workspaces', 'workspace', {
-                          name,
-                          key: 'initial-workspace',
-                        });
-                    setSelected(updated.id);
-                    setNotice(
-                      workspace
-                        ? 'Workspace name saved.'
-                        : 'Workspace created.',
-                    );
-                    await load();
-                  });
-                }}
+          )}
+          {notice && (
+            <p className="info-banner" role="status">
+              {notice}
+            </p>
+          )}
+          {!session.user.emailVerified ? (
+            <section className="auth-form !py-4">
+              <h2 className="!text-2xl !leading-tight">Verify your email</h2>
+              <p>Check your inbox before opening a workspace.</p>
+              <Button
+                disabled={pending}
+                onClick={() =>
+                  void authAction.run(
+                    'Requesting verification email…',
+                    (signal) =>
+                      authRequest(
+                        'auth/resend-verification',
+                        'message',
+                        { email: session.user.email },
+                        'POST',
+                        signal,
+                      ),
+                    () => {
+                      const message =
+                        'If your account is eligible, a verification email has been sent. Check your inbox and spam folder.';
+                      setNotice(message);
+                      toast(message, 'info');
+                    },
+                    (error) => {
+                      fail(error);
+                      toast(authErrorMessage(error), 'error');
+                    },
+                  )
+                }
               >
-                <Field>
-                  Workspace name
-                  <input
-                    value={name}
-                    onChange={(event) => setName(event.target.value)}
-                    required
-                    maxLength={100}
-                  />
-                </Field>
-                <Button
-                  type="submit"
-                  disabled={pending || !name.trim()}
-                  aria-busy={pending}
-                >
-                  {pending
-                    ? 'Saving…'
-                    : workspace
-                      ? 'Save workspace name'
-                      : 'Create workspace'}
-                </Button>
-              </form>
-            )}
-            {workspace?.role === 'STAFF' && (
-              <p>
-                You have read access. An owner can change the workspace name.
+                Resend verification email
+              </Button>
+              <Button
+                variant="secondary"
+                disabled={pending}
+                onClick={() => void load()}
+              >
+                I’ve verified my email
+              </Button>
+            </section>
+          ) : loading ? (
+            <p role="status">Loading your workspaces…</p>
+          ) : (
+            <section className="auth-form !py-4">
+              <h2 className="!text-2xl !leading-tight">
+                {workspace ? workspace.name : 'Create your workspace'}
+              </h2>
+              <p className="mb-6 mt-3">
+                {workspace
+                  ? 'Your workspace is ready. Business setup and review tools will be available in a later phase.'
+                  : 'Choose a name for your workspace. No business or sample records will be created.'}
               </p>
-            )}
-          </section>
-        )}
-        <p className="auth-switch">
-          <Link href="/dashboard">Explore the separate fictional demo</Link>
-        </p>
-        <Button
-          variant="ghost"
-          disabled={pending}
-          onClick={() =>
-            void run(async () => {
-              await authRequest('auth/logout-all', 'message', {});
-              generation.current++;
-              setWorkspaces([]);
-              router.replace('/login');
-              router.refresh();
-            })
-          }
-        >
-          Log out all sessions
-        </Button>
-      </main>
-    </div>
+              {!!workspaces.length && (
+                <Field>
+                  Workspace
+                  <select
+                    value={selected}
+                    onChange={(event) => setSelected(event.target.value)}
+                  >
+                    {workspaces.map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {item.name} · {item.role}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+              )}
+              {(!workspace || workspace.role === 'OWNER') && (
+                <form
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    void run(async () => {
+                      const updated = workspace
+                        ? await authRequest(
+                            `workspaces/${workspace.id}`,
+                            'workspace',
+                            { name },
+                            'PATCH',
+                          )
+                        : await authRequest('workspaces', 'workspace', {
+                            name,
+                            key: 'initial-workspace',
+                          });
+                      setSelected(updated.id);
+                      setNotice(
+                        workspace
+                          ? 'Workspace name saved.'
+                          : 'Workspace created.',
+                      );
+                      await load();
+                    });
+                  }}
+                >
+                  <Field>
+                    Workspace name
+                    <input
+                      value={name}
+                      onChange={(event) => setName(event.target.value)}
+                      required
+                      maxLength={100}
+                    />
+                  </Field>
+                  <Button
+                    type="submit"
+                    disabled={pending || !name.trim()}
+                    aria-busy={pending}
+                  >
+                    {pending
+                      ? 'Saving…'
+                      : workspace
+                        ? 'Save workspace name'
+                        : 'Create workspace'}
+                  </Button>
+                </form>
+              )}
+              {workspace?.role === 'STAFF' && (
+                <p>
+                  You have read access. An owner can change the workspace name.
+                </p>
+              )}
+            </section>
+          )}
+          <p className="auth-switch">
+            <Link href="/dashboard">Explore the separate fictional demo</Link>
+          </p>
+          <Button
+            variant="ghost"
+            disabled={pending}
+            onClick={() =>
+              void authAction.run(
+                'Logging out all sessions…',
+                (signal) =>
+                  authRequest('auth/logout-all', 'message', {}, 'POST', signal),
+                () => {
+                  generation.current++;
+                  setWorkspaces([]);
+                  router.replace('/login');
+                  router.refresh();
+                  toast('All sessions logged out.');
+                },
+                (error) => {
+                  fail(error);
+                  toast(authErrorMessage(error), 'error');
+                },
+              )
+            }
+          >
+            Log out all sessions
+          </Button>
+        </main>
+      </div>
+    </AuthBlocker>
   );
 }

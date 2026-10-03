@@ -15,6 +15,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   useWindowDimensions,
+  AccessibilityInfo,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
@@ -28,14 +29,15 @@ import { IconButton } from './icon-button.tsx';
 
 interface ToastItem {
   message: string;
-  type: 'success' | 'error';
+  type: 'success' | 'error' | 'info';
 }
 const ToastContext = createContext<{
-  showToast: (message: string, type?: 'success' | 'error') => void;
+  showToast: (message: string, type?: ToastItem['type']) => void;
 } | null>(null);
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toast, setToast] = useState<ToastItem | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const active = useRef<ToastItem | null>(null);
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const reduced = useReducedMotion();
@@ -68,15 +70,21 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   const dismiss = useCallback(() => {
     if (timer.current) clearTimeout(timer.current);
     timer.current = null;
+    active.current = null;
     setToast(null);
   }, []);
   const showToast = useCallback(
-    (message: string, type: 'success' | 'error' = 'success') => {
+    (message: string, type: ToastItem['type'] = 'success') => {
+      if (active.current?.message === message && active.current.type === type)
+        return;
       if (timer.current) clearTimeout(timer.current);
-      setToast({ message, type });
-      timer.current = setTimeout(() => setToast(null), 5000);
+      active.current = { message, type };
+      setToast(active.current);
+      if (Platform.OS === 'ios')
+        AccessibilityInfo.announceForAccessibility(message);
+      timer.current = setTimeout(dismiss, 5000);
     },
-    [],
+    [dismiss],
   );
   useEffect(
     () => () => {
@@ -105,18 +113,31 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                       bottomNavigationHeight(fontScale) +
                       12,
                   backgroundColor: colors.surface,
-                  borderColor: colors.border,
+                  borderColor:
+                    toast.type === 'success'
+                      ? colors.positiveLine
+                      : toast.type === 'error'
+                        ? colors.danger
+                        : colors.accentLine,
                 },
               ]}
               accessibilityLiveRegion="polite"
             >
               <Ionicons
                 name={
-                  toast.type === 'success' ? 'checkmark-circle' : 'alert-circle'
+                  toast.type === 'success'
+                    ? 'checkmark-circle'
+                    : toast.type === 'error'
+                      ? 'alert-circle'
+                      : 'information-circle'
                 }
                 size={22}
                 color={
-                  toast.type === 'success' ? colors.positiveInk : colors.danger
+                  toast.type === 'success'
+                    ? colors.positiveInk
+                    : toast.type === 'error'
+                      ? colors.danger
+                      : colors.violet
                 }
               />
               <Text style={[styles.text, { color: colors.ink }]}>

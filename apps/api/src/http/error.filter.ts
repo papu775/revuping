@@ -8,6 +8,7 @@ import {
 import type { Request, Response } from 'express';
 import type { ApiErrorResponse } from 'api-contracts';
 import { StructuredLogger } from './structured-logger';
+import { RegistrationVerificationException } from '../auth/registration-verification.exception';
 
 const codes: Record<number, string> = {
   400: 'BAD_REQUEST',
@@ -59,7 +60,9 @@ export class ApiErrorFilter implements ExceptionFilter {
     const body: ApiErrorResponse = {
       error: {
         code:
-          codes[status] ??
+          (exception instanceof RegistrationVerificationException
+            ? 'REGISTRATION_VERIFICATION_UNAVAILABLE'
+            : codes[status]) ??
           (status >= 500 ? 'INTERNAL_ERROR' : 'REQUEST_FAILED'),
         message,
         requestId,

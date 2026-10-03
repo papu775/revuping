@@ -244,7 +244,59 @@
   color: var(--violet);
 }
 .brand-toast.error > svg {
-  color: #c75b61;
+  color: var(--danger);
+}
+.brand-toast.success > svg {
+  color: var(--positive-ink);
+}
+.brand-toast.success {
+  border-color: var(--positive-line);
+}
+.brand-toast.error {
+  border-color: var(--danger);
+}
+.auth-blocking-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  place-items: center;
+  padding: max(24px, env(safe-area-inset-top))
+    max(20px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom))
+    max(20px, env(safe-area-inset-left));
+  background: var(--overlay);
+  outline: none;
+  touch-action: none;
+  overscroll-behavior: contain;
+}
+.auth-blocking-panel {
+  display: grid;
+  justify-items: center;
+  gap: 16px;
+  width: min(100%, 340px);
+  padding: 24px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-work);
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 600;
+  text-align: center;
+  visibility: hidden;
+}
+.auth-blocking-panel.is-ready {
+  visibility: visible;
+}
+.auth-blocking-panel > svg {
+  color: var(--violet);
+}
+.info-banner.auth-verification-guidance {
+  display: block;
+}
+.auth-verification-guidance a {
+  display: inline;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 .brand-toast span {
   flex: 1;
@@ -252,9 +304,9 @@
 .brand-toast button {
   display: grid;
   place-items: center;
-  min-width: 32px;
-  min-height: 32px;
-  border-radius: 6px;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 8px;
 }
 .brand-toast button:focus-visible {
   outline: 2px solid var(--violet);

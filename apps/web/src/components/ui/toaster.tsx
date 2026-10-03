@@ -2,6 +2,7 @@
 import {
   createContext,
   useContext,
+  useCallback,
   useEffect,
   useLayoutEffect,
   useRef,
@@ -21,9 +22,26 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [notices, setNotices] = useState<Notice[]>([]);
   const sequence = useRef(0);
   const stack = useRef<HTMLDivElement>(null);
-  const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const active = useRef<Notice | null>(null);
+  const dismiss = useCallback(() => {
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = null;
+    active.current = null;
+    setNotices([]);
+  }, []);
+  const resume = useCallback(() => {
+    if (!active.current) return;
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = setTimeout(dismiss, 5500);
+  }, [dismiss]);
   const reduced = useReducedMotion();
-  useEffect(() => () => timers.current.forEach(clearTimeout), []);
+  useEffect(
+    () => () => {
+      if (timer.current) clearTimeout(timer.current);
+    },
+    [],
+  );
   useLayoutEffect(() => {
     const element = stack.current;
     if (!element || !notices.length) return;
@@ -31,8 +49,14 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       if (!element) return;
       const box = element.getBoundingClientRect();
       const height = element.offsetHeight;
+      const viewport = window.visualViewport;
+      const top = (viewport?.offsetTop ?? 0) + 16;
+      const keyboard = viewport && viewport.height < window.innerHeight * 0.8;
       const bottom =
-        window.innerHeight - (window.innerWidth < 768 ? 88 : 24) - height;
+        (viewport?.offsetTop ?? 0) +
+        (viewport?.height ?? window.innerHeight) -
+        (window.innerWidth < 768 && !keyboard ? 88 : 24) -
+        height;
       const controls = Array.from(
         document.querySelectorAll(
           'button, input, textarea, select, a, [role="combobox"]',
@@ -48,13 +72,13 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
             rect.left < box.right,
         );
       const candidates = [bottom];
-      for (let y = bottom - 8; y >= 88; y -= 8) candidates.push(y);
+      for (let y = bottom - 8; y >= top; y -= 8) candidates.push(y);
       const safe = candidates.find((y) =>
         controls.every(
           (rect) => rect.bottom + 8 <= y || rect.top - 8 >= y + height,
         ),
       );
-      element.style.top = `${Math.max(88, safe ?? bottom)}px`;
+      element.style.top = `${Math.max(top, safe ?? bottom)}px`;
       element.style.bottom = 'auto';
     }
     place();
@@ -62,27 +86,27 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     observer.observe(element);
     window.addEventListener('resize', place);
     document.addEventListener('scroll', place, true);
+    window.visualViewport?.addEventListener('resize', place);
+    window.visualViewport?.addEventListener('scroll', place);
     return () => {
       observer.disconnect();
       window.removeEventListener('resize', place);
       document.removeEventListener('scroll', place, true);
+      window.visualViewport?.removeEventListener('resize', place);
+      window.visualViewport?.removeEventListener('scroll', place);
     };
   }, [notices]);
-  function notify(message: string, kind: Notice['kind'] = 'success') {
-    const id = ++sequence.current;
-    setNotices((current) =>
-      [
-        ...current.filter((n) => n.message !== message),
-        { id, message, kind },
-      ].slice(-1),
-    );
-    timers.current.push(
-      setTimeout(
-        () => setNotices((current) => current.filter((n) => n.id !== id)),
-        5500,
-      ),
-    );
-  }
+  const notify = useCallback(
+    (message: string, kind: Notice['kind'] = 'success') => {
+      if (active.current?.message === message && active.current.kind === kind)
+        return;
+      const id = ++sequence.current;
+      active.current = { id, message, kind };
+      setNotices([active.current]);
+      resume();
+    },
+    [resume],
+  );
   return (
     <Context.Provider value={notify}>
       {children}
@@ -92,6 +116,16 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         aria-label="Notifications"
         aria-live="polite"
         aria-relevant="additions text"
+        onMouseEnter={() => {
+          if (timer.current) clearTimeout(timer.current);
+        }}
+        onMouseLeave={resume}
+        onFocus={() => {
+          if (timer.current) clearTimeout(timer.current);
+        }}
+        onBlur={(event) => {
+          if (!event.currentTarget.contains(event.relatedTarget)) resume();
+        }}
       >
         <AnimatePresence initial={false} mode="wait">
           {notices.map((notice) => {
@@ -112,14 +146,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
               >
                 <Icon size={20} aria-hidden="true" />
                 <span>{notice.message}</span>
-                <button
-                  aria-label="Dismiss notification"
-                  onClick={() =>
-                    setNotices((current) =>
-                      current.filter((n) => n.id !== notice.id),
-                    )
-                  }
-                >
+                <button aria-label="Dismiss notification" onClick={dismiss}>
                   <X size={16} />
                 </button>
               </motion.div>

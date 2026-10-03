@@ -15,6 +15,7 @@ import { DatabaseService } from '../infrastructure/database.service';
 import { RedisService } from '../infrastructure/redis.service';
 import { configureApp } from '../http/configure-app';
 import { StructuredLogger } from '../http/structured-logger';
+import { RegistrationVerificationException } from '../auth/registration-verification.exception';
 
 class ProbeDto {
   @IsString()
@@ -37,6 +38,11 @@ class ProbeController {
   @Get('bad-request')
   badRequest() {
     throw new BadRequestException('private internal text');
+  }
+
+  @Get('registration-delivery')
+  registrationDelivery() {
+    throw new RegistrationVerificationException();
   }
 }
 
@@ -96,6 +102,20 @@ describe('health and API transport', () => {
     expect(await response.json()).toEqual({ status: 'ok' });
     expect(database.check).toHaveBeenCalledTimes(1);
     expect(redis.check).toHaveBeenCalledTimes(1);
+  });
+
+  it('exposes only the safe registration outcome code for a created account', async () => {
+    const response = await fetch(`${base}/api/v1/probe/registration-delivery`, {
+      headers: { 'X-Request-ID': 'delivery-probe' },
+    });
+    expect(response.status).toBe(503);
+    expect(await response.json()).toEqual({
+      error: {
+        code: 'REGISTRATION_VERIFICATION_UNAVAILABLE',
+        message: 'Service unavailable',
+        requestId: 'delivery-probe',
+      },
+    });
   });
 
   it.each(['database', 'redis'] as const)(

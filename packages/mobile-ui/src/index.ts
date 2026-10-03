@@ -9,6 +9,7 @@ export * from './lib/select.tsx';
 export * from './lib/bottom-sheet.tsx';
 export * from './lib/dialog.tsx';
 export * from './lib/toast.tsx';
+export * from './lib/auth-blocker.tsx';
 export * from './lib/avatar.tsx';
 export * from './lib/stars.tsx';
 export * from './lib/toggle.tsx';

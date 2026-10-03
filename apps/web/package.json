@@ -5,6 +5,13 @@
   "nx": {
     "sourceRoot": "apps/web/src",
     "targets": {
+      "auth-feedback-check": {
+        "executor": "nx:run-commands",
+        "cache": false,
+        "options": {
+          "command": "node apps/web/scripts/check-auth-feedback.cjs"
+        }
+      },
       "auth-preview": {
         "executor": "nx:run-commands",
         "continuous": true,

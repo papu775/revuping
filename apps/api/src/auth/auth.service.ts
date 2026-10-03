@@ -18,6 +18,7 @@ import {
   verifyPassword,
 } from './credentials';
 import { EmailService } from './email.service';
+import { RegistrationVerificationException } from './registration-verification.exception';
 import type { LoginDto, RegisterDto } from './auth.dto';
 
 export type Identity = { session: Session; user: User };
@@ -79,9 +80,13 @@ export class AuthService {
           throw new ConflictException();
         throw error;
       }
-      await this.sendAction(user, 'VERIFY_EMAIL');
+      try {
+        await this.sendAction(user, 'VERIFY_EMAIL');
+      } catch {
+        throw new RegistrationVerificationException();
+      }
       return {
-        message: 'Account created. Check your email to verify it, then log in.',
+        message: 'Account created. Check your email to verify it.',
       };
     });
   }
