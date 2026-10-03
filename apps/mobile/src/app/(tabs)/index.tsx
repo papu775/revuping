@@ -13,6 +13,7 @@ import {
   overviewMetrics,
   sampleTrend,
   countLabel,
+  dashboardPeriod,
 } from 'mobile-data';
 import { Card, Badge, BarChart, Avatar, Stars } from 'mobile-ui';
 import { spacing, typography } from 'mobile-tokens';
@@ -71,7 +72,7 @@ export default function HomeScreen() {
         <View style={styles.header}>
           <View style={{ flex: 1, marginRight: 12 }}>
             <Text style={[styles.greeting, { color: colors.muted }]}>
-              Good morning
+              Welcome back
             </Text>
             <Text style={[styles.businessName, { color: colors.ink }]}>
               {state.business.name}
@@ -102,7 +103,10 @@ export default function HomeScreen() {
 
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.ink }]}>
-            Overview
+            Sample week
+          </Text>
+          <Text style={[styles.period, { color: colors.muted }]}>
+            {dashboardPeriod.current}
           </Text>
           <View style={styles.metricGrid}>
             {overviewMetrics.map((metric) => (
@@ -121,15 +125,24 @@ export default function HomeScreen() {
               </Card>
             ))}
           </View>
+          <Text
+            style={[
+              styles.period,
+              { color: colors.muted, marginTop: 12, marginBottom: 0 },
+            ]}
+          >
+            Comparisons use the previous sample week: {dashboardPeriod.previous}
+            .
+          </Text>
         </View>
 
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.ink }]}>
-            This week
+            Weekly trend
           </Text>
           <Card>
             <Text style={[styles.chartTitle, { color: colors.ink }]}>
-              QR scans
+              QR scans · {dashboardPeriod.current}
             </Text>
             <BarChart
               data={sampleTrend.scans}
@@ -300,6 +313,7 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: spacing.md,
   },
+  period: { fontSize: typography.caption, lineHeight: 20, marginBottom: 12 },
   metricCard: {
     flex: 1,
     minWidth: '45%',

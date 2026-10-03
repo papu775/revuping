@@ -410,22 +410,33 @@ export const initialWidget: WidgetConfig = {
   reviewIds: [1, 2],
 };
 
+export const sampleTrend = {
+  scans: [18, 22, 15, 28, 32, 27, 42],
+  feedback: [3, 5, 2, 6, 8, 5, 9],
+  days: ['Sat', 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+};
+
+export const dashboardPeriod = {
+  current: '26 Sep–2 Oct 2026',
+  previous: '19–25 Sep 2026',
+};
+
 export const overviewMetrics = [
   {
     label: 'QR scans',
-    value: '184',
-    change: '+24 from last period',
+    value: String(sampleTrend.scans.reduce((sum, value) => sum + value, 0)),
+    change: '+24 vs previous week',
     desc: 'Visits started with your QR',
   },
   {
     label: 'Review-link clicks',
     value: '62',
-    change: '+12 from last period',
+    change: '+12 vs previous week',
     desc: 'Clicks, not confirmed reviews',
   },
   {
     label: 'Private feedback',
-    value: '38',
+    value: String(sampleTrend.feedback.reduce((sum, value) => sum + value, 0)),
     change: '3 need your attention',
     desc: 'Responses shared with your salon',
   },
@@ -433,15 +444,9 @@ export const overviewMetrics = [
     label: 'Google reviews',
     value: '24',
     change: '4.8 average sample rating',
-    desc: 'Simulated reviews this month',
+    desc: 'Simulated reviews in the sample week',
   },
 ];
-
-export const sampleTrend = {
-  scans: [18, 22, 15, 28, 32, 27, 42],
-  feedback: [3, 5, 2, 6, 8, 5, 9],
-  days: ['Sat', 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
-};
 
 export const demoPlans = [
   {

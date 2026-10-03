@@ -28,3 +28,4 @@ export * from './lib/accordion.tsx';
 export * from './lib/feedback-preview.tsx';
 export * from './lib/date-field.tsx';
 export * from './lib/search-field.tsx';
+export * from './lib/expandable-text.tsx';

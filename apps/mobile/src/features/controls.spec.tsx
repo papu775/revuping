@@ -6,8 +6,10 @@ import {
   Accordion,
   Stars,
   DateField,
+  ToastProvider,
+  useToast,
 } from 'mobile-ui';
-import { Text, Platform } from 'react-native';
+import { Text, Platform, Pressable } from 'react-native';
 import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 jest.mock('@react-native-community/datetimepicker', () => ({
   __esModule: true,
@@ -159,5 +161,48 @@ describe('sheet lifecycle', () => {
     expect(queryByText('Choose an option')).toBeNull();
     jest.useRealTimers();
     mockReducedMotion = true;
+  });
+});
+
+describe('notification lifecycle', () => {
+  it('restarts the timeout on repeated actions and permits explicit dismissal', () => {
+    jest.useFakeTimers();
+    function Actions() {
+      const { showToast } = useToast();
+      return (
+        <>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Connect"
+            onPress={() => showToast('Google connected in demo.')}
+          />
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Disconnect"
+            onPress={() => showToast('Google disconnected in demo.')}
+          />
+        </>
+      );
+    }
+    try {
+      const view = render(
+        <ToastProvider>
+          <Actions />
+        </ToastProvider>,
+      );
+      fireEvent.press(view.getByLabelText('Connect'));
+      act(() => jest.advanceTimersByTime(4000));
+      fireEvent.press(view.getByLabelText('Disconnect'));
+      act(() => jest.advanceTimersByTime(1100));
+      expect(view.getByText('Google disconnected in demo.')).toBeTruthy();
+      act(() => jest.advanceTimersByTime(3900));
+      expect(view.queryByText('Google disconnected in demo.')).toBeNull();
+      fireEvent.press(view.getByLabelText('Connect'));
+      fireEvent.press(view.getByLabelText('Dismiss notification'));
+      expect(view.queryByText('Google connected in demo.')).toBeNull();
+      view.unmount();
+    } finally {
+      jest.useRealTimers();
+    }
   });
 });

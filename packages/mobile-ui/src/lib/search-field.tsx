@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { TextInput, View } from 'react-native';
+import { TextInput, View, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from 'mobile-tokens';
 import { IconButton } from './icon-button.tsx';
@@ -22,12 +22,13 @@ export function SearchField({
         flexDirection: 'row',
         alignItems: 'center',
         gap: 8,
-        borderWidth: 2,
+        borderWidth: focused ? 2 : 1,
         borderRadius: 12,
         borderColor: focused ? colors.violet : colors.controlBorder,
         backgroundColor: colors.surfaceInput,
-        paddingLeft: 12,
-        paddingRight: value ? 0 : 12,
+        paddingLeft: focused ? 12 : 13,
+        paddingRight: (value ? 0 : 12) + (focused ? 0 : 1),
+        paddingVertical: focused ? 0 : 1,
       }}
     >
       <Ionicons name="search-outline" size={20} color={colors.muted} />
@@ -37,6 +38,7 @@ export function SearchField({
         accessibilityLabel={label}
         placeholder={`${label}…`}
         placeholderTextColor={colors.muted}
+        underlineColorAndroid="transparent"
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
         autoCorrect={false}
@@ -49,6 +51,8 @@ export function SearchField({
           color: colors.ink,
           fontSize: 15,
           paddingVertical: 12,
+          outlineWidth: Platform.OS === 'web' ? 0 : undefined,
+          outlineStyle: Platform.OS === 'web' ? 'solid' : undefined,
         }}
       />
       {!!value && (

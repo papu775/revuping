@@ -25,26 +25,16 @@ export function Toggle({
           </Text>
         ) : null}
       </View>
-      <View style={{ alignItems: 'center', gap: 3 }}>
-        <Switch
-          value={value}
-          onValueChange={onValueChange}
-          trackColor={{ false: colors.controlBorder, true: colors.actionBg }}
-          thumbColor="#ffffff"
-          ios_backgroundColor={colors.controlBorder}
-          accessibilityLabel={label}
-        />
-        <Text
-          style={{
-            fontSize: 12,
-            color: value ? colors.violet : colors.muted,
-            fontWeight: '600',
-          }}
-          accessible={false}
-        >
-          {value ? 'On' : 'Off'}
-        </Text>
-      </View>
+      <Switch
+        value={value}
+        onValueChange={onValueChange}
+        trackColor={{ false: colors.controlBorder, true: colors.actionBg }}
+        thumbColor="#ffffff"
+        ios_backgroundColor={colors.controlBorder}
+        accessibilityLabel={label}
+        accessibilityState={{ checked: value }}
+        accessibilityHint={description}
+      />
     </View>
   );
 }
@@ -54,7 +44,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: spacing.md,
+    paddingVertical: spacing.xs,
     minHeight: 48,
   },
   textContainer: {

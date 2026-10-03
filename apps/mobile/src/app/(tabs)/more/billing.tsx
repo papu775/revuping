@@ -56,8 +56,6 @@ export default function BillingScreen() {
                 </Text>
                 {isSelected ? (
                   <Badge label="Selected · demo" tone="mint" />
-                ) : plan.featured ? (
-                  <Badge label="Highlighted" tone="violet" />
                 ) : null}
               </View>
               <Text style={[styles.planPrice, { color: colors.violet }]}>

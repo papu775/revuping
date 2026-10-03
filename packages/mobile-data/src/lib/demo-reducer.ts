@@ -39,7 +39,21 @@ export type Action =
 export function demoReducer(state: DemoState, action: Action): DemoState {
   switch (action.type) {
     case 'HYDRATE':
-      return { ...state, ...action.payload };
+      return {
+        ...state,
+        ...action.payload,
+        customers: (action.payload.customers ?? state.customers).map(
+          (customer) => ({
+            ...customer,
+            // Older demo snapshots used permission wording for acquisition.
+            source: customer.source.replace(
+              'In-salon permission',
+              'In-salon record',
+            ),
+            consentDate: customer.consent ? customer.consentDate : '',
+          }),
+        ),
+      };
     case 'ADD_CUSTOMER':
       return { ...state, customers: [...state.customers, action.customer] };
     case 'UPDATE_CUSTOMER':

@@ -98,6 +98,27 @@ async function run() {
         await page.waitForTimeout(230);
       };
       await go('/login');
+      const emailControl = page.getByLabel('Email', { exact: true });
+      const fieldSize = () =>
+        emailControl.evaluate((input) => {
+          const wrapper = input.parentElement;
+          const rect = wrapper.getBoundingClientRect();
+          return {
+            width: rect.width,
+            height: rect.height,
+            border: getComputedStyle(wrapper).borderTopWidth,
+          };
+        });
+      const restingField = await fieldSize();
+      await emailControl.focus();
+      const focusedField = await fieldSize();
+      expect(restingField.border).toBe('1px');
+      expect(focusedField.border).toBe('2px');
+      expect(focusedField.width).toBe(restingField.width);
+      expect(focusedField.height).toBe(restingField.height);
+      await page.screenshot({
+        path: path.join(output, `${theme}-focused-input.png`),
+      });
       await page.getByLabel('Password', { exact: true }).fill('sample-secret');
       await click('Show password');
       await expect
@@ -157,6 +178,31 @@ async function run() {
       await expect(page.getByText('Opted out', { exact: true })).toBeVisible();
       results.push(
         `${theme}: customer validation/save/filter/consent restrictions/preview/opt-out`,
+      );
+      const oldSnapshot = JSON.parse(
+        await page.evaluate((key) => localStorage.getItem(key), dataKey),
+      );
+      const noConsent = oldSnapshot.customers.find(
+        (customer) => customer.id === 4,
+      );
+      noConsent.source = 'In-salon permission · fictional';
+      noConsent.consentDate = '2026-09-10';
+      await page.evaluate(
+        ({ key, state }) => localStorage.setItem(key, JSON.stringify(state)),
+        { key: dataKey, state: oldSnapshot },
+      );
+      await go('/customers/4');
+      await expect(page.getByText('No consent', { exact: true })).toHaveCount(
+        1,
+      );
+      await expect(page.getByText('Not recorded', { exact: true })).toHaveCount(
+        2,
+      );
+      await expect(
+        page.getByText('In-salon record · fictional', { exact: true }),
+      ).toBeVisible();
+      results.push(
+        `${theme}: old permission wording migrated; acquisition, consent source and date stay distinct`,
       );
 
       await go('/feedback');
@@ -224,6 +270,37 @@ async function run() {
         `${theme}: survey add/type/choices/reorder/rapid toggle/remove/save`,
       );
 
+      await go('/more/surveys');
+      await click('Create survey');
+      await page
+        .getByLabel('Survey name', { exact: true })
+        .fill('Unsaved limit check');
+      for (let i = 1; i < 8; i++) await click('Add question');
+      await expect(
+        page.getByRole('button', { name: 'Add question', exact: true }),
+      ).toBeDisabled();
+      await click('Go back');
+      await expect(
+        page.getByText('Discard survey changes?', { exact: true }),
+      ).toBeVisible();
+      await click('Keep editing');
+      await expect(page.getByLabel('Survey name', { exact: true })).toHaveValue(
+        'Unsaved limit check',
+      );
+      await click('Remove question 8');
+      await expect(
+        page.getByRole('button', { name: 'Add question', exact: true }),
+      ).toBeEnabled();
+      await click('Go back');
+      await click('Discard changes');
+      await expect(page).toHaveURL(/\/more\/surveys$/);
+      await expect(
+        page.getByText('Unsaved limit check', { exact: true }),
+      ).toHaveCount(0);
+      results.push(
+        `${theme}: eight-question limit, deletion, unsaved back/cancel/discard`,
+      );
+
       await go('/more/qr-studio');
       await click('Customer page preview');
       await expect(
@@ -259,6 +336,9 @@ async function run() {
       );
 
       await go('/more/reviews');
+      await expect(
+        page.getByRole('button', { name: /Read full review from/ }),
+      ).toHaveCount(0);
       await page
         .getByRole('button', { name: 'Edit draft', exact: true })
         .first()
@@ -276,13 +356,32 @@ async function run() {
         .getByRole('button', { name: 'Edit draft', exact: true })
         .first()
         .click();
+      await click('Save');
+      await expect(page.getByText('Approved', { exact: true })).toHaveCount(1);
+      await page
+        .getByRole('button', { name: 'Edit draft', exact: true })
+        .first()
+        .click();
+      await page
+        .getByLabel('Edit reply draft', { exact: true })
+        .fill('An unsaved revision.');
+      await expect(page.getByText('Approved', { exact: true })).toHaveCount(0);
+      await expect(
+        page.getByText('Unsaved changes', { exact: true }),
+      ).toBeVisible();
+      await click('Cancel');
+      await expect(page.getByText('Approved', { exact: true })).toHaveCount(1);
+      await page
+        .getByRole('button', { name: 'Edit draft', exact: true })
+        .first()
+        .click();
       await page
         .getByLabel('Edit reply draft', { exact: true })
         .fill('A new reply needing owner approval.');
       await click('Save');
       await expect(page.getByText('Approved', { exact: true })).toHaveCount(0);
       results.push(
-        `${theme}: reply edit/save/approve/revision clears approval`,
+        `${theme}: reply edit/save/approve, unchanged save/cancel preserve approval, revision clears approval`,
       );
 
       await go('/more/reports');
@@ -397,9 +496,39 @@ async function run() {
       await expect(
         page.getByText('Demo connected', { exact: true }),
       ).toHaveCount(1);
+      await expect(
+        page.getByText('Google connected in demo.', { exact: true }),
+      ).toBeVisible();
+      const notice = page.getByText('Google connected in demo.', {
+        exact: true,
+      });
+      const navigation = page.getByRole('tab', {
+        name: 'More tab',
+        exact: true,
+      });
+      const noticeRect = await notice.boundingBox();
+      const navRect = await navigation.boundingBox();
+      expect(noticeRect.y + noticeRect.height).toBeLessThan(navRect.y);
       await page
         .getByRole('button', { name: 'Disconnect demo', exact: true })
         .click();
+      await expect(
+        page.getByText('Google disconnected in demo.', { exact: true }),
+      ).toBeVisible();
+      await click('Dismiss notification');
+      await expect(
+        page.getByText('Google disconnected in demo.', { exact: true }),
+      ).toHaveCount(0);
+      await page
+        .getByRole('button', { name: 'Simulate connection', exact: true })
+        .first()
+        .click();
+      await expect(
+        page.getByText('Google connected in demo.', { exact: true }),
+      ).toBeVisible();
+      await expect(
+        page.getByText('Google connected in demo.', { exact: true }),
+      ).toHaveCount(0, { timeout: 6500 });
       await go('/more/billing');
       await page
         .getByRole('button', { name: 'Select plan', exact: true })
@@ -484,6 +613,30 @@ async function run() {
         { key: dataKey, state: longState },
       );
       await page.setViewportSize({ width: 430, height: 932 });
+      await go('/more/reviews');
+      await click('Read full review from Amelia R.');
+      await expect(
+        page.getByRole('button', {
+          name: 'Collapse review from Amelia R.',
+          exact: true,
+        }),
+      ).toBeVisible();
+      await click('Collapse review from Amelia R.');
+      await expect(
+        page.getByRole('button', {
+          name: 'Read full review from Amelia R.',
+          exact: true,
+        }),
+      ).toBeVisible();
+      await expect(
+        page.getByRole('button', {
+          name: 'Read full review from Noah P.',
+          exact: true,
+        }),
+      ).toHaveCount(0);
+      results.push(
+        `${theme}: short review compact; measured long review expands/collapses`,
+      );
       for (const route of [
         '/',
         '/feedback',

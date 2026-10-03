@@ -12,7 +12,7 @@ export function FeedbackPreview({ compact = false }: { compact?: boolean }) {
     <View
       style={{
         alignSelf: 'stretch',
-        padding: 16,
+        padding: compact ? 12 : 16,
         borderWidth: 1,
         borderColor: colors.accentLine,
         borderRadius: 20,
@@ -24,7 +24,7 @@ export function FeedbackPreview({ compact = false }: { compact?: boolean }) {
           flexDirection: 'row',
           alignItems: 'center',
           gap: 8,
-          marginBottom: 12,
+          marginBottom: compact ? 8 : 12,
         }}
       >
         <Ionicons
@@ -45,7 +45,7 @@ export function FeedbackPreview({ compact = false }: { compact?: boolean }) {
         <Badge label="Demo" tone="violet" />
       </View>
       <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center' }}>
-        <Avatar initials="JW" tone="peach" size={36} />
+        <Avatar initials="JW" tone="peach" size={compact ? 28 : 36} />
         <View style={{ flex: 1 }}>
           <Text style={{ color: colors.ink, fontWeight: '700', fontSize: 15 }}>
             James Wilson
@@ -68,32 +68,34 @@ export function FeedbackPreview({ compact = false }: { compact?: boolean }) {
           “Happy with the haircut. A heads-up about the wait would have helped.”
         </Text>
       )}
-      <View
-        style={{
-          backgroundColor: colors.mint,
-          borderRadius: 10,
-          padding: 10,
-          marginTop: 12,
-          flexDirection: 'row',
-          gap: 8,
-        }}
-      >
-        <Ionicons
-          name="checkmark-circle-outline"
-          size={18}
-          color={colors.positiveInk}
-        />
-        <Text
+      {!compact && (
+        <View
           style={{
-            color: colors.positiveInk,
-            fontSize: 13,
-            flex: 1,
-            lineHeight: 19,
+            backgroundColor: colors.mint,
+            borderRadius: 10,
+            padding: 10,
+            marginTop: 12,
+            flexDirection: 'row',
+            gap: 8,
           }}
         >
-          Next step: follow up with James
-        </Text>
-      </View>
+          <Ionicons
+            name="checkmark-circle-outline"
+            size={18}
+            color={colors.positiveInk}
+          />
+          <Text
+            style={{
+              color: colors.positiveInk,
+              fontSize: 13,
+              flex: 1,
+              lineHeight: 19,
+            }}
+          >
+            Next step: follow up with James
+          </Text>
+        </View>
+      )}
     </View>
   );
 }

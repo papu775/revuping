@@ -4,6 +4,7 @@ import {
   Text,
   TextInput,
   StyleSheet,
+  Platform,
   type TextInputProps,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -40,6 +41,9 @@ export function Field({
           styles.wrapper,
           {
             backgroundColor: colors.surfaceInput,
+            borderWidth: focused || error ? 2 : 1,
+            // Keep the control and its text aligned as the focus ring changes.
+            padding: focused || error ? 0 : 1,
             borderColor: error
               ? colors.danger
               : focused
@@ -54,6 +58,7 @@ export function Field({
           value={value}
           onChangeText={onChangeText}
           placeholderTextColor={colors.muted}
+          underlineColorAndroid="transparent"
           autoCapitalize={autoCapitalize}
           secureTextEntry={secureTextEntry && !revealed}
           accessibilityLabel={accessibilityLabel ?? label}
@@ -67,6 +72,7 @@ export function Field({
           }}
           style={[
             styles.input,
+            Platform.OS === 'web' && { outlineWidth: 0, outlineStyle: 'solid' },
             { color: colors.ink },
             props.multiline && styles.multiline,
             style,
@@ -105,7 +111,7 @@ const styles = StyleSheet.create({
   wrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 2,
+    borderWidth: 1,
     borderRadius: radius.md,
   },
   input: {

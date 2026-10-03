@@ -1,5 +1,7 @@
 # Mobile design and native UX refinement — 3 October 2026
 
+The subsequent screenshot finishing pass and latest freeze decision are recorded in [MOBILE_FINISHING.md](MOBILE_FINISHING.md). This report preserves the earlier refinement.
+
 The existing app was refined in place. The workspace was clean at the start; the earlier repair is recorded in [MOBILE_REVIEW.md](MOBILE_REVIEW.md). Web source, routes, CSS, API/admin starters and backend behavior are unchanged. No credentials, environment files, real billing prices or integrations were added.
 
 **Android device review remains outstanding.** The local Gradle build was attempted, but this environment has no Java/JDK, Android SDK, `adb`, emulator or native device tool. It stops with `JAVA_HOME is not set and no 'java' command could be found in your PATH.` No native screenshots were captured. The screenshots below are Expo **WEB** evidence; they do not verify Android layout, keyboard, TalkBack, device font scaling, system dialogs or native module linking.

@@ -1,15 +1,21 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  Keyboard,
 } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter, useNavigation } from 'expo-router';
+// SDK 57 ships this hook through its React Navigation compatibility entry point.
+import {
+  usePreventRemove,
+  type NavigationAction,
+} from 'expo-router/react-navigation';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useDemoStore, type Survey, type Question } from 'mobile-data';
-import { useTheme } from 'mobile-tokens';
+import { useTheme, useReducedMotion } from 'mobile-tokens';
 import {
   Header,
   Card,
@@ -20,6 +26,7 @@ import {
   Accordion,
   IconButton,
   useToast,
+  Dialog,
 } from 'mobile-ui';
 import { Ionicons } from '@expo/vector-icons';
 const types: Question['type'][] = [
@@ -32,10 +39,18 @@ export default function SurveyEditor() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { state, dispatch } = useDemoStore();
   const router = useRouter();
+  const navigation = useNavigation();
   const { colors } = useTheme();
+  const reduced = useReducedMotion();
   const insets = useSafeAreaInsets();
   const toast = useToast();
   const saving = useRef(false);
+  const scroll = useRef<ScrollView>(null);
+  const addedQuestion = useRef(false);
+  const [saved, setSaved] = useState(false);
+  const [pendingAction, setPendingAction] = useState<NavigationAction | null>(
+    null,
+  );
   const existing = state.surveys.find((s) => s.id === Number(id));
   const [name, setName] = useState(existing?.name ?? '');
   const [status, setStatus] = useState<Survey['status']>(
@@ -56,6 +71,29 @@ export default function SurveyEditor() {
     existing?.questions[0]?.id ?? 1,
   );
   const [error, setError] = useState('');
+  const initialDraft = useRef(JSON.stringify({ name, status, questions }));
+  const dirty =
+    JSON.stringify({ name, status, questions }) !== initialDraft.current;
+  usePreventRemove(dirty && !saved, ({ data }) => {
+    Keyboard.dismiss();
+    setPendingAction(data.action);
+  });
+  useEffect(() => {
+    if (!saved) return;
+    if (router.canGoBack()) router.back();
+    else router.replace('/(tabs)/more/surveys');
+  }, [saved, router]);
+  useEffect(() => {
+    if (!addedQuestion.current) return;
+    const timer = setTimeout(
+      () => {
+        scroll.current?.scrollToEnd({ animated: !reduced });
+        addedQuestion.current = false;
+      },
+      reduced ? 0 : 240,
+    );
+    return () => clearTimeout(timer);
+  }, [questions.length, reduced]);
   const update = (id: number, patch: Partial<Question>) =>
     setQuestions((qs) => qs.map((q) => (q.id === id ? { ...q, ...patch } : q)));
   const move = (questionId: number, delta: number) =>
@@ -101,8 +139,7 @@ export default function SurveyEditor() {
         : { type: 'ADD_SURVEY', survey },
     );
     toast.showToast('Survey saved in this demo. No responses are collected.');
-    if (router.canGoBack()) router.back();
-    else router.replace('/(tabs)/more/surveys');
+    setSaved(true);
   };
   return (
     <View style={{ flex: 1, backgroundColor: colors.canvas }}>
@@ -117,6 +154,7 @@ export default function SurveyEditor() {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <ScrollView
+          ref={scroll}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag"
           contentContainerStyle={{
@@ -184,8 +222,8 @@ export default function SurveyEditor() {
                   gap: 8,
                   borderTopWidth: 1,
                   borderColor: colors.border,
-                  paddingTop: 8,
-                  marginTop: 12,
+                  paddingTop: 4,
+                  marginTop: 4,
                 }}
               >
                 <IconButton
@@ -225,6 +263,9 @@ export default function SurveyEditor() {
             variant="secondary"
             disabled={questions.length >= 8}
             onPress={() => {
+              if (questions.length >= 8) return;
+              Keyboard.dismiss();
+              addedQuestion.current = true;
               const nextId = Math.max(...questions.map((q) => q.id), 0) + 1;
               setOpenQuestion(nextId);
               setQuestions((qs) => [
@@ -253,6 +294,18 @@ export default function SurveyEditor() {
           <Button title="Save survey" onPress={save} />
         </ScrollView>
       </KeyboardAvoidingView>
+      <Dialog
+        visible={pendingAction !== null}
+        onClose={() => setPendingAction(null)}
+        title="Discard survey changes?"
+        message="Your unsaved edits will be lost."
+        cancelLabel="Keep editing"
+        confirmLabel="Discard changes"
+        destructive
+        onConfirm={() => {
+          if (pendingAction) navigation.dispatch(pendingAction);
+        }}
+      />
     </View>
   );
 }

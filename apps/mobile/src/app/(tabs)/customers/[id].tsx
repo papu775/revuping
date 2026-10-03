@@ -112,13 +112,17 @@ export default function CustomerDetailScreen() {
         </Card>
 
         <DetailSection title="Details">
-          <DetailItem label="Source" value={customer.source} />
+          <DetailItem label="Customer source" value={customer.source} />
           {!['No consent', 'Opted out'].includes(customer.status) && (
             <DetailItem
               label="Request activity"
               value={`${customer.status} · demo`}
             />
           )}
+          <DetailItem
+            label="Consent source"
+            value={customer.consent ? 'Recorded in demo' : 'Not recorded'}
+          />
           <DetailItem
             label="Consent date"
             value={

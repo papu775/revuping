@@ -1,7 +1,7 @@
 import { Text, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Tabs, usePathname } from 'expo-router';
-import { useTheme } from 'mobile-tokens';
+import { useTheme, bottomNavigationHeight } from 'mobile-tokens';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function TabsLayout() {
@@ -29,7 +29,7 @@ export default function TabsLayout() {
               letterSpacing: -0.1,
               textAlign: 'center',
               color,
-              marginTop: 4,
+              marginTop: 3,
               // Allow the full item width despite the navigator's inner padding.
               width: width / 5,
               maxWidth: width / 5,
@@ -45,8 +45,8 @@ export default function TabsLayout() {
           display: editing ? 'none' : 'flex',
           backgroundColor: colors.surface,
           borderTopColor: colors.border,
-          height: 72 + Math.max(0, fontScale - 1) * 40 + insets.bottom,
-          paddingTop: 8,
+          height: bottomNavigationHeight(fontScale) + insets.bottom,
+          paddingTop: 6,
           paddingBottom: Math.max(insets.bottom, 8),
         },
         tabBarLabelStyle: {
@@ -59,8 +59,12 @@ export default function TabsLayout() {
         name="index"
         options={{
           title: 'Home',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="home" size={size} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? 'home' : 'home-outline'}
+              size={22}
+              color={color}
+            />
           ),
           tabBarAccessibilityLabel: 'Home tab',
         }}
@@ -69,8 +73,12 @@ export default function TabsLayout() {
         name="feedback"
         options={{
           title: 'Feedback',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="chatbubble" size={size} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? 'chatbubble' : 'chatbubble-outline'}
+              size={22}
+              color={color}
+            />
           ),
           tabBarAccessibilityLabel: 'Feedback inbox tab',
         }}
@@ -79,8 +87,12 @@ export default function TabsLayout() {
         name="customers"
         options={{
           title: 'Customers',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="people" size={size} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? 'people' : 'people-outline'}
+              size={22}
+              color={color}
+            />
           ),
           tabBarAccessibilityLabel: 'Customers tab',
         }}
@@ -89,8 +101,12 @@ export default function TabsLayout() {
         name="campaigns"
         options={{
           title: 'Campaigns',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="megaphone" size={size} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? 'megaphone' : 'megaphone-outline'}
+              size={22}
+              color={color}
+            />
           ),
           tabBarAccessibilityLabel: 'Campaigns tab',
         }}
@@ -99,8 +115,8 @@ export default function TabsLayout() {
         name="more"
         options={{
           title: 'More',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="ellipsis-horizontal" size={size} color={color} />
+          tabBarIcon: ({ color }) => (
+            <Ionicons name="ellipsis-horizontal" size={22} color={color} />
           ),
           tabBarAccessibilityLabel: 'More tab',
         }}

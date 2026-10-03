@@ -76,8 +76,7 @@ export default function QRStudioScreen() {
                   { color: colors.muted, lineHeight: 22, textAlign: 'center' },
                 ]}
               >
-                How was your visit? Share your honest experience in whichever
-                way you prefer.
+                How was your visit?
               </Text>
               <View style={{ alignSelf: 'stretch', gap: 12, marginTop: 12 }}>
                 <Button
@@ -91,16 +90,6 @@ export default function QRStudioScreen() {
                   onPress={() => setChoice('private')}
                 />
               </View>
-              <Text
-                style={{
-                  color: colors.muted,
-                  fontSize: 13,
-                  lineHeight: 20,
-                  textAlign: 'center',
-                }}
-              >
-                Both choices remain available to everyone.
-              </Text>
             </View>
           </Accordion>
         </Card>

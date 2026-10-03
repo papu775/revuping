@@ -114,12 +114,12 @@ const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
     paddingHorizontal: 24,
-    paddingTop: 32,
-    gap: 24,
+    paddingTop: 20,
+    gap: 16,
     justifyContent: 'flex-start',
   },
   header: {
-    paddingVertical: 8,
+    paddingVertical: 0,
     justifyContent: 'center',
     gap: spacing.sm,
   },

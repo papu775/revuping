@@ -17,6 +17,7 @@ import {
   Button,
   Avatar,
   Field,
+  ExpandableText,
   useToast,
 } from 'mobile-ui';
 import { spacing, typography } from 'mobile-tokens';
@@ -26,7 +27,6 @@ export default function ReviewsScreen() {
   const { state, dispatch } = useDemoStore();
   const toast = useToast();
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [expanded, setExpanded] = useState<number[]>([]);
   const [draft, setDraft] = useState('');
 
   const startEdit = (id: number) => {
@@ -81,6 +81,8 @@ export default function ReviewsScreen() {
           {state.reviews.map((review) => {
             const isApproved = state.approvedReplies.includes(review.id);
             const isEditing = editingId === review.id;
+            const savedDraft = state.replyDrafts[review.id] ?? review.draft;
+            const revised = isEditing && draft !== savedDraft;
             return (
               <Card key={review.id} style={styles.card}>
                 <View style={styles.header}>
@@ -108,30 +110,15 @@ export default function ReviewsScreen() {
                   </View>
                   <Stars rating={review.rating} size={14} />
                 </View>
-                <Text
-                  numberOfLines={expanded.includes(review.id) ? undefined : 3}
-                  style={[styles.reviewText, { color: colors.muted }]}
-                >
-                  {review.text}
-                </Text>
-                {review.text.length > 0 && (
-                  <Button
-                    title={
-                      expanded.includes(review.id)
-                        ? 'Show less'
-                        : 'Read full review'
-                    }
-                    accessibilityLabel={`${expanded.includes(review.id) ? 'Collapse' : 'Read full'} review from ${review.name}`}
-                    variant="ghost"
-                    onPress={() =>
-                      setExpanded((ids) =>
-                        ids.includes(review.id)
-                          ? ids.filter((id) => id !== review.id)
-                          : [...ids, review.id],
-                      )
-                    }
+                <View style={{ marginBottom: 12 }}>
+                  <ExpandableText
+                    key={review.text}
+                    text={review.text}
+                    style={[styles.reviewText, { color: colors.muted }]}
+                    expandLabel={`Read full review from ${review.name}`}
+                    collapseLabel={`Collapse review from ${review.name}`}
                   />
-                )}
+                </View>
 
                 <View
                   style={[
@@ -143,7 +130,11 @@ export default function ReviewsScreen() {
                     <Text style={[styles.draftLabel, { color: colors.muted }]}>
                       Owner reply draft
                     </Text>
-                    {isApproved && <Badge label="Approved" tone="mint" />}
+                    {revised ? (
+                      <Badge label="Unsaved changes" tone="muted" />
+                    ) : isApproved ? (
+                      <Badge label="Approved" tone="mint" />
+                    ) : null}
                   </View>
                   {isEditing ? (
                     <KeyboardAvoidingView
@@ -172,7 +163,7 @@ export default function ReviewsScreen() {
                   ) : (
                     <>
                       <Text style={[styles.draftText, { color: colors.ink }]}>
-                        {state.replyDrafts[review.id] || review.draft}
+                        {savedDraft}
                       </Text>
                       <View style={styles.actions}>
                         <Button
@@ -231,7 +222,6 @@ const styles = StyleSheet.create({
   reviewText: {
     fontSize: typography.body,
     lineHeight: 22,
-    marginBottom: spacing.md,
   },
   draftSection: {
     borderTopWidth: StyleSheet.hairlineWidth,
