@@ -13,7 +13,15 @@ describe('structured log redaction', () => {
         },
       ],
       DATABASE_URL: 'private',
-      nested: { clientSecret: 'private', api_key: 'private' },
+      nested: {
+        clientSecret: 'private',
+        api_key: 'private',
+        passwordHash: 'private',
+        secretHash: 'private',
+        csrfToken: 'private',
+        tokenHash: 'private',
+        SMTP_PASSWORD: 'private',
+      },
       exception: new Error('database connection with private credentials'),
     });
     expect(JSON.stringify(redacted)).not.toContain('private');

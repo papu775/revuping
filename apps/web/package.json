@@ -5,7 +5,27 @@
   "nx": {
     "sourceRoot": "apps/web/src",
     "targets": {
+      "auth-preview": {
+        "executor": "nx:run-commands",
+        "continuous": true,
+        "cache": false,
+        "dependsOn": [
+          "build"
+        ],
+        "options": {
+          "cwd": "apps/web",
+          "command": "next start --port 3010 --hostname 127.0.0.1",
+          "env": {
+            "NODE_ENV": "production"
+          }
+        }
+      },
       "build": {
+        "options": {
+          "env": {
+            "NODE_ENV": "production"
+          }
+        },
         "inputs": [
           "default",
           "^default",
@@ -129,6 +149,7 @@
     "qrcode": "^1.5.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "server-only": "^0.0.1",
     "tailwind-merge": "^3.7.0"
   },
   "devDependencies": {

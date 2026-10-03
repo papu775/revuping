@@ -4,6 +4,13 @@
   "private": true,
   "nx": {
     "targets": {
+      "cleanup-auth": {
+        "executor": "nx:run-commands",
+        "cache": false,
+        "options": {
+          "command": "node apps/api/scripts/cleanup-auth.cjs"
+        }
+      },
       "prisma-generate": {
         "executor": "nx:run-commands",
         "cache": true,
@@ -187,9 +194,11 @@
     "@prisma/adapter-pg": "7.10.0",
     "@prisma/client": "7.10.0",
     "api-contracts": "workspace:*",
+    "argon2": "0.45.1",
     "class-transformer": "0.5.1",
     "class-validator": "0.15.1",
     "ioredis": "5.11.1",
+    "nodemailer": "10.0.13",
     "pg": "8.16.3",
     "pino": "9.14.0",
     "reflect-metadata": "^0.2.0",
@@ -200,6 +209,7 @@
   "devDependencies": {
     "@nestjs/testing": "^11.0.0",
     "@types/express": "5.0.6",
+    "@types/nodemailer": "^8.0.2",
     "@types/pg": "8.16.0",
     "prisma": "7.10.0"
   }

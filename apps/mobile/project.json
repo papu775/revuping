@@ -6,6 +6,15 @@
   "tags": ["scope:mobile", "platform:native", "type:app"],
   "// targets": "to see all targets run: nx show project mobile --web",
   "targets": {
+    "auth-native-bundle": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": ["^build"],
+      "options": {
+        "cwd": "apps/mobile",
+        "command": "expo export --platform android --max-workers 1 --output-dir test-output/auth-native"
+      }
+    },
     "start": {
       "executor": "nx:run-commands",
       "continuous": true,

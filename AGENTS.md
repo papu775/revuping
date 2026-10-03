@@ -26,7 +26,7 @@
 
 - Preserve the completed web design, route locations, CSS and mock behavior when organizing code.
 - Web features live in `apps/web/src/features`; demo fixtures/state in `src/data-access`; reusable presentation in `src/components`. `@/` is app-local.
-- Admin remains a starter. API has configuration, health transport and database/Redis foundations; do not imply implemented authentication, authorized business storage or integrations.
+- Admin remains a starter. API implements first-party authentication, web/native sessions and membership-authorized workspace access. Business/location CRUD and integrations remain deferred; real accounts never use demo metrics.
 - Applications never import each other. Extract `packages/` libraries only for concrete consumers, use workspace package dependencies, public exports and platform/type tags.
 - Browser source cannot import server packages or `src/server`. Future Next server modules must import `server-only` and stay behind server entry points.
 - Use Node 24.20.x, pnpm 11.25.0 and the frozen pnpm lockfile. Never commit local environment files or credentials.

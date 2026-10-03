@@ -9,6 +9,28 @@
       "mobile"
     ],
     "targets": {
+      "web-auth-check": {
+        "executor": "nx:run-commands",
+        "cache": false,
+        "dependsOn": [
+          "api:serve",
+          "web:auth-preview"
+        ],
+        "options": {
+          "command": "node apps/api-e2e/scripts/check-web-auth.cjs"
+        }
+      },
+      "auth-check": {
+        "executor": "nx:run-commands",
+        "cache": false,
+        "dependsOn": [
+          "api:build",
+          "api:serve"
+        ],
+        "options": {
+          "command": "node apps/api-e2e/scripts/check-auth.cjs"
+        }
+      },
       "connectivity-check": {
         "executor": "nx:run-commands",
         "dependsOn": [

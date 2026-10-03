@@ -9,7 +9,8 @@ import { useRouter, type Href } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from 'mobile-tokens';
 import { useDemoStore } from 'mobile-data';
-import { Card, Avatar } from 'mobile-ui';
+import { Card, Avatar, Button } from 'mobile-ui';
+import { useAuth } from '../../../data-access/auth-context';
 import { spacing, typography } from 'mobile-tokens';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -89,6 +90,7 @@ const menuItems = [
 ];
 
 export default function MoreScreen() {
+  const { exitDemo } = useAuth();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { colors } = useTheme();
@@ -157,6 +159,14 @@ export default function MoreScreen() {
             </TouchableOpacity>
           ))}
         </Card>
+        <Button
+          title="Leave demo"
+          variant="ghost"
+          onPress={() => {
+            exitDemo();
+            router.replace('/welcome');
+          }}
+        />
       </ScrollView>
     </View>
   );

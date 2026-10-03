@@ -2,7 +2,7 @@ import type { LoggerService } from '@nestjs/common';
 import pino, { type Logger, type Level } from 'pino';
 
 const sensitiveKey =
-  /^(authorization|cookie|set-cookie|password|passwd|token|access[_-]?token|refresh[_-]?token|secret|client[_-]?secret|api[_-]?key|database[_-]?url|redis[_-]?url|connection[_-]?string|email|phone)$/i;
+  /^(authorization|cookie|set-cookie|password|passwordHash|passwd|token|tokenHash|csrfHash|csrfToken|access[_-]?token|refresh[_-]?token|secret|secretHash|smtp[_-]?password|client[_-]?secret|api[_-]?key|database[_-]?url|redis[_-]?url|connection[_-]?string|email|phone)$/i;
 
 export function redactSensitive(value: unknown): unknown {
   if (value instanceof Error) return { error: 'Internal error' };

@@ -4,6 +4,9 @@ const local = {
   DATABASE_URL: 'postgresql://test:test@localhost:5433/test',
   REDIS_URL: 'redis://:test@localhost:6380',
   CORS_ORIGINS: 'http://localhost:3000, http://localhost:19006',
+  WEB_URL: 'https://app.example.test',
+  SMTP_HOST: 'smtp.example.test',
+  SMTP_FROM: 'accounts@example.test',
 };
 
 describe('API environment validation', () => {
@@ -41,6 +44,8 @@ describe('API environment validation', () => {
     { REDIS_URL: 'http://redis.example.com' },
     { LOG_LEVEL: 'everything' },
     { NODE_ENV: 'prod' },
+    { TRUSTED_PROXIES: 'true' },
+    { TRUSTED_PROXIES: '127.0.0.1/99' },
   ])('rejects invalid configuration %j', (overrides) => {
     expect(() => validateEnvironment({ ...local, ...overrides })).toThrow(
       'Invalid API configuration',

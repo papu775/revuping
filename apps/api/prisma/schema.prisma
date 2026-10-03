@@ -1,7 +1,7 @@
 generator client {
-  provider     = "prisma-client"
-  output       = "../src/generated/prisma"
-  moduleFormat = "cjs"
+  provider            = "prisma-client"
+  output              = "../src/generated/prisma"
+  moduleFormat        = "cjs"
   importFileExtension = ""
 }
 
@@ -15,22 +15,96 @@ enum MembershipRole {
 }
 
 model User {
-  id          String       @id @default(uuid()) @db.Uuid
-  email       String       @unique @db.Citext
-  displayName String?
-  createdAt   DateTime     @default(now()) @db.Timestamptz(3)
-  updatedAt   DateTime     @updatedAt @db.Timestamptz(3)
-  memberships Membership[]
+  id                 String              @id @default(uuid()) @db.Uuid
+  email              String              @unique @db.Citext
+  displayName        String?
+  createdAt          DateTime            @default(now()) @db.Timestamptz(3)
+  updatedAt          DateTime            @updatedAt @db.Timestamptz(3)
+  memberships        Membership[]
+  passwordHash       String?
+  emailVerifiedAt    DateTime?           @db.Timestamptz(3)
+  credentialVersion  Int                 @default(0)
+  sessions           Session[]
+  actionTokens       EmailActionToken[]
+  workspaceCreations WorkspaceCreation[]
 }
 
 model Workspace {
-  id          String       @id @default(uuid()) @db.Uuid
+  id          String              @id @default(uuid()) @db.Uuid
   name        String
-  createdAt   DateTime     @default(now()) @db.Timestamptz(3)
-  updatedAt   DateTime     @updatedAt @db.Timestamptz(3)
+  createdAt   DateTime            @default(now()) @db.Timestamptz(3)
+  updatedAt   DateTime            @updatedAt @db.Timestamptz(3)
   memberships Membership[]
   business    Business?
   locations   Location[]
+  creations   WorkspaceCreation[]
+}
+
+enum SessionKind {
+  WEB
+  NATIVE
+}
+
+enum EmailAction {
+  VERIFY_EMAIL
+  RESET_PASSWORD
+}
+
+model Session {
+  id              String         @id @default(uuid()) @db.Uuid
+  userId          String         @db.Uuid
+  kind            SessionKind
+  secretHash      String         @unique @db.Char(64)
+  csrfHash        String?        @db.Char(64)
+  accessExpiresAt DateTime       @db.Timestamptz(3)
+  expiresAt       DateTime       @db.Timestamptz(3)
+  revokedAt       DateTime?      @db.Timestamptz(3)
+  createdAt       DateTime       @default(now()) @db.Timestamptz(3)
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  refreshTokens   RefreshToken[]
+
+  @@index([userId, revokedAt])
+  @@index([expiresAt])
+}
+
+// Consumed refresh hashes are retained until family expiry to detect replay.
+model RefreshToken {
+  id         String    @id @default(uuid()) @db.Uuid
+  sessionId  String    @db.Uuid
+  tokenHash  String    @unique @db.Char(64)
+  expiresAt  DateTime  @db.Timestamptz(3)
+  consumedAt DateTime? @db.Timestamptz(3)
+  createdAt  DateTime  @default(now()) @db.Timestamptz(3)
+  session    Session   @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+  @@index([expiresAt])
+}
+
+model EmailActionToken {
+  id         String      @id @default(uuid()) @db.Uuid
+  userId     String      @db.Uuid
+  purpose    EmailAction
+  tokenHash  String      @unique @db.Char(64)
+  expiresAt  DateTime    @db.Timestamptz(3)
+  consumedAt DateTime?   @db.Timestamptz(3)
+  createdAt  DateTime    @default(now()) @db.Timestamptz(3)
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, purpose])
+  @@index([expiresAt])
+}
+
+model WorkspaceCreation {
+  userId      String    @db.Uuid
+  key         String    @db.VarChar(64)
+  workspaceId String    @db.Uuid
+  createdAt   DateTime  @default(now()) @db.Timestamptz(3)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@id([userId, key])
+  @@index([workspaceId])
 }
 
 model Membership {

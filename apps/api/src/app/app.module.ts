@@ -1,18 +1,18 @@
 import { DynamicModule, Module } from '@nestjs/common';
-import { API_ENVIRONMENT, type ApiEnvironment } from '../config/environment';
+import { type ApiEnvironment } from '../config/environment';
 import { HealthController } from '../health/health.controller';
-import { DatabaseService } from '../infrastructure/database.service';
-import { RedisService } from '../infrastructure/redis.service';
+import { AuthModule } from '../auth/auth.module';
+import { WorkspacesModule } from '../workspaces/workspaces.module';
 
 @Module({
   controllers: [HealthController],
-  providers: [DatabaseService, RedisService],
+  imports: [WorkspacesModule],
 })
 export class AppModule {
   static configure(environment: ApiEnvironment): DynamicModule {
     return {
       module: AppModule,
-      providers: [{ provide: API_ENVIRONMENT, useValue: environment }],
+      imports: [AuthModule.configure(environment)],
     };
   }
 }

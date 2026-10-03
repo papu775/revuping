@@ -13,7 +13,8 @@ import {
   Platform,
   BackHandler,
 } from 'react-native';
-import { useRouter, useFocusEffect } from 'expo-router';
+import { useRouter, useFocusEffect, Redirect } from 'expo-router';
+import { useAuth } from '../../data-access/auth-context';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from 'mobile-tokens';
 import { Screen, Button, Field, Card, Header, BrandColour } from 'mobile-ui';
@@ -24,6 +25,7 @@ import { Ionicons } from '@expo/vector-icons';
 const steps = ['Business info', 'Hours & locations', 'Branding', 'Complete'];
 
 export default function OnboardingScreen() {
+  const { demo } = useAuth();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { colors } = useTheme();
@@ -70,6 +72,7 @@ export default function OnboardingScreen() {
     }
   };
 
+  if (!demo) return <Redirect href="/welcome" />;
   return (
     <Screen edges={[]}>
       <Header

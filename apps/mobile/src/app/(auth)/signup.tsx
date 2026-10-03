@@ -10,27 +10,52 @@ import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from 'mobile-tokens';
 import { Screen, Button, Field, Logo, FeedbackPreview } from 'mobile-ui';
-import { useState } from 'react';
-import { useDemoStore } from 'mobile-data';
+import { useRef, useState } from 'react';
+import { useAuth } from '../../data-access/auth-context';
+import { authErrorMessage } from 'api-contracts';
 import { spacing, typography } from 'mobile-tokens';
 
 export default function SignupScreen() {
   const router = useRouter();
-  const { dispatch } = useDemoStore();
+  const { client } = useAuth();
   const insets = useSafeAreaInsets();
   const { colors } = useTheme();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
+  const [pending, setPending] = useState(false);
+  const busy = useRef(false);
 
-  const handleSignup = () => {
+  const handleSignup = async () => {
+    if (busy.current) return;
     if (!name.trim() || !email.trim() || !password.trim()) {
       setError('Please fill in all fields.');
       return;
     }
-    dispatch({ type: 'SET_BUSINESS', business: { name: name.trim() } });
-    router.push('/onboarding');
+    if (password.length < 12 || password.length > 128) {
+      setError('Use 12–128 characters for your password.');
+      return;
+    }
+    busy.current = true;
+    setPending(true);
+    setError('');
+    setNotice('');
+    try {
+      const result = await client.register({
+        displayName: name.trim(),
+        email: email.trim(),
+        password,
+      });
+      setPassword('');
+      setNotice(result.message);
+    } catch (error) {
+      setError(authErrorMessage(error));
+    } finally {
+      busy.current = false;
+      setPending(false);
+    }
   };
 
   return (
@@ -50,23 +75,24 @@ export default function SignupScreen() {
           <View style={styles.header}>
             <Logo />
             <Text style={[styles.title, { color: colors.ink }]}>
-              Demo setup
+              Create your account
             </Text>
             <Text style={[styles.subtitle, { color: colors.muted }]}>
-              Set up a fictional demo workspace. No account is created or
-              credentials saved.
+              Verify your email, then create your workspace. No sample records
+              are added.
             </Text>
           </View>
           <FeedbackPreview compact />
           <View style={styles.form}>
             <Field
-              label="Business name"
+              label="Your name"
               value={name}
               onChangeText={setName}
-              placeholder="Bloom & Co."
+              placeholder="Your name"
+              maxLength={100}
               autoCapitalize="words"
               error={
-                error && !name.trim() ? 'Business name is required' : undefined
+                error && !name.trim() ? 'Your name is required' : undefined
               }
             />
             <Field
@@ -86,20 +112,33 @@ export default function SignupScreen() {
               label="Password"
               value={password}
               onChangeText={setPassword}
-              placeholder="Sample password"
+              placeholder="12–128 characters"
               error={
                 error && !password.trim() ? 'Password is required' : undefined
               }
             />
             <Button
-              title="Continue demo setup"
-              onPress={handleSignup}
-              accessibilityLabel="Continue demo setup"
+              title="Create account"
+              onPress={() => void handleSignup()}
+              loading={pending}
             />
           </View>
+          {!!error && (
+            <Text accessibilityRole="alert" style={{ color: colors.danger }}>
+              {error}
+            </Text>
+          )}
+          {!!notice && (
+            <Text
+              accessibilityLiveRegion="polite"
+              style={{ color: colors.ink }}
+            >
+              {notice}
+            </Text>
+          )}
           <View style={[styles.footer]}>
             <Button
-              title="Already have a demo? Log in"
+              title="Already have an account? Log in"
               variant="ghost"
               onPress={() => router.push('/login')}
             />

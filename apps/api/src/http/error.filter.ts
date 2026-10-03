@@ -15,6 +15,7 @@ const codes: Record<number, string> = {
   403: 'FORBIDDEN',
   404: 'NOT_FOUND',
   409: 'CONFLICT',
+  413: 'PAYLOAD_TOO_LARGE',
   429: 'TOO_MANY_REQUESTS',
   503: 'SERVICE_UNAVAILABLE',
 };
@@ -27,10 +28,18 @@ export class ApiErrorFilter implements ExceptionFilter {
     const context = host.switchToHttp();
     const response = context.getResponse<Response>();
     const request = context.getRequest<Request>();
+    const parserStatus =
+      exception !== null && typeof exception === 'object' && 'type' in exception
+        ? exception.type === 'entity.too.large'
+          ? 413
+          : exception.type === 'entity.parse.failed'
+            ? 400
+            : undefined
+        : undefined;
     const status =
       exception instanceof HttpException
         ? exception.getStatus()
-        : HttpStatus.INTERNAL_SERVER_ERROR;
+        : (parserStatus ?? HttpStatus.INTERNAL_SERVER_ERROR);
     const requestId = response.getHeader('x-request-id') as string;
     // Only known, safe transport text is public; never pass through exception messages.
     const message =
@@ -44,6 +53,7 @@ export class ApiErrorFilter implements ExceptionFilter {
             403: 'Access denied',
             404: 'Resource not found',
             409: 'Request conflicts with existing data',
+            413: 'Request too large',
             429: 'Too many requests',
           }[status] ?? 'Request failed');
     const body: ApiErrorResponse = {

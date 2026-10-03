@@ -1,8 +1,8 @@
 # RevuPing
 
-An Nx/pnpm monorepo with completed web/mobile demo designs and a NestJS backend foundation. PostgreSQL/Prisma schema, Redis infrastructure, validated API configuration and health transport are implemented. Authentication, authorized business persistence, tenant access and external integrations are not implemented. Admin remains a starter.
+An Nx/pnpm monorepo with completed web/mobile demo designs and a NestJS API. First-party email/password authentication, email verification/recovery, web/native sessions and membership-authorized workspace access are implemented. Business persistence and external integrations remain deferred. Admin remains a starter.
 
-See [backend setup, architecture and verification](docs/BACKEND_FOUNDATION.md) for exact infrastructure, migration and API commands. Frontend demo data and screens remain unchanged.
+See [Phase 2 authentication setup and verification](docs/AUTHENTICATION.md) and the [Phase 1 foundation report](docs/BACKEND_FOUNDATION.md). Real accounts open `/workspace`; `/dashboard` remains an explicitly fictional demo.
 
 ## Setup and commands
 
@@ -28,22 +28,22 @@ The browser tests start their owning frontend automatically. `BASE_URL` optional
 
 ## Ownership and structure
 
-| Project                  | Responsibility                                                                        |
-| ------------------------ | ------------------------------------------------------------------------------------- |
-| `apps/web`               | Customer Next.js App Router application, marketing, demo authentication and dashboard |
-| `apps/admin`             | Platform administration Next.js starter; no administration features yet               |
-| `apps/api`               | NestJS health/transport, Prisma foundation and Redis; no business APIs yet            |
-| `apps/mobile`            | Expo/React Native customer demo, with independent native presentation                 |
-| `packages/api-contracts` | Portable public health/error schemas, validation and typed connectivity               |
-| `packages/mobile-*`      | Existing native tokens, UI and demo data; no DOM sharing                              |
-| `apps/*-e2e`             | Tests owned by the corresponding application                                          |
+| Project                  | Responsibility                                                                 |
+| ------------------------ | ------------------------------------------------------------------------------ |
+| `apps/web`               | Next.js customer app, same-origin auth proxy, real workspace and separate demo |
+| `apps/admin`             | Platform administration Next.js starter; no administration features yet        |
+| `apps/api`               | NestJS authentication, sessions, workspace authorization, Prisma and Redis     |
+| `apps/mobile`            | Expo native authentication with SecureStore and a separate explicit demo       |
+| `packages/api-contracts` | Portable public health/auth/workspace/error schemas and validation             |
+| `packages/mobile-*`      | Existing native tokens, UI and demo data; no DOM sharing                       |
+| `apps/*-e2e`             | Tests owned by the corresponding application                                   |
 
 Web source:
 
 - `src/app`: framework routes, layouts, loading states and styles. Keep Next route files here.
 - `src/features/auth`, `dashboard`, `marketing`, `product`: application feature implementation.
 - `src/components`: reusable application presentation, UI primitives, theme and motion.
-- `src/data-access`: fictional fixtures, product state and demo workspace provider. This does not call API.
+- `src/data-access`: independent fictional fixtures/demo state and explicit real API/auth clients.
 - `src/lib`: focused browser utilities (deadlines, print palette, QR export and panel focus).
 - `specs` and `scripts`: unit tests and existing browser regression tools.
 
@@ -87,4 +87,4 @@ Checked current official guidance on 2026-10-02 and applied it to the installed 
 
 ## Before production deployment
 
-Implement and verify authentication/authorization, tenant access, business persistence, real integrations, secret management, operational monitoring and deployment configuration. Web/mobile auth, billing, integrations and dashboard state remain fictional demo interactions. API health and schema infrastructure do not make product features production-ready. The next backend phase is authentication and workspace access.
+Configure production HTTPS origins, private proxy trust, SMTP TLS/credentials, managed database/Redis, cleanup and operational monitoring as described in [Phase 2](docs/AUTHENTICATION.md). Business CRUD, billing, integrations and demo dashboard metrics remain deferred. No paid integration or admin development is included.

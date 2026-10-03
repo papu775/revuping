@@ -1,5 +1,7 @@
 # Backend foundation
 
+This is the historical Phase 1 report (`1ea16cfd74363615f7cfdbf55c1172d867e3b5e3`). Authentication and workspace access are now implemented in [Phase 2](AUTHENTICATION.md); the implementation details and checks below describe the original foundation.
+
 RevuPing starts as a NestJS REST modular monolith. This phase implements configuration, transport, health, database schema and local infrastructure. Web and mobile retain their frozen design and fictional demo state. Admin, authentication, business CRUD, payments, campaigns and integrations remain deferred.
 
 ## Ownership and boundaries
@@ -102,7 +104,7 @@ All requests receive `X-Request-ID`; a safe incoming ID is preserved, malformed/
 
 ## Next phases
 
-1. **Authentication and workspace access:** select and verify a maintained OIDC identity provider; use Authorization Code + PKCE, provider-hosted identity handling and server verification of issuer/audience/expiry/signature. Map a verified stable provider subject to a local user through a reviewed follow-up migration. Do not use client-supplied email/roles/workspace IDs as authentication. Native tokens belong in secure storage; web session/cookie/CSRF handling must be designed and tested then. No custom password/session scheme has been invented here.
+1. **Authentication and workspace access (Phase 2 decision):** first-party email/password authentication in NestJS, using maintained Argon2id and SMTP libraries. Web uses opaque server-managed HttpOnly sessions through a same-origin Next proxy with CSRF and origin checks. Native uses short-lived opaque access credentials in memory and rotating refresh credentials in Expo SecureStore, with server-side session checks and replay revocation. This explicit decision supersedes the earlier OIDC proposal. See [Phase 2](AUTHENTICATION.md) for implementation and operational details.
 2. Implement users/workspaces/memberships and authorized business/location operations with tenant-scoped services and cross-tenant tests. Add customers, feedback and review links only as concrete features arrive.
 3. Add campaigns and a separate runnable BullMQ worker when scheduled work exists. API enqueues versioned payloads with workspace context; workers revalidate membership/tenant ownership, use idempotency keys, bounded retries/backoff and failure observability. Reminders and integration retries belong there. Redis queues require durable deployment configuration and deliberate retention policies.
 4. Implement integrations and subscriptions/payments with verified provider contracts, webhook authentication and idempotency. Admin remains separately deferred.

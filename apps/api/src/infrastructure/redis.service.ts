@@ -4,7 +4,7 @@ import { API_ENVIRONMENT, type ApiEnvironment } from '../config/environment';
 
 @Injectable()
 export class RedisService implements OnApplicationShutdown {
-  private readonly client: Redis;
+  readonly client: Redis;
 
   constructor(@Inject(API_ENVIRONMENT) environment: ApiEnvironment) {
     this.client = new Redis(environment.REDIS_URL, {

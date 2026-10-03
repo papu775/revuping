@@ -3,6 +3,7 @@ import { performance } from 'node:perf_hooks';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import type { Request, Response, NextFunction } from 'express';
+import { json } from 'express';
 import { API_PREFIX } from 'api-contracts';
 import type { ApiEnvironment } from '../config/environment';
 import { ApiErrorFilter } from './error.filter';
@@ -16,6 +17,13 @@ export function configureApp(
   app.useLogger(logger);
   app.setGlobalPrefix(API_PREFIX);
   app.enableShutdownHooks();
+  app
+    .getHttpAdapter()
+    .getInstance()
+    .set(
+      'trust proxy',
+      environment.TRUSTED_PROXIES.length ? environment.TRUSTED_PROXIES : false,
+    );
   app.use((request: Request, response: Response, next: NextFunction) => {
     const incoming = request.headers['x-request-id'];
     const requestId =
@@ -37,13 +45,19 @@ export function configureApp(
     );
     next();
   });
+  app.use(json({ limit: '16kb' }));
   app.enableCors({
     origin: (
       origin: string | undefined,
       callback: (error: Error | null, allow?: boolean) => void,
     ) => callback(null, !origin || environment.CORS_ORIGINS.includes(origin)),
     methods: ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-ID'],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'X-Request-ID',
+      'X-CSRF-Token',
+    ],
     exposedHeaders: ['X-Request-ID'],
     credentials: false,
     maxAge: 600,
@@ -64,7 +78,7 @@ export function configureApp(
       new DocumentBuilder()
         .setTitle('RevuPing API')
         .setDescription(
-          'Backend foundation. Authentication and business endpoints are not implemented.',
+          'First-party authentication, sessions and membership-authorized workspace access. Business endpoints are deferred.',
         )
         .setVersion('1')
         .build(),

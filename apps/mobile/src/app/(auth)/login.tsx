@@ -10,7 +10,9 @@ import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from 'mobile-tokens';
 import { Screen, Button, Field, Logo, FeedbackPreview } from 'mobile-ui';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+import { useAuth } from '../../data-access/auth-context';
+import { authErrorMessage } from 'api-contracts';
 import { spacing, typography } from 'mobile-tokens';
 
 export default function LoginScreen() {
@@ -20,13 +22,34 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [pending, setPending] = useState(false);
+  const busy = useRef(false);
+  const { client, exitDemo } = useAuth();
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
+    if (busy.current) return;
     if (!email.trim() || !password.trim()) {
       setError('Please enter your email and password.');
       return;
     }
-    router.replace('/(tabs)');
+    busy.current = true;
+    setPending(true);
+    setError('');
+    try {
+      await client.login({ email: email.trim(), password });
+      exitDemo();
+      setPassword('');
+      router.replace('/workspace');
+    } catch (error) {
+      setError(
+        Platform.OS === 'web'
+          ? 'Real authentication requires the native app. Use the RevuPing web app for browser login.'
+          : authErrorMessage(error),
+      );
+    } finally {
+      busy.current = false;
+      setPending(false);
+    }
   };
 
   return (
@@ -45,12 +68,9 @@ export default function LoginScreen() {
         >
           <View style={styles.header}>
             <Logo />
-            <Text style={[styles.title, { color: colors.ink }]}>
-              Demo login
-            </Text>
+            <Text style={[styles.title, { color: colors.ink }]}>Log in</Text>
             <Text style={[styles.subtitle, { color: colors.muted }]}>
-              Explore the demo workspace. Use sample details; passwords are
-              never saved.
+              Open your RevuPing account. Demo access stays separate.
             </Text>
           </View>
           <FeedbackPreview compact />
@@ -72,20 +92,30 @@ export default function LoginScreen() {
               label="Password"
               value={password}
               onChangeText={setPassword}
-              placeholder="Sample password"
+              placeholder="Your password"
               error={
                 error && !password.trim() ? 'Password is required' : undefined
               }
             />
             <Button
-              title="Open demo workspace"
-              onPress={handleLogin}
-              accessibilityLabel="Open demo workspace"
+              title="Log in"
+              onPress={() => void handleLogin()}
+              loading={pending}
             />
           </View>
+          {!!error && (
+            <Text accessibilityRole="alert" style={{ color: colors.danger }}>
+              {error}
+            </Text>
+          )}
+          <Button
+            title="Forgot password?"
+            variant="ghost"
+            onPress={() => router.push('/forgot-password')}
+          />
           <View style={[styles.footer]}>
             <Button
-              title="New to the demo? Set up a workspace"
+              title="New to RevuPing? Create an account"
               variant="ghost"
               onPress={() => router.push('/signup')}
             />

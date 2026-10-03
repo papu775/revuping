@@ -12,6 +12,11 @@ export default [
     rules: browserSourceRules,
   },
   {
+    // This explicit server entry point imports server-only session authorization.
+    files: ['src/app/workspace/page.tsx'],
+    rules: { 'no-restricted-imports': 'off' },
+  },
+  {
     ignores: ['.next/**/*', '**/out-tsc'],
   },
 ];

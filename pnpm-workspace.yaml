@@ -13,6 +13,7 @@ allowBuilds:
   '@swc/core': false
   '@nestjs/core': false
   nx: true
+  argon2: true
 overrides:
   react: 19.2.3
   react-dom: 19.2.3

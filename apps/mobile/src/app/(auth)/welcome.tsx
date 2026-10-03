@@ -3,11 +3,13 @@ import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from 'mobile-tokens';
 import { Button, Screen, Logo, FeedbackPreview } from 'mobile-ui';
+import { useAuth } from '../../data-access/auth-context';
 
 export default function WelcomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { colors } = useTheme();
+  const { enterDemo, session } = useAuth();
 
   return (
     <Screen
@@ -39,16 +41,25 @@ export default function WelcomeScreen() {
         <FeedbackPreview />
         <View style={[styles.actions, { paddingBottom: insets.bottom + 24 }]}>
           <Button
-            title="Set up demo"
-            onPress={() => router.push('/signup')}
-            accessibilityLabel="Set up demo"
+            title={session ? 'Open your workspace' : 'Create an account'}
+            onPress={() => router.push(session ? '/workspace' : '/signup')}
           />
           <Button
             title="Open demo workspace"
             variant="secondary"
-            onPress={() => router.replace('/(tabs)')}
+            onPress={() => {
+              enterDemo();
+              router.replace('/(tabs)');
+            }}
             accessibilityLabel="Open demo workspace"
           />
+          {!session && (
+            <Button
+              title="Log in"
+              variant="ghost"
+              onPress={() => router.push('/login')}
+            />
+          )}
         </View>
       </ScrollView>
     </Screen>
