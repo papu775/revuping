@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useTheme } from 'mobile-tokens';
 import { radius, spacing, typography } from 'mobile-tokens';
 import { Ionicons } from '@expo/vector-icons';
-import { BottomSheet } from './bottom-sheet.js';
+import { BottomSheet } from './bottom-sheet.tsx';
 
 export function Select({
   label,

@@ -7,7 +7,6 @@
     "icon": "./assets/images/icon.png",
     "scheme": "revuping",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.revuping.mobile",
@@ -20,7 +19,6 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#faf8f3"
       },
-      "edgeToEdgeEnabled": true,
       "package": "com.revuping.mobile"
     },
     "web": {
@@ -37,7 +35,8 @@
           "resizeMode": "contain",
           "backgroundColor": "#faf8f3"
         }
-      ]
+      ],
+      "expo-status-bar"
     ],
     "extra": {
       "router": {},

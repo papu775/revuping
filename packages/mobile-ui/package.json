@@ -20,11 +20,15 @@
       "type:ui"
     ]
   },
-  "dependencies": {
-    "expo-router": "^57.0.24",
+  "peerDependencies": {
     "mobile-tokens": "workspace:*",
-    "react-native-qrcode-svg": "^6.3.26",
-    "react-native-safe-area-context": "^5.10.1",
-    "react-native-svg": "^15.15.5"
+    "react": "*",
+    "react-native": "*"
+  },
+  "dependencies": {
+    "expo-router": "57.0.24",
+    "react-native-qrcode-svg": "6.3.26",
+    "react-native-safe-area-context": "5.7.0",
+    "react-native-svg": "15.15.4"
   }
 }

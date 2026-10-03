@@ -1,10 +1,10 @@
 const { withNxMetro } = require('@nx/expo');
-// Expo SDK 55+ ships Metro via `@expo/metro`. `getDefaultConfig` and
-// `mergeConfig` must come from the Expo-provided Metro instance.
 const { getDefaultConfig } = require('expo/metro-config');
 const { mergeConfig } = require('@expo/metro/metro-config');
+const path = require('path');
 
-const defaultConfig = getDefaultConfig(__dirname);
+const appRoot = __dirname;
+const defaultConfig = getDefaultConfig(appRoot);
 const { assetExts, sourceExts } = defaultConfig.resolver;
 
 /**
@@ -15,8 +15,10 @@ const { assetExts, sourceExts } = defaultConfig.resolver;
  */
 const customConfig = {
   cacheVersion: 'mobile',
+  projectRoot: appRoot,
   transformer: {
     babelTransformerPath: require.resolve('react-native-svg-transformer'),
+    unstable_allowRequireContext: true,
   },
   resolver: {
     assetExts: assetExts.filter((ext) => ext !== 'svg'),
@@ -24,12 +26,20 @@ const customConfig = {
   },
 };
 
-module.exports = withNxMetro(mergeConfig(defaultConfig, customConfig), {
-  // Change this to true to see debugging info.
-  // Useful if you have issues resolving modules
-  debug: false,
-  // all the file extensions used for imports other than 'ts', 'tsx', 'js', 'jsx', 'json'
+const nxConfig = withNxMetro(mergeConfig(defaultConfig, customConfig), {
+  debug: true,
   extensions: [],
-  // Specify folders to watch, in addition to Nx defaults (workspace libraries and node_modules)
   watchFolders: [],
 });
+
+// Force projectRoot to be the app directory
+nxConfig.projectRoot = appRoot;
+
+// Wrap the Nx resolver to debug what it's trying to resolve
+const originalResolveRequest = nxConfig.resolver.resolveRequest;
+nxConfig.resolver.resolveRequest = (context, moduleName, platform) => {
+  console.log('[DEBUG] Resolving:', moduleName, 'from', context.originModulePath);
+  return originalResolveRequest(context, moduleName, platform);
+};
+
+module.exports = nxConfig;

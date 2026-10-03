@@ -7,7 +7,11 @@ import React, {
 } from 'react';
 import { useColorScheme } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { lightColors, darkColors, type ThemeColors } from './tokens.js';
+import type { AsyncStorageStatic } from '@react-native-async-storage/async-storage';
+
+const storage = AsyncStorage as unknown as AsyncStorageStatic;
+
+import { lightColors, darkColors, type ThemeColors } from './tokens.ts';
 
 const THEME_KEY = 'revuping-mobile-theme-v1';
 
@@ -28,7 +32,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    AsyncStorage.getItem(THEME_KEY)
+    storage.getItem(THEME_KEY)
       .then((raw: string | null) => {
         if (raw === 'light' || raw === 'dark' || raw === 'system') {
           setThemePref(raw);
@@ -39,7 +43,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   const setThemePreference = useCallback((pref: ThemePreference) => {
     setThemePref(pref);
-    AsyncStorage.setItem(THEME_KEY, pref).catch(() => {});
+    storage.setItem(THEME_KEY, pref).catch(() => undefined);
   }, []);
 
   const isDark =

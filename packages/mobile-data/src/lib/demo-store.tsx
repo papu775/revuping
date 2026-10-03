@@ -7,8 +7,11 @@ import React, {
   useState,
 } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { initialDemoState } from './fixtures.js';
-import type { DemoState, Customer, Campaign, Survey } from './types.js';
+import type { AsyncStorageStatic } from '@react-native-async-storage/async-storage';
+
+const storage = AsyncStorage as unknown as AsyncStorageStatic;
+import { initialDemoState } from './fixtures.ts';
+import type { DemoState, Customer, Campaign, Survey } from './types.ts';
 
 const STORAGE_KEY = 'revuping-mobile-demo-v1';
 
@@ -173,13 +176,15 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    AsyncStorage.getItem(STORAGE_KEY)
+    storage.getItem(STORAGE_KEY)
       .then((raw: string | null) => {
         if (raw) {
           try {
             const saved = JSON.parse(raw) as Partial<DemoState>;
             dispatch({ type: 'HYDRATE', payload: saved });
-          } catch {}
+          } catch {
+            // ignore parse errors
+          }
         }
       })
       .finally(() => setLoaded(true));
@@ -187,12 +192,12 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!loaded) return;
-    AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(state)).catch(() => {});
+    storage.setItem(STORAGE_KEY, JSON.stringify(state)).catch(() => undefined);
   }, [loaded, state]);
 
   const resetDemo = useCallback(() => {
     dispatch({ type: 'RESET_DEMO' });
-    AsyncStorage.removeItem(STORAGE_KEY).catch(() => {});
+    storage.removeItem(STORAGE_KEY).catch(() => undefined);
   }, []);
 
   if (!loaded) return null;
