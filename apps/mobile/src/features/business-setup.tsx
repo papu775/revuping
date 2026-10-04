@@ -5,6 +5,7 @@ import { Button, Card, Field, Select, AuthBlocker, useToast } from 'mobile-ui';
 import { useTheme } from 'mobile-tokens';
 import {
   ApiRequestError,
+  businessBrand,
   onboardingDraftSchema,
   type OnboardingDraft,
   type OnboardingResponse,
@@ -30,6 +31,9 @@ export function BusinessSetup({ id, owner }: { id: string; owner: boolean }) {
   const [step, setStep] = useState(0);
   const [editing, setEditing] = useState(false);
   const [error, setError] = useState('');
+  const [saved, setSaved] = useState(false);
+  const [copyFrom, setCopyFrom] = useState<number | null>(null);
+  const [destinations, setDestinations] = useState<number[]>([]);
   const [logo, setLogo] = useState<Awaited<
     ReturnType<typeof client.logoSource>
   > | null>(null);
@@ -78,9 +82,12 @@ export function BusinessSetup({ id, owner }: { id: string; owner: boolean }) {
   const apply = (result: OnboardingResponse) => {
     setState(result);
     setDraft(result.draft);
+    setSaved(true);
   };
-  const update = (patch: Partial<OnboardingDraft>) =>
+  const update = (patch: Partial<OnboardingDraft>) => {
+    setSaved(false);
     setDraft((current) => (current ? { ...current, ...patch } : current));
+  };
   const fail = (error: unknown) =>
     setError(
       error instanceof ApiRequestError && error.status === 409
@@ -115,7 +122,8 @@ export function BusinessSetup({ id, owner }: { id: string; owner: boolean }) {
         apply(result);
         setStep(next);
         if (complete) setEditing(false);
-        showToast('Business details saved.');
+        setSaved(true);
+        if (complete) showToast('Business details saved.');
       },
       fail,
     );
@@ -173,6 +181,7 @@ export function BusinessSetup({ id, owner }: { id: string; owner: boolean }) {
     return (
       <Text style={{ color: colors.muted }}>{error || 'Loading setup…'}</Text>
     );
+  const brand = businessBrand(draft.brandColor);
   const summary = (
     <View style={{ gap: 16 }}>
       <Text style={{ color: colors.ink, fontSize: 20 }}>{draft.name}</Text>
@@ -189,7 +198,7 @@ export function BusinessSetup({ id, owner }: { id: string; owner: boolean }) {
           {day}:{' '}
           {draft.hours[i]
             .map((item) => `${item.open}–${item.close}`)
-            .join(', ') || 'Closed / not specified'}
+            .join(', ') || (draft.closedDays[i] ? 'Closed' : 'Not provided')}
         </Text>
       ))}
     </View>
@@ -202,7 +211,8 @@ export function BusinessSetup({ id, owner }: { id: string; owner: boolean }) {
             <Image
               source={logo}
               accessibilityLabel="Business logo"
-              style={{ width: 80, height: 80, borderRadius: 16 }}
+              resizeMode="contain"
+              style={{ width: 112, height: 112, borderRadius: 16 }}
             />
           )}
           <Text
@@ -225,8 +235,8 @@ export function BusinessSetup({ id, owner }: { id: string; owner: boolean }) {
           {(state.completedAt && !editing) || !owner ? (
             <>
               <Text style={{ color: colors.muted }}>
-                Details saved. No feedback collected yet. Review tools arrive in
-                a future phase.
+                Your business details are saved. You can update them whenever
+                you need.
               </Text>
               {summary}
               {owner && (
@@ -242,7 +252,8 @@ export function BusinessSetup({ id, owner }: { id: string; owner: boolean }) {
           ) : (
             <>
               <Text style={{ color: colors.muted }}>
-                Step {step + 1} of 4 · Progress saves when you continue.
+                Step {step + 1} of 4 ·{' '}
+                {saved ? 'Saved' : 'Progress saves when you continue.'}
               </Text>
               {step === 0 && (
                 <>
@@ -318,7 +329,7 @@ export function BusinessSetup({ id, owner }: { id: string; owner: boolean }) {
                     editable={owner}
                   />
                   <Field
-                    label="IANA timezone"
+                    label="Timezone"
                     value={draft.timezone}
                     onChangeText={(timezone) => update({ timezone })}
                     editable={owner}
@@ -336,8 +347,7 @@ export function BusinessSetup({ id, owner }: { id: string; owner: boolean }) {
                     />
                   )}
                   <Text style={{ color: colors.muted }}>
-                    Check this editable suggestion. Address does not determine
-                    timezone.
+                    Choose your city or region.
                   </Text>
                 </>
               )}
@@ -353,14 +363,121 @@ export function BusinessSetup({ id, owner }: { id: string; owner: boolean }) {
                     Hours are optional. Use HH:mm within one day. Overnight
                     intervals are not supported.
                   </Text>
+                  <View
+                    style={{
+                      padding: 16,
+                      borderRadius: 12,
+                      backgroundColor: brand.accent,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        color: brand.foreground,
+                        fontSize: 18,
+                        fontWeight: '600',
+                      }}
+                    >
+                      {draft.name}
+                    </Text>
+                    <Text style={{ color: brand.foreground }}>
+                      {saved
+                        ? 'Your saved business branding'
+                        : 'Live business preview · unsaved changes'}
+                    </Text>
+                  </View>
+                  {copyFrom !== null && (
+                    <View style={{ gap: 8 }}>
+                      <Text style={{ color: colors.ink }}>
+                        Copy {days[copyFrom]} hours to selected days
+                      </Text>
+                      {days.map(
+                        (day, n) =>
+                          n !== copyFrom && (
+                            <Button
+                              key={day}
+                              title={`${destinations.includes(n) ? '✓ ' : ''}${day}`}
+                              variant="secondary"
+                              onPress={() =>
+                                setDestinations((current) =>
+                                  current.includes(n)
+                                    ? current.filter((i) => i !== n)
+                                    : [...current, n],
+                                )
+                              }
+                            />
+                          ),
+                      )}
+                      <Button
+                        title="Copy to selected days"
+                        disabled={!destinations.length}
+                        onPress={() => {
+                          update({
+                            hours: draft.hours.map((value, n) =>
+                              destinations.includes(n)
+                                ? draft.hours[copyFrom].map((item) => ({
+                                    ...item,
+                                  }))
+                                : value,
+                            ),
+                            closedDays: draft.closedDays.map((value, n) =>
+                              destinations.includes(n)
+                                ? draft.closedDays[copyFrom]
+                                : value,
+                            ),
+                          });
+                          setCopyFrom(null);
+                        }}
+                      />
+                      <Button
+                        title="Cancel copy"
+                        variant="ghost"
+                        onPress={() => setCopyFrom(null)}
+                      />
+                    </View>
+                  )}
                   {days.map((day, i) => (
                     <View key={day} style={{ gap: 8 }}>
                       <Text style={{ color: colors.ink, fontWeight: '600' }}>
                         {day}
                       </Text>
+                      <Select
+                        label={`${day} status`}
+                        value={
+                          draft.hours[i].length
+                            ? 'Open'
+                            : draft.closedDays[i]
+                              ? 'Closed'
+                              : 'Not provided'
+                        }
+                        options={['Not provided', 'Open', 'Closed']}
+                        onChange={(value) =>
+                          update({
+                            hours: draft.hours.map((items, n) =>
+                              n === i
+                                ? value === 'Open'
+                                  ? [{ open: '09:00', close: '17:00' }]
+                                  : []
+                                : items,
+                            ),
+                            closedDays: draft.closedDays.map((v, n) =>
+                              n === i ? value === 'Closed' : v,
+                            ),
+                          })
+                        }
+                      />
+                      {(draft.hours[i].length > 0 || draft.closedDays[i]) && (
+                        <Button
+                          title={`Copy ${day} hours`}
+                          variant="ghost"
+                          onPress={() => {
+                            setCopyFrom(i);
+                            setDestinations([]);
+                          }}
+                        />
+                      )}
                       {!draft.hours[i].length && (
                         <Text style={{ color: colors.muted }}>
-                          Closed / not specified
+                          {draft.closedDays[i] ? 'Closed' : 'Not provided'}
                         </Text>
                       )}
                       {draft.hours[i].map((interval, j) => (
@@ -403,24 +520,26 @@ export function BusinessSetup({ id, owner }: { id: string; owner: boolean }) {
                           )}
                         </View>
                       ))}
-                      {owner && draft.hours[i].length < 4 && (
-                        <Button
-                          title={`Add ${day} interval`}
-                          variant="ghost"
-                          onPress={() =>
-                            update({
-                              hours: draft.hours.map((items, n) =>
-                                n === i
-                                  ? [
-                                      ...items,
-                                      { open: '09:00', close: '17:00' },
-                                    ]
-                                  : items,
-                              ),
-                            })
-                          }
-                        />
-                      )}
+                      {owner &&
+                        !draft.closedDays[i] &&
+                        draft.hours[i].length < 4 && (
+                          <Button
+                            title={`Add ${day} interval`}
+                            variant="ghost"
+                            onPress={() =>
+                              update({
+                                hours: draft.hours.map((items, n) =>
+                                  n === i
+                                    ? [
+                                        ...items,
+                                        { open: '09:00', close: '17:00' },
+                                      ]
+                                    : items,
+                                ),
+                              })
+                            }
+                          />
+                        )}
                     </View>
                   ))}
                 </>

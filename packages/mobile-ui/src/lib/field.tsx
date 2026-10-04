@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, type RefObject } from 'react';
 import {
   View,
   Text,
@@ -13,6 +13,7 @@ import { IconButton } from './icon-button.tsx';
 
 export function Field({
   label,
+  inputRef,
   value,
   onChangeText,
   error,
@@ -25,6 +26,7 @@ export function Field({
   ...props
 }: {
   label: string;
+  inputRef?: RefObject<TextInput | null>;
   value: string;
   onChangeText: (text: string) => void;
   error?: string;
@@ -41,9 +43,9 @@ export function Field({
           styles.wrapper,
           {
             backgroundColor: colors.surfaceInput,
-            borderWidth: focused || error ? 2 : 1,
+            borderWidth: focused ? 2 : 1,
             // Keep the control and its text aligned as the focus ring changes.
-            padding: focused || error ? 0 : 1,
+            padding: focused ? 0 : 1,
             borderColor: error
               ? colors.danger
               : focused
@@ -54,7 +56,8 @@ export function Field({
       >
         <TextInput
           {...props}
-          ref={input}
+          ref={inputRef ?? input}
+          accessibilityHint={error || props.accessibilityHint}
           value={value}
           onChangeText={onChangeText}
           placeholderTextColor={colors.muted}
@@ -83,7 +86,7 @@ export function Field({
             accessibilityLabel={revealed ? 'Hide password' : 'Show password'}
             onPress={() => {
               setRevealed(!revealed);
-              input.current?.focus();
+              (inputRef ?? input).current?.focus();
             }}
           >
             <Ionicons

@@ -29,6 +29,26 @@ export function Auth({ signup = false }: { signup?: boolean }) {
   const [notice, setNotice] = useState('');
   const [error, setError] = useState('');
   const [password, setPassword] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const validate = (name: string, value: string) =>
+    name === 'password'
+      ? !value
+        ? 'Enter your password.'
+        : signup && (value.length < 12 || value.length > 128)
+          ? 'Use 12–128 characters.'
+          : ''
+      : name === 'email'
+        ? !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())
+          ? 'Enter a valid email address.'
+          : ''
+        : !value.trim()
+          ? 'Enter your name.'
+          : '';
+  const checkField = (name: string, value: string) =>
+    setFieldErrors((current) => ({
+      ...current,
+      [name]: validate(name, value),
+    }));
   return (
     <AuthBlocker label={label}>
       <main className="auth-page">
@@ -135,16 +155,54 @@ export function Auth({ signup = false }: { signup?: boolean }) {
               </span>
             </div>
             <form
+              noValidate
+              onBlur={(event) => {
+                if (
+                  event.relatedTarget instanceof HTMLButtonElement &&
+                  event.relatedTarget.type === 'submit'
+                )
+                  return;
+                const input = event.target;
+                if (input instanceof HTMLInputElement && input.name)
+                  checkField(input.name, input.value);
+              }}
+              onChange={(event) => {
+                const input = event.target;
+                if (
+                  input instanceof HTMLInputElement &&
+                  fieldErrors[input.name]
+                )
+                  checkField(input.name, input.value);
+              }}
               onSubmit={async (e) => {
                 e.preventDefault();
                 if (pending || registeredEmail) return;
-                if (signup && (password.length < 12 || password.length > 128)) {
-                  setError(
-                    'Use between 12 and 128 characters for your password.',
+                const form = new FormData(e.currentTarget);
+                const names = signup
+                  ? ['displayName', 'email', 'password']
+                  : ['email', 'password'];
+                const errors = Object.fromEntries(
+                  names.map((name) => [
+                    name,
+                    validate(
+                      name,
+                      name === 'password'
+                        ? password
+                        : String(form.get(name) ?? ''),
+                    ),
+                  ]),
+                );
+                setFieldErrors(errors);
+                const first = names.find((name) => errors[name]);
+                if (first) {
+                  const element = e.currentTarget;
+                  requestAnimationFrame(() =>
+                    element
+                      .querySelector<HTMLInputElement>(`input[name="${first}"]`)
+                      ?.focus(),
                   );
                   return;
                 }
-                const form = new FormData(e.currentTarget);
                 setError('');
                 setNotice('');
                 const input = { email: String(form.get('email')), password };
@@ -210,12 +268,22 @@ export function Auth({ signup = false }: { signup?: boolean }) {
                   Your name
                   <input
                     name="displayName"
+                    aria-label="Your name"
+                    aria-invalid={!!fieldErrors.displayName}
+                    aria-describedby={
+                      fieldErrors.displayName ? 'name-error' : undefined
+                    }
                     readOnly={!!registeredEmail}
                     required
                     maxLength={100}
                     autoComplete="name"
                     placeholder="Your name"
                   />
+                  {fieldErrors.displayName && (
+                    <span className="field-error" id="name-error" role="alert">
+                      {fieldErrors.displayName}
+                    </span>
+                  )}
                 </Field>
               )}
               <Field>
@@ -223,16 +291,27 @@ export function Auth({ signup = false }: { signup?: boolean }) {
                 <input
                   type="email"
                   name="email"
+                  aria-label="Email address"
+                  aria-invalid={!!fieldErrors.email}
+                  aria-describedby={
+                    fieldErrors.email ? 'email-error' : undefined
+                  }
                   readOnly={!!registeredEmail}
                   required
                   maxLength={254}
                   autoComplete="email"
                   placeholder="you@example.com"
                 />
+                {fieldErrors.email && (
+                  <span className="field-error" id="email-error" role="alert">
+                    {fieldErrors.email}
+                  </span>
+                )}
               </Field>
               <Field>
                 Password
                 <PasswordField
+                  name="password"
                   readOnly={!!registeredEmail}
                   required
                   value={password}
@@ -242,9 +321,29 @@ export function Auth({ signup = false }: { signup?: boolean }) {
                   }}
                   autoComplete={signup ? 'new-password' : 'current-password'}
                   placeholder={signup ? '12–128 characters' : 'Your password'}
-                  aria-invalid={!!error}
-                  aria-describedby={error ? 'auth-error' : undefined}
+                  aria-invalid={!!fieldErrors.password}
+                  aria-describedby={
+                    fieldErrors.password
+                      ? 'password-error password-help'
+                      : signup
+                        ? 'password-help'
+                        : undefined
+                  }
                 />
+                {signup && (
+                  <span className="field-helper" id="password-help">
+                    12–128 characters. Choose a password unique to this account.
+                  </span>
+                )}
+                {fieldErrors.password && (
+                  <span
+                    className="field-error"
+                    id="password-error"
+                    role="alert"
+                  >
+                    {fieldErrors.password}
+                  </span>
+                )}
               </Field>
               {error && (
                 <p className="error-note" role="alert" id="auth-error">

@@ -118,6 +118,7 @@ export class OnboardingService {
           address: draft.address || null,
           timezone: draft.timezone,
           hours: draft.hours,
+          closedDays: draft.closedDays,
         };
         if (location)
           await tx.location.update({ where: { id: location.id }, data });

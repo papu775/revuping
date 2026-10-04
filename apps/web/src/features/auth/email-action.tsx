@@ -13,6 +13,11 @@ import { AuthBlocker } from './auth-blocker';
 export function EmailAction({ kind }: { kind: 'verify' | 'forgot' | 'reset' }) {
   const [token, setToken] = useState('');
   const [password, setPassword] = useState('');
+  const [passwordTouched, setPasswordTouched] = useState(false);
+  const passwordError =
+    passwordTouched && (password.length < 12 || password.length > 128)
+      ? 'Use 12–128 characters.'
+      : '';
   const [notice, setNotice] = useState('');
   const [error, setError] = useState('');
   const [status, setStatus] = useState<
@@ -131,12 +136,11 @@ export function EmailAction({ kind }: { kind: 'verify' | 'forgot' | 'reset' }) {
             {success ? (
               <>
                 <p>Your email is confirmed. Business setup is the next step.</p>
-                <Link
-                  className="mt-6 inline-flex"
-                  href={authenticated ? '/workspace' : '/login'}
-                >
-                  <Button>{authenticated ? 'Continue setup' : 'Log in'}</Button>
-                </Link>
+                <Button asChild className="mt-6">
+                  <Link href={authenticated ? '/workspace' : '/login'}>
+                    {authenticated ? 'Continue setup' : 'Log in'}
+                  </Link>
+                </Button>
               </>
             ) : (
               <>
@@ -158,8 +162,12 @@ export function EmailAction({ kind }: { kind: 'verify' | 'forgot' | 'reset' }) {
                       kind === 'reset' &&
                       (password.length < 12 || password.length > 128)
                     ) {
-                      setError(
-                        'Use between 12 and 128 characters for your password.',
+                      setPasswordTouched(true);
+                      const element = event.currentTarget;
+                      requestAnimationFrame(() =>
+                        element
+                          .querySelector<HTMLInputElement>('input')
+                          ?.focus(),
                       );
                       return;
                     }
@@ -197,7 +205,10 @@ export function EmailAction({ kind }: { kind: 'verify' | 'forgot' | 'reset' }) {
                         setNotice(message);
                         toast(message, kind === 'reset' ? 'success' : 'info');
                         setPassword('');
-                        if (kind === 'reset') setToken('');
+                        if (kind === 'reset') {
+                          setToken('');
+                          setPasswordTouched(false);
+                        }
                       },
                       (error) => setError(authErrorMessage(error)),
                     );
@@ -221,12 +232,26 @@ export function EmailAction({ kind }: { kind: 'verify' | 'forgot' | 'reset' }) {
                       New password
                       <PasswordField
                         aria-label="New password"
+                        onBlur={() => setPasswordTouched(true)}
+                        aria-invalid={!!passwordError}
+                        aria-describedby={
+                          passwordError ? 'reset-password-error' : undefined
+                        }
                         value={password}
                         onChange={(event) => setPassword(event.target.value)}
                         required
                         minLength={12}
                         autoComplete="new-password"
                       />
+                      {passwordError && (
+                        <span
+                          className="field-error"
+                          id="reset-password-error"
+                          role="alert"
+                        >
+                          {passwordError}
+                        </span>
+                      )}
                     </Field>
                   )}
                   {kind === 'reset' && !token && !notice && (

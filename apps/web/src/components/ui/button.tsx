@@ -3,10 +3,12 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 const variants = cva(
-  'button whitespace-nowrap inline-flex min-h-12 items-center justify-center gap-2.5 rounded-lg border px-5 py-3 text-sm font-semibold leading-5 transition-[background-color,border-color,box-shadow] duration-200 active:shadow-inner focus-visible:outline-3 focus-visible:outline-offset-4 focus-visible:outline-violet/60 disabled:cursor-not-allowed disabled:border-disabled-line disabled:bg-disabled disabled:text-disabled-ink disabled:opacity-100 disabled:shadow-none motion-reduce:transform-none motion-reduce:transition-none [&_svg]:size-[17px] [&_svg]:shrink-0',
+  'button whitespace-nowrap inline-flex min-h-12 items-center justify-center gap-2.5 rounded-lg border px-5 py-3 text-sm font-semibold leading-5 transition-[background-color,border-color,box-shadow] duration-200 active:brightness-95 focus-visible:outline-3 focus-visible:outline-offset-4 focus-visible:outline-violet/60 disabled:cursor-not-allowed disabled:border-disabled-line disabled:bg-disabled disabled:text-disabled-ink disabled:opacity-100 disabled:shadow-none motion-reduce:transform-none motion-reduce:transition-none [&_svg]:size-[17px] [&_svg]:shrink-0',
   {
     variants: {
       variant: {
+        danger:
+          'button-danger border-danger/30 bg-danger-soft text-danger hover:border-danger',
         default:
           'button-primary border-transparent bg-action text-white shadow-[0_8px_24px_var(--shadow-color)] hover:bg-action-hover',
         secondary:

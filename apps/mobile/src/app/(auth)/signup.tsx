@@ -5,6 +5,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  TextInput,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -18,7 +19,7 @@ import {
   AuthBlocker,
   useToast,
 } from 'mobile-ui';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useAuthAction } from '../../features/use-auth-action';
 import { useAuth } from '../../data-access/auth-context';
 import {
@@ -35,10 +36,18 @@ export default function SignupScreen() {
   const { client } = useAuth();
   const insets = useSafeAreaInsets();
   const { colors } = useTheme();
+  const nameInput = useRef<TextInput>(null);
+  const emailInput = useRef<TextInput>(null);
+  const passwordInput = useRef<TextInput>(null);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [passwordTouched, setPasswordTouched] = useState(false);
+  const passwordError =
+    passwordTouched && (password.length < 12 || password.length > 128)
+      ? 'Use 12–128 characters for your password.'
+      : undefined;
   const [notice, setNotice] = useState('');
   const { pending, label, run, cancel } = useAuthAction();
   const { showToast } = useToast();
@@ -48,14 +57,22 @@ export default function SignupScreen() {
     if (pending || registeredEmail) return;
     if (!name.trim() || !email.trim() || !password.trim()) {
       setError('Please fill in all fields.');
+      (!name.trim()
+        ? nameInput
+        : !email.trim()
+          ? emailInput
+          : passwordInput
+      ).current?.focus();
       return;
     }
     if (password.length < 12 || password.length > 128) {
-      setError('Use 12–128 characters for your password.');
+      setPasswordTouched(true);
+      passwordInput.current?.focus();
       return;
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
       setError('Enter a valid email address.');
+      emailInput.current?.focus();
       return;
     }
     setError('');
@@ -73,6 +90,7 @@ export default function SignupScreen() {
         ),
       () => {
         setPassword('');
+        setPasswordTouched(false);
         setRegisteredEmail(email.trim());
         setNotice(registrationSuccessMessage);
         showToast(registrationSuccessMessage);
@@ -81,6 +99,7 @@ export default function SignupScreen() {
         if (registrationVerificationUnavailable(error)) {
           setRegisteredEmail(email.trim());
           setPassword('');
+          setPasswordTouched(false);
           setNotice(registrationVerificationUnavailableMessage);
           showToast(registrationVerificationUnavailableMessage, 'info');
         } else {
@@ -127,6 +146,7 @@ export default function SignupScreen() {
             <FeedbackPreview compact />
             <View style={styles.form}>
               <Field
+                inputRef={nameInput}
                 label="Your name"
                 editable={!registeredEmail}
                 value={name}
@@ -139,6 +159,7 @@ export default function SignupScreen() {
                 }
               />
               <Field
+                inputRef={emailInput}
                 label="Email"
                 editable={!registeredEmail}
                 value={email}
@@ -153,14 +174,14 @@ export default function SignupScreen() {
                 secureTextEntry
                 autoCapitalize="none"
                 autoCorrect={false}
+                inputRef={passwordInput}
                 label="Password"
                 editable={!registeredEmail}
                 value={password}
                 onChangeText={setPassword}
                 placeholder="12–128 characters"
-                error={
-                  error && !password.trim() ? 'Password is required' : undefined
-                }
+                onBlur={() => setPasswordTouched(true)}
+                error={passwordError}
               />
               <Button
                 title="Create account"

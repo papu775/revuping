@@ -1,5 +1,7 @@
 import { z } from 'zod';
-const time = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/);
+const time = z
+  .string()
+  .regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Enter a time in HH:mm format.');
 export const intervalSchema = z.object({ open: time, close: time }).strict();
 export const hoursSchema = z
   .array(z.array(intervalSchema).max(4))
@@ -24,7 +26,11 @@ export const hoursSchema = z
   });
 export const onboardingDraftSchema = z
   .object({
-    name: z.string().trim().min(1).max(100),
+    name: z
+      .string()
+      .trim()
+      .min(1, 'Enter a business name.')
+      .max(100, 'Use 100 characters or fewer.'),
     category: z.string().trim().max(80),
     locationName: z.string().trim().max(100),
     address: z.string().trim().max(500),
@@ -38,12 +44,26 @@ export const onboardingDraftSchema = z
         } catch {
           return false;
         }
-      }, 'Choose a valid IANA timezone.'),
+      }, 'Choose a timezone from the suggestions.'),
     brandColor: z.string().regex(/^#[0-9a-fA-F]{6}$/),
     hours: hoursSchema,
+    closedDays: z
+      .array(z.boolean())
+      .length(7)
+      .default(() => Array(7).fill(false)),
     step: z.number().int().min(0).max(3),
   })
-  .strict();
+  .strict()
+  .superRefine((draft, ctx) => {
+    draft.closedDays.forEach((closed, index) => {
+      if (closed && draft.hours[index].length)
+        ctx.addIssue({
+          code: 'custom',
+          path: ['hours', index],
+          message: 'A closed day cannot have opening hours.',
+        });
+    });
+  });
 export const saveOnboardingSchema = z
   .object({
     revision: z.number().int().nonnegative(),
@@ -69,6 +89,7 @@ export function initialOnboarding(name: string): OnboardingDraft {
     timezone: 'UTC',
     brandColor: '#7856ff',
     hours: Array.from({ length: 7 }, () => []),
+    closedDays: Array(7).fill(false),
     step: 0,
   };
 }

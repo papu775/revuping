@@ -33,3 +33,20 @@ describe('business contracts', () => {
     ).toBe(false);
   });
 });
+
+describe('explicit closed days', () => {
+  it('keeps legacy empty days unknown and rejects closed days with intervals', () => {
+    const draft = initialOnboarding('Studio');
+    const { closedDays: _legacy, ...legacy } = draft;
+    const parsed = saveOnboardingSchema.parse({ revision: 0, draft: legacy });
+    expect(parsed.draft.closedDays).toEqual(Array(7).fill(false));
+    draft.closedDays[0] = true;
+    expect(saveOnboardingSchema.safeParse({ revision: 0, draft }).success).toBe(
+      true,
+    );
+    draft.hours[0] = [{ open: '09:00', close: '17:00' }];
+    expect(saveOnboardingSchema.safeParse({ revision: 0, draft }).success).toBe(
+      false,
+    );
+  });
+});

@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { emailTemplate } from './email-template';
 import {
   Inject,
@@ -52,6 +54,15 @@ export class EmailService {
         to,
         subject: title,
         ...content,
+        attachments: [
+          {
+            filename: 'revuping-logo.png',
+            content: readFileSync(join(__dirname, 'assets/revuping-logo.png')),
+            cid: 'revuping-logo',
+            contentType: 'image/png',
+            contentDisposition: 'inline',
+          },
+        ],
       });
       if (!result.accepted.length || result.rejected.length)
         throw new Error('Delivery rejected');

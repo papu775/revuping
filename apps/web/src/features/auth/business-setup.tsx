@@ -1,8 +1,16 @@
 'use client';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+} from 'react';
 import { AudioLines, CheckCircle2, MapPin } from 'lucide-react';
 import {
   ApiRequestError,
+  businessBrand,
   onboardingDraftSchema,
   type OnboardingDraft,
   type OnboardingResponse,
@@ -15,6 +23,7 @@ import { Select } from '@/components/ui/select';
 import { useToast } from '@/components/ui/toaster';
 import { useAuthAction } from './use-auth-action';
 import { AuthBlocker } from './auth-blocker';
+import { HoursEditor, LogoPicker } from './business-controls';
 const steps = ['Business', 'Location', 'Hours & branding', 'Review'];
 const days = [
   'Monday',
@@ -32,10 +41,14 @@ export function BusinessSetup({ id, owner }: { id: string; owner: boolean }) {
   const [editing, setEditing] = useState(false);
   const [error, setError] = useState('');
   const [conflict, setConflict] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [logoError, setLogoError] = useState('');
+  const [saved, setSaved] = useState(false);
   const [progress, setProgress] = useState<number | null>(null);
   const toast = useToast();
   const action = useAuthAction();
   const heading = useRef<HTMLHeadingElement>(null);
+  const focusedStep = useRef('');
   const load = useCallback(async () => {
     try {
       const result = await authRequest(
@@ -44,6 +57,7 @@ export function BusinessSetup({ id, owner }: { id: string; owner: boolean }) {
       );
       setState(result);
       setDraft(result.draft);
+      setSaved(true);
       const query = Number(
         new URLSearchParams(window.location.search).get('step') ??
           result.draft.step,
@@ -65,11 +79,41 @@ export function BusinessSetup({ id, owner }: { id: string; owner: boolean }) {
     window.addEventListener('popstate', pop);
     return () => window.removeEventListener('popstate', pop);
   }, [load]);
-  const update = (patch: Partial<OnboardingDraft>) =>
+  const update = (patch: Partial<OnboardingDraft>) => {
+    setSaved(false);
     setDraft((current) => (current ? { ...current, ...patch } : current));
+    if (!draft) return;
+    const check = onboardingDraftSchema.safeParse({ ...draft, ...patch });
+    setFieldErrors((errors) => {
+      const result = { ...errors };
+      for (const key of Object.keys(patch))
+        if (
+          key in result &&
+          (check.success ||
+            !check.error.issues.some((issue) => issue.path[0] === key))
+        )
+          delete result[key];
+      return result;
+    });
+  };
+  useLayoutEffect(() => {
+    if (!draft || action.pending) return;
+    const currentStep = `${step}-${editing}-${!!state?.completedAt}`;
+    if (focusedStep.current === currentStep) return;
+    focusedStep.current = currentStep;
+    heading.current?.focus({ preventScroll: true });
+    heading.current?.scrollIntoView({ block: 'start', behavior: 'instant' });
+  }, [step, editing, !!draft, action.pending, !!state?.completedAt]);
+  const go = (next: number) => {
+    setEditing(true);
+    setStep(next);
+    window.history.pushState(null, '', `?workspace=${id}&step=${next}`);
+  };
+
   const apply = (result: OnboardingResponse) => {
     setState(result);
     setDraft(result.draft);
+    setSaved(true);
   };
   const fail = (error: unknown) => {
     const stale = error instanceof ApiRequestError && error.status === 409;
@@ -84,18 +128,26 @@ export function BusinessSetup({ id, owner }: { id: string; owner: boolean }) {
     if (!draft || !state) return;
     setError('');
     const checked = onboardingDraftSchema.safeParse({ ...draft, step: next });
-    if (!checked.success) {
-      setError(checked.error.issues[0]?.message ?? 'Check your fields.');
+    const errors: Record<string, string> = {};
+    if (!checked.success)
+      checked.error.issues.forEach((issue) => {
+        const key = String(issue.path[0]);
+        errors[key] ??= issue.message;
+      });
+    if ((step === 0 || complete) && !draft.category)
+      errors.category = 'Choose a business category.';
+    if ((step === 1 || complete) && !draft.locationName.trim())
+      errors.locationName = 'Enter a location name.';
+    setFieldErrors(errors);
+    if (Object.keys(errors).length) {
+      requestAnimationFrame(() =>
+        document
+          .querySelector<HTMLElement>('.setup-card [aria-invalid="true"]')
+          ?.focus(),
+      );
       return;
     }
-    if ((step === 0 || complete) && !draft.category) {
-      setError('Choose a business category.');
-      return;
-    }
-    if ((step === 1 || complete) && !draft.locationName.trim()) {
-      setError('Enter a location name.');
-      return;
-    }
+    if (!checked.success) return;
     await action.run(
       complete ? 'Finishing your setup…' : 'Saving your progress…',
       (signal) =>
@@ -110,11 +162,10 @@ export function BusinessSetup({ id, owner }: { id: string; owner: boolean }) {
         apply(result);
         setStep(next);
         window.history.pushState(null, '', `?workspace=${id}&step=${next}`);
-        heading.current?.focus();
         if (complete) {
           setEditing(false);
           toast('Business setup saved.');
-        } else toast('Progress saved.');
+        } else setSaved(true);
       },
       fail,
     );
@@ -122,10 +173,11 @@ export function BusinessSetup({ id, owner }: { id: string; owner: boolean }) {
   const changeLogo = async (file: File) => {
     if (!state || !draft) return;
     if (file.size > 2 * 1024 * 1024) {
-      setError('Choose an image smaller than 2 MB.');
+      setLogoError('Choose an image smaller than 2 MB.');
       return;
     }
     setError('');
+    setLogoError('');
     setProgress(0);
     let savedDraft: OnboardingResponse | null = null;
     try {
@@ -148,9 +200,14 @@ export function BusinessSetup({ id, owner }: { id: string; owner: boolean }) {
         },
         (error) => {
           if (savedDraft) apply(savedDraft);
-          fail(error);
+          if (error instanceof ApiRequestError && error.status === 409)
+            fail(error);
+          else
+            setLogoError(
+              'Upload failed. Your previous logo is kept. Check your connection and retry.',
+            );
           if (error instanceof ApiRequestError && error.status === 400)
-            setError(
+            setLogoError(
               'Use a valid PNG, JPEG or WebP, at most 4096 × 4096 pixels.',
             );
         },
@@ -173,100 +230,190 @@ export function BusinessSetup({ id, owner }: { id: string; owner: boolean }) {
   const logo = state.hasLogo
     ? `/api/backend/workspaces/${id}/logo?v=${state.revision}`
     : null;
+  const currentValidation = onboardingDraftSchema.safeParse(draft);
+  const invalidHoursDays = !currentValidation.success
+    ? currentValidation.error.issues
+        .filter((issue) => issue.path[0] === 'hours')
+        .map((issue) => Number(issue.path[1]))
+    : [];
+  const brand = businessBrand(draft.brandColor);
+  const brandStyle = {
+    '--business-accent': brand.accent,
+    '--business-foreground': brand.foreground,
+    '--business-focus-light': brand.lightFocus,
+    '--business-focus-dark': brand.darkFocus,
+  } as CSSProperties;
+  const edit = (title: string, next: number) =>
+    owner && (
+      <Button
+        type="button"
+        variant="ghost"
+        size="small"
+        onClick={() => go(next)}
+      >
+        {title}
+      </Button>
+    );
   const summary = (
     <div className="setup-summary">
-      <section>
-        {logo && (
-          <img className="setup-logo" src={logo} alt={`${draft.name} logo`} />
+      <section className="summary-business">
+        {logo ? (
+          <img
+            className="setup-logo summary-logo"
+            src={logo}
+            alt={`${draft.name} logo`}
+          />
+        ) : (
+          <span className="setup-logo summary-logo logo-placeholder">
+            <AudioLines size={32} />
+          </span>
         )}
-        <h3 className="mt-3 font-semibold">{draft.name}</h3>
-        <p>{draft.category}</p>
-        {owner && (
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={() => {
-              setEditing(true);
-              setStep(0);
-            }}
-          >
-            Edit business
-          </Button>
-        )}
+        <div>
+          <h3>{draft.name}</h3>
+          <p>{draft.category || 'Category not added'}</p>
+        </div>
+        {edit('Edit business', 0)}
       </section>
       <section>
-        <h3 className="font-semibold">{draft.locationName}</h3>
-        <p>
+        <div className="section-heading">
+          <h3>Location</h3>
+          {edit('Edit location', 1)}
+        </div>
+        <strong>{draft.locationName}</strong>
+        <p className="summary-address">
           {draft.address || 'Address not added'}
-          <br />
-          {draft.timezone}
         </p>
-        {owner && (
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={() => {
-              setEditing(true);
-              setStep(1);
-            }}
-          >
-            Edit location
-          </Button>
-        )}
+        <p className="summary-timezone">
+          {draft.timezone.replaceAll('_', ' ')}
+        </p>
       </section>
       <section>
-        <p>Brand colour: {draft.brandColor}</p>
-        {days.map((day, index) => (
-          <p key={day}>
-            {day}:{' '}
-            {draft.hours[index]
-              .map((interval) => `${interval.open}–${interval.close}`)
-              .join(', ') || 'Closed / not specified'}
-          </p>
-        ))}
-        {owner && (
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={() => {
-              setEditing(true);
-              setStep(2);
-            }}
-          >
-            Edit hours & branding
-          </Button>
-        )}
+        <div className="section-heading">
+          <h3>Branding</h3>
+          {edit('Edit branding', 2)}
+        </div>
+        <div className="brand-swatch-row">
+          <span className="brand-swatch" style={{ background: brand.accent }} />
+          <div>
+            <strong>Business accent</strong>
+            <p>{draft.brandColor.toUpperCase()}</p>
+          </div>
+        </div>
+      </section>
+      <section>
+        <div className="section-heading">
+          <h3>Opening hours</h3>
+          {edit('Edit hours & branding', 2)}
+        </div>
+        <dl className="hours-summary">
+          {days.map((day, index) => (
+            <div key={day}>
+              <dt>{day}</dt>
+              <dd>
+                {draft.hours[index]
+                  .map((interval) => `${interval.open}–${interval.close}`)
+                  .join(', ') ||
+                  (draft.closedDays[index] ? 'Closed' : 'Not provided')}
+              </dd>
+            </div>
+          ))}
+        </dl>
       </section>
     </div>
   );
+  const fieldError = (key: string) =>
+    fieldErrors[key] && (
+      <span className="field-error" id={`setup-${key}-error`} role="alert">
+        {fieldErrors[key]}
+      </span>
+    );
+  const invalid = (key: string) => ({
+    'aria-invalid': !!fieldErrors[key],
+    'aria-describedby': fieldErrors[key] ? `setup-${key}-error` : undefined,
+  });
+  const ready = (state.completedAt && !editing) || !owner;
+  const preview = (
+    <aside
+      className="setup-preview business-brand"
+      aria-label="Brand preview"
+      style={brandStyle}
+    >
+      <span className="preview-eyebrow">Business preview</span>
+      <div className="preview-business-header">
+        {logo ? (
+          <img
+            className="setup-logo"
+            src={logo}
+            alt="Business branding preview"
+          />
+        ) : (
+          <span className="setup-logo logo-placeholder">
+            <AudioLines size={32} />
+          </span>
+        )}
+        <div>
+          <h3>{draft.name || 'Your business'}</h3>
+          <p>{draft.category || 'Your category'}</p>
+        </div>
+      </div>
+      <div className="preview-location">
+        <MapPin size={18} />
+        <strong>{draft.locationName || 'Your location'}</strong>
+        <p>{draft.address || 'Your location details will appear here.'}</p>
+        <span className="business-accent-chip">
+          {draft.name || 'Your business'}
+        </span>
+      </div>
+      <p className="preview-caption">
+        {ready
+          ? 'Your saved business branding.'
+          : saved
+            ? 'Progress saved. Preview of your current details.'
+            : 'Live preview · unsaved changes are shown.'}
+      </p>
+    </aside>
+  );
   return (
-    <AuthBlocker label={action.label}>
-      <div className="setup-grid">
+    <AuthBlocker
+      label={
+        progress !== null
+          ? progress < 100
+            ? `Uploading your logo… ${progress}%`
+            : 'Processing your image…'
+          : action.label
+      }
+    >
+      <div className="setup-grid business-brand" style={brandStyle}>
         <section className="setup-card">
-          {(state.completedAt && !editing) || !owner ? (
+          {ready ? (
             <>
               <CheckCircle2 className="text-accent mb-4" size={36} />
-              <h2>
+              <h2 ref={heading} tabIndex={-1}>
                 {state.completedAt
                   ? 'Your business is ready'
                   : 'Business setup'}
               </h2>
               <p className="mb-6">
-                Your details are saved. No customer feedback has been collected
-                yet. Review tools will arrive in a future phase.
+                {state.completedAt
+                  ? 'Your business details are saved. You can update them whenever you need.'
+                  : 'A workspace owner can finish setting up these details.'}
               </p>
               {summary}
             </>
           ) : (
             <>
-              <p className="text-xs uppercase tracking-widest">Make it yours</p>
+              <div className="section-heading">
+                <p className="setup-eyebrow">Make it yours</p>
+                {saved && (
+                  <span className="saved-indicator" role="status">
+                    ✓ Saved
+                  </span>
+                )}
+              </div>
               <h2 ref={heading} tabIndex={-1}>
                 {steps[step]}
               </h2>
-              <p>
-                A few details to make RevuPing feel like your business. Your
-                progress is saved when you continue.
-              </p>
+              <p>Progress saves when you continue.</p>
               <ol className="setup-steps" aria-label="Setup progress">
                 {steps.map((title, index) => (
                   <li
@@ -277,13 +424,8 @@ export function BusinessSetup({ id, owner }: { id: string; owner: boolean }) {
                   </li>
                 ))}
               </ol>
-              {!owner && (
-                <p>
-                  You have read access. A workspace owner can complete or edit
-                  setup.
-                </p>
-              )}
               <form
+                noValidate
                 onSubmit={(event) => {
                   event.preventDefault();
                   void save(Math.min(3, step + 1), step === 3);
@@ -300,17 +442,30 @@ export function BusinessSetup({ id, owner }: { id: string; owner: boolean }) {
                         <input
                           required
                           maxLength={100}
+                          aria-label="Business name"
                           value={draft.name}
+                          {...invalid('name')}
+                          onBlur={() => {
+                            if (!draft.name.trim())
+                              setFieldErrors((current) => ({
+                                ...current,
+                                name: 'Enter a business name.',
+                              }));
+                          }}
                           onChange={(event) =>
                             update({ name: event.target.value })
                           }
                         />
+                        {fieldError('name')}
                       </Field>
                       <Field as="div">
                         Category
                         <Select
                           label="Business category"
                           value={draft.category}
+                          className={
+                            fieldErrors.category ? 'border-danger' : ''
+                          }
                           options={[
                             'Salon & beauty',
                             'Restaurant & café',
@@ -319,64 +474,43 @@ export function BusinessSetup({ id, owner }: { id: string; owner: boolean }) {
                             'Professional services',
                             'Other',
                           ].map((value) => ({ value, label: value }))}
-                          onValueChange={(category) => update({ category })}
-                        />
-                      </Field>
-                      <Field>
-                        Business logo{' '}
-                        <span className="text-xs text-muted">
-                          Optional · PNG, JPEG or WebP · up to 2 MB
-                        </span>
-                        {logo && (
-                          <img
-                            className="setup-logo"
-                            src={logo}
-                            alt="Your business logo"
-                          />
-                        )}
-                        <input
-                          type="file"
-                          accept="image/png,image/jpeg,image/webp"
-                          onChange={(event) => {
-                            const file = event.target.files?.[0];
-                            event.target.value = '';
-                            if (file) void changeLogo(file);
+                          onValueChange={(category) => {
+                            update({ category });
+                            setFieldErrors((current) => ({
+                              ...current,
+                              category: '',
+                            }));
                           }}
+                          {...invalid('category')}
                         />
+                        {fieldError('category')}
                       </Field>
-                      {progress !== null && (
-                        <p role="status">
-                          {progress < 100
-                            ? `Uploading ${progress}%`
-                            : 'Processing your image…'}
-                        </p>
-                      )}
-                      {logo && (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          onClick={() =>
-                            void action.run(
-                              'Removing your logo…',
-                              (signal) =>
-                                authRequest(
-                                  `workspaces/${id}/logo`,
-                                  'onboarding',
-                                  { revision: state.revision },
-                                  'DELETE',
-                                  signal,
-                                ),
-                              (result) => {
-                                setState(result);
-                                toast('Logo removed.');
-                              },
-                              fail,
-                            )
-                          }
-                        >
-                          Remove logo
-                        </Button>
-                      )}
+                      <LogoPicker
+                        logo={logo}
+                        progress={progress}
+                        error={logoError}
+                        disabled={action.pending}
+                        onUpload={(file) => void changeLogo(file)}
+                        onRemove={() =>
+                          void action.run(
+                            'Removing your logo…',
+                            (signal) =>
+                              authRequest(
+                                `workspaces/${id}/logo`,
+                                'onboarding',
+                                { revision: state.revision },
+                                'DELETE',
+                                signal,
+                              ),
+                            (result) => {
+                              setState(result);
+                              setLogoError('');
+                              toast('Logo removed.');
+                            },
+                            fail,
+                          )
+                        }
+                      />
                     </>
                   )}
                   {step === 1 && (
@@ -386,38 +520,52 @@ export function BusinessSetup({ id, owner }: { id: string; owner: boolean }) {
                         <input
                           required
                           maxLength={100}
+                          aria-label="Location name"
                           value={draft.locationName}
+                          {...invalid('locationName')}
                           onChange={(event) =>
                             update({ locationName: event.target.value })
                           }
                         />
+                        {fieldError('locationName')}
                       </Field>
                       <Field>
-                        Address{' '}
-                        <span className="text-xs text-muted">Optional</span>
+                        Address <span className="field-helper">Optional</span>
                         <textarea
                           maxLength={500}
+                          aria-label="Address"
+                          rows={3}
                           value={draft.address}
+                          {...invalid('address')}
                           onChange={(event) =>
                             update({ address: event.target.value })
                           }
                         />
+                        {fieldError('address')}
                       </Field>
                       <Field>
                         Timezone
                         <input
                           required
+                          aria-label="Timezone"
                           list="timezones"
                           value={draft.timezone}
+                          {...invalid('timezone')}
                           onChange={(event) =>
                             update({ timezone: event.target.value })
                           }
                         />
                         <datalist id="timezones">
-                          {Intl.supportedValuesOf('timeZone').map((zone) => (
-                            <option key={zone} value={zone} />
-                          ))}
+                          {['UTC', ...Intl.supportedValuesOf('timeZone')].map(
+                            (zone) => (
+                              <option key={zone} value={zone} />
+                            ),
+                          )}
                         </datalist>
+                        <span className="field-helper">
+                          Search for your city or region.
+                        </span>
+                        {fieldError('timezone')}
                       </Field>
                       <Button
                         type="button"
@@ -431,102 +579,48 @@ export function BusinessSetup({ id, owner }: { id: string; owner: boolean }) {
                       >
                         Use device timezone
                       </Button>
-                      <p>
-                        You can edit this suggestion. Timezone is never inferred
-                        from your address.
-                      </p>
                     </>
                   )}
                   {step === 2 && (
                     <>
-                      <Field>
-                        Brand colour
-                        <input
-                          type="color"
-                          value={draft.brandColor}
-                          onChange={(event) =>
-                            update({ brandColor: event.target.value })
-                          }
-                        />
-                      </Field>
-                      <p>
-                        Opening hours are optional. Leave days closed or add up
-                        to four intervals. Overnight hours are not supported.
-                      </p>
-                      {days.map((day, index) => (
-                        <div className="setup-day" key={day}>
-                          <span className="font-semibold text-sm">{day}</span>
-                          {draft.hours[index].length === 0 && (
-                            <span className="text-sm text-muted">
-                              Closed / not specified
-                            </span>
-                          )}
-                          {draft.hours[index].map((interval, position) => (
-                            <div className="setup-interval" key={position}>
-                              {(['open', 'close'] as const).map((key) => (
-                                <input
-                                  key={key}
-                                  type="time"
-                                  aria-label={`${day} ${key} ${position + 1}`}
-                                  value={interval[key]}
-                                  onChange={(event) =>
-                                    update({
-                                      hours: draft.hours.map((items, i) =>
-                                        i === index
-                                          ? items.map((item, j) =>
-                                              j === position
-                                                ? {
-                                                    ...item,
-                                                    [key]: event.target.value,
-                                                  }
-                                                : item,
-                                            )
-                                          : items,
-                                      ),
-                                    })
-                                  }
-                                />
-                              ))}
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                aria-label={`Remove ${day} interval ${position + 1}`}
-                                onClick={() =>
-                                  update({
-                                    hours: draft.hours.map((items, i) =>
-                                      i === index
-                                        ? items.filter((_, j) => j !== position)
-                                        : items,
-                                    ),
-                                  })
-                                }
-                              >
-                                Remove
-                              </Button>
-                            </div>
-                          ))}
-                          {draft.hours[index].length < 4 && (
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              onClick={() =>
-                                update({
-                                  hours: draft.hours.map((items, i) =>
-                                    i === index
-                                      ? [
-                                          ...items,
-                                          { open: '09:00', close: '17:00' },
-                                        ]
-                                      : items,
-                                  ),
-                                })
+                      <section className="brand-editor">
+                        <h3>Business branding</h3>
+                        <p className="field-helper">
+                          Your business accent. Appearance follows your existing
+                          Light, Dark or System setting.
+                        </p>
+                        <Field>
+                          Brand colour
+                          <div className="brand-colour-control">
+                            <input
+                              type="color"
+                              value={draft.brandColor}
+                              aria-label="Brand colour"
+                              onChange={(event) =>
+                                update({ brandColor: event.target.value })
                               }
-                            >
-                              Add {day} interval
-                            </Button>
-                          )}
-                        </div>
-                      ))}
+                            />
+                            <span>{draft.brandColor.toUpperCase()}</span>
+                          </div>
+                          {fieldError('brandColor')}
+                        </Field>
+                      </section>
+                      <HoursEditor
+                        draft={draft}
+                        update={update}
+                        error={fieldErrors.hours}
+                        invalidDays={invalidHoursDays}
+                      />
+                      {fieldErrors.hours && (
+                        <p
+                          className="field-error"
+                          role="alert"
+                          id="setup-hours-error"
+                          tabIndex={-1}
+                        >
+                          {fieldErrors.hours}
+                        </p>
+                      )}
                     </>
                   )}
                   {step === 3 && summary}
@@ -545,68 +639,24 @@ export function BusinessSetup({ id, owner }: { id: string; owner: boolean }) {
                     )}
                   </p>
                 )}
-                {owner && (
-                  <div className="setup-actions">
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      disabled={action.pending || step === 0}
-                      onClick={() => void save(step - 1)}
-                    >
-                      Back
-                    </Button>
-                    <Button type="submit" disabled={action.pending}>
-                      {step === 3 ? 'Finish setup' : 'Continue'}
-                    </Button>
-                  </div>
-                )}
+                <div className="setup-actions">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    disabled={action.pending || step === 0}
+                    onClick={() => void save(step - 1)}
+                  >
+                    Back
+                  </Button>
+                  <Button type="submit" disabled={action.pending}>
+                    {step === 3 ? 'Finish setup' : 'Continue'}
+                  </Button>
+                </div>
               </form>
             </>
           )}
         </section>
-        <aside className="setup-preview" aria-label="Brand preview">
-          <span className="text-xs uppercase tracking-widest text-muted">
-            Your business, your brand
-          </span>
-          <div className="mt-6 flex items-center gap-3">
-            {logo ? (
-              <img
-                className="setup-logo"
-                src={logo}
-                alt="Business branding preview"
-              />
-            ) : (
-              <span
-                className="setup-logo grid place-items-center"
-                style={{ color: draft.brandColor }}
-              >
-                <AudioLines size={32} />
-              </span>
-            )}
-            <div>
-              <h3>{draft.name}</h3>
-              <p className="text-sm text-muted">
-                {draft.category || 'A little more you'}
-              </p>
-            </div>
-          </div>
-          <div className="mt-6 rounded-xl border border-line bg-surface p-4">
-            <MapPin size={18} className="text-accent" />
-            <p className="mt-2 font-medium">{draft.locationName}</p>
-            <p className="mt-1 text-sm text-muted">
-              {draft.address ||
-                'Welcome your customers with a consistent brand.'}
-            </p>
-            <div
-              className="mt-4 h-1 rounded"
-              style={{ background: draft.brandColor }}
-            />
-          </div>
-          <p className="mt-5 text-sm text-muted">
-            A preview of your saved business details. No sample reviews or
-            metrics.
-          </p>
-        </aside>
+        {preview}
       </div>
     </AuthBlocker>
   );
