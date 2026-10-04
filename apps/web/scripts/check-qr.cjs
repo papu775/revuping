@@ -316,6 +316,7 @@ async function decode(file, url) {
     await page
       .getByLabel('Display text', { exact: true })
       .fill('Tell us about your visit');
+    await page.getByText('Customer page settings', { exact: true }).click();
     await page
       .getByLabel('Google review URL', { exact: true })
       .fill('https://g.page/r/Fixture123/review');
@@ -353,6 +354,64 @@ async function decode(file, url) {
       ).status(),
       403,
     );
+    await page
+      .getByLabel('Display text', { exact: true })
+      .fill('Preserved after failed save');
+    await page.route(
+      '**/api/backend/workspaces/*/locations/*/qr',
+      async (route) => {
+        await new Promise((resolve) => setTimeout(resolve, 400));
+        await route.fulfill({
+          status: 503,
+          contentType: 'application/json',
+          body: JSON.stringify({ error: { code: 'SERVICE_UNAVAILABLE' } }),
+        });
+      },
+    );
+    const saveButton = page.getByRole('button', {
+      name: 'Save QR settings',
+      exact: true,
+    });
+    const saveBounds = await saveButton.boundingBox();
+    await saveButton.click();
+    await expect(
+      page.getByRole('button', { name: 'Saving…', exact: true }),
+    ).toHaveAttribute('aria-busy', 'true');
+    const busySaveBounds = await page
+      .getByRole('button', { name: 'Saving…', exact: true })
+      .boundingBox();
+    assert.equal(busySaveBounds.width, saveBounds.width);
+    assert.equal(busySaveBounds.height, saveBounds.height);
+    await expect(
+      page.getByRole('button', { name: 'Retry saving settings', exact: true }),
+    ).toBeVisible();
+    await expect(page.getByLabel('Display text', { exact: true })).toHaveValue(
+      'Preserved after failed save',
+    );
+    await page.unroute('**/api/backend/workspaces/*/locations/*/qr');
+    await page
+      .getByRole('button', { name: 'Retry saving settings', exact: true })
+      .click();
+    await expect(
+      page.getByText('Saved settings · Ready to preview and export.', {
+        exact: true,
+      }),
+    ).toBeVisible();
+    await expect(page.getByLabel('Display text', { exact: true })).toHaveValue(
+      'Preserved after failed save',
+    );
+
+    await page
+      .getByLabel('Display text', { exact: true })
+      .fill('Tell us about your visit');
+    await page
+      .getByRole('button', { name: 'Save QR settings', exact: true })
+      .click();
+    await expect(
+      page.getByText('Saved settings · Ready to preview and export.', {
+        exact: true,
+      }),
+    ).toBeVisible();
     await page.getByLabel('Display text', { exact: true }).fill('Unsaved main');
     page.once('dialog', (d) => d.accept());
     await page.getByLabel('Location', { exact: true }).selectOption(location2);
@@ -381,6 +440,81 @@ async function decode(file, url) {
       .click();
     await expect(page.locator('.error-note')).toBeVisible();
     await page.unroute('**/api/backend/workspaces/*/logo');
+    const retryDownload = page.waitForEvent('download');
+    await page
+      .getByRole('button', { name: 'Retry SVG export', exact: true })
+      .click();
+    const retryFile = path.join(output, 'retried-card.svg');
+    await (await retryDownload).saveAs(retryFile);
+    await decode(retryFile, first.customerUrl);
+    await expect(
+      page.getByRole('button', { name: 'Retry SVG export' }),
+    ).toHaveCount(0);
+    await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+    await page
+      .getByRole('button', { name: 'Copy customer link', exact: true })
+      .click();
+    await expect
+      .poll(() => page.evaluate(() => navigator.clipboard.readText()))
+      .toBe(first.customerUrl);
+    await page.evaluate(() => {
+      window.qrOriginalClipboardWrite = navigator.clipboard.writeText;
+      navigator.clipboard.writeText = async () => {
+        throw new Error('Synthetic clipboard denial');
+      };
+    });
+    await page
+      .getByRole('button', { name: 'Copy customer link', exact: true })
+      .click();
+    await expect(
+      page.getByRole('button', { name: 'Retry copying link', exact: true }),
+    ).toBeVisible();
+    await page.evaluate(() => {
+      navigator.clipboard.writeText = window.qrOriginalClipboardWrite;
+      delete window.qrOriginalClipboardWrite;
+    });
+    await page
+      .getByRole('button', { name: 'Retry copying link', exact: true })
+      .click();
+    await expect
+      .poll(() => page.evaluate(() => navigator.clipboard.readText()))
+      .toBe(first.customerUrl);
+    await page
+      .getByRole('button', { name: 'Preview customer experience', exact: true })
+      .click();
+    const previewDialog = page.getByRole('dialog', {
+      name: 'Preview the customer experience',
+    });
+    await expect(previewDialog).toContainText('Juniper <&> Studio');
+    await expect(
+      previewDialog.getByRole('link', { name: 'Open customer page' }),
+    ).toHaveAttribute('href', first.customerUrl);
+    await expect
+      .poll(() =>
+        previewDialog.evaluate((element) => getComputedStyle(element).opacity),
+      )
+      .toBe('1');
+    await page.screenshot({
+      path: path.join(output, 'studio-preview-dialog.png'),
+    });
+    await page.keyboard.press('Escape');
+    await expect(
+      page.getByRole('button', {
+        name: 'Preview customer experience',
+        exact: true,
+      }),
+    ).toBeFocused();
+    await page.getByRole('tab', { name: 'Counter card', exact: true }).focus();
+    await page.keyboard.press('ArrowRight');
+    await expect(
+      page.getByRole('tab', { name: 'Minimal poster', exact: true }),
+    ).toHaveAttribute('aria-selected', 'true');
+    await expect(page.locator('.qr-print-card')).toHaveClass(/poster/);
+    await expect(
+      page.getByRole('button', { name: 'Download SVG card', exact: true }),
+    ).toBeDisabled();
+    await page.getByRole('tab', { name: 'Counter card', exact: true }).click();
+
     const copyButton = page.getByRole('button', {
       name: 'Copy customer link',
       exact: true,
@@ -391,8 +525,67 @@ async function decode(file, url) {
     assert.equal(afterHover.width, beforeHover.width);
     assert.equal(afterHover.height, beforeHover.height);
 
+    async function studioShots(prefix) {
+      for (const theme of ['light', 'dark'])
+        for (const width of [1280, 390]) {
+          await page.setViewportSize({ width, height: 900 });
+          await page.evaluate(
+            (t) => localStorage.setItem('revuping-theme', t),
+            theme,
+          );
+          await page.reload();
+          await expect(
+            page.getByRole('heading', { name: 'QR code studio', exact: true }),
+          ).toBeVisible();
+          assert.ok(
+            await page.evaluate(
+              () => document.documentElement.scrollWidth <= innerWidth,
+            ),
+          );
+          await page.evaluate(() => scrollTo(0, 0));
+          await expect(page.locator('.qr-code svg')).toBeVisible();
+          await page.screenshot({
+            path: path.join(output, `${prefix}-${width}-${theme}.png`),
+            fullPage: true,
+          });
+          if (prefix === 'studio-counter') {
+            await page
+              .getByRole('button', {
+                name: 'Preview customer experience',
+                exact: true,
+              })
+              .click();
+            const dialog = page.getByRole('dialog', {
+              name: 'Preview the customer experience',
+            });
+            await expect
+              .poll(() =>
+                dialog.evaluate((element) => getComputedStyle(element).opacity),
+              )
+              .toBe('1');
+            assert.ok(
+              await dialog.evaluate(
+                (element) => element.scrollWidth <= element.clientWidth,
+              ),
+            );
+            await page.screenshot({
+              path: path.join(output, `studio-dialog-${width}-${theme}.png`),
+            });
+            await page.keyboard.press('Escape');
+            await expect(
+              page.getByRole('button', {
+                name: 'Preview customer experience',
+                exact: true,
+              }),
+            ).toBeFocused();
+          }
+        }
+    }
     for (const layout of ['Counter card', 'Minimal poster']) {
-      await page.getByLabel('Choose a layout').selectOption(layout);
+      await page.getByRole('tab', { name: layout, exact: true }).click();
+      await expect(
+        page.getByRole('tab', { name: layout, exact: true }),
+      ).toHaveAttribute('aria-selected', 'true');
       if (layout === 'Minimal poster') {
         await page
           .getByRole('button', { name: 'Save QR settings', exact: true })
@@ -426,30 +619,9 @@ async function decode(file, url) {
           assert.equal((await sharp(file).metadata()).width, 1680);
         await decode(file, first.customerUrl);
       }
+      if (layout === 'Counter card') await studioShots('studio-counter');
     }
-    for (const theme of ['light', 'dark'])
-      for (const width of [1280, 390]) {
-        await page.setViewportSize({ width, height: 900 });
-        await page.evaluate(
-          (t) => localStorage.setItem('revuping-theme', t),
-          theme,
-        );
-        await page.reload();
-        await expect(
-          page.getByRole('heading', { name: 'QR code studio', exact: true }),
-        ).toBeVisible();
-        assert.ok(
-          await page.evaluate(
-            () => document.documentElement.scrollWidth <= innerWidth,
-          ),
-        );
-        await page.evaluate(() => scrollTo(0, 0));
-        await expect(page.locator('.qr-code svg')).toBeVisible();
-        await page.screenshot({
-          path: path.join(output, `studio-${width}-${theme}.png`),
-          fullPage: true,
-        });
-      }
+    await studioShots('studio');
     onboarding = await call(
       `workspaces/${id}/onboarding`,
       undefined,
@@ -642,6 +814,9 @@ async function decode(file, url) {
       .getByRole('link', { name: 'QR studio', exact: true })
       .click();
     await expect(staffPage.getByLabel('Display name override')).toBeDisabled();
+    await expect(
+      staffPage.getByRole('tab', { name: 'Counter card', exact: true }),
+    ).toBeDisabled();
     await pool.query(
       'DELETE FROM "Membership" WHERE "workspaceId"=$1 AND "userId"=$2',
       [id, staff.user.id],

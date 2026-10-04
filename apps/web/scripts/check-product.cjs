@@ -218,7 +218,9 @@ async function verifyControls(browser, errors) {
   await expect(page.locator('html')).toHaveClass(/dark/);
   await page.emulateMedia({ colorScheme: 'light' });
   await expect(page.locator('html')).not.toHaveClass(/dark/);
-  await page.getByLabel('Business name', { exact: true }).fill('W'.repeat(60));
+  await page
+    .getByRole('textbox', { name: 'Business name', exact: true })
+    .fill('W'.repeat(60));
   await page.getByRole('button', { name: 'Save business profile' }).click();
   await page.getByRole('button', { name: 'Open navigation' }).click();
   await page.locator('.workspace-nav a[href="/dashboard"]').click();

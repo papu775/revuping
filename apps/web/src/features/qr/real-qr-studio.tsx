@@ -1,10 +1,23 @@
 'use client';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import QRCode from 'qrcode';
+import * as Tabs from '@radix-ui/react-tabs';
+import {
+  ArrowRight,
+  ArrowUpRight,
+  CheckCircle2,
+  Copy,
+  Download,
+  Leaf,
+  QrCode as QrIcon,
+} from 'lucide-react';
 import type { QrSettings, QrSettingsInput } from 'api-contracts';
 import { authErrorMessage, qrSettingsInputSchema } from 'api-contracts';
 import { authRequest } from '@/data-access/auth-client';
-import { Panel } from '@/components/shared';
+import { Panel, Field } from '@/components/shared';
+import { Dialog } from '@/components/ui/dialog';
+import { InlineSpinner } from '@/components/ui/loading';
+import { withDeadline } from '@/lib/async-actions';
 import { QrCode } from '@/components/qr-code';
 import { BrandColour } from '@/components/ui/brand-colour';
 import { Button } from '@/components/ui/button';
@@ -12,6 +25,25 @@ import { PageHeading } from '@/components/ui/page-heading';
 import { qrCardSvg } from '@/lib/qr-card-export';
 import { printableColor } from '@/lib/print-palette';
 import { useToast } from '@/components/ui/toaster';
+type Action = 'save' | 'svg' | 'png' | 'copy';
+function ActionLabel({
+  label,
+  busy,
+  pendingLabel,
+}: {
+  label: string;
+  busy: boolean;
+  pendingLabel: string;
+}) {
+  return (
+    <span className="action-label">
+      <span className="reserved-label" aria-hidden="true">
+        {label}
+      </span>
+      <span>{busy ? pendingLabel : label}</span>
+    </span>
+  );
+}
 const input = (s: QrSettings): QrSettingsInput => ({
   revision: s.revision,
   displayName: s.displayName,
@@ -37,7 +69,10 @@ export function RealQrStudio({
     saved ? input(saved) : null,
   );
   const [error, setError] = useState('');
-  const [pending, setPending] = useState(false);
+  const [activity, setActivity] = useState<Action | null>(null);
+  const [failureAction, setFailureAction] = useState<Action | null>(null);
+  const [preview, setPreview] = useState(false);
+  const pending = activity !== null;
   const lock = useRef(false);
   const toast = useToast();
   const dirty =
@@ -69,22 +104,24 @@ export function RealQrStudio({
   const qrColor = printableColor(color);
   const name = draft.displayName || saved.businessName;
   const logoUrl = `/api/backend/workspaces/${workspaceId}/logo`;
-  const run = async (action: () => Promise<void>) => {
+  const run = async (kind: Action, action: () => Promise<void>) => {
     if (lock.current) return;
     lock.current = true;
-    setPending(true);
+    setActivity(kind);
     setError('');
+    setFailureAction(null);
     try {
       await action();
     } catch (e) {
       setError(authErrorMessage(e));
+      setFailureAction(kind);
       toast(
         'Action could not be completed. Your changes are preserved.',
         'error',
       );
     } finally {
       lock.current = false;
-      setPending(false);
+      setActivity(null);
     }
   };
   const download = async (format: 'svg' | 'png') => {
@@ -162,215 +199,333 @@ export function RealQrStudio({
     setTimeout(() => URL.revokeObjectURL(uri), 1000);
     toast('QR card downloaded');
   };
+  const save = async () => {
+    const next = await authRequest(
+      `workspaces/${workspaceId}/locations/${saved.id}/qr`,
+      'qrSettings',
+      draft,
+      'PUT',
+    );
+    setList((items) =>
+      items.map((location) => (location.id === next.id ? next : location)),
+    );
+    setDraft(input(next));
+    toast('QR settings saved');
+  };
+  const copy = async () => {
+    await withDeadline(navigator.clipboard.writeText(saved.customerUrl));
+    toast('Customer link copied');
+  };
+  const retry = () => {
+    if (failureAction === 'save') void run('save', save);
+    else if (failureAction === 'copy') void run('copy', copy);
+    else if (failureAction) void run('svg', () => download('svg'));
+  };
+  const textValid = !!draft.displayText.trim();
+  const googleValid = qrSettingsInputSchema.shape.googleReviewUrl.safeParse(
+    draft.googleReviewUrl,
+  ).success;
+  const localOnly = ['localhost', '127.0.0.1', '[::1]'].includes(
+    new URL(saved.customerUrl).hostname,
+  );
   return (
     <>
       <PageHeading
         eyebrow="Branded customer experience"
         title="QR code studio"
-        text="Create a customer card for your saved location. Both review and private feedback choices remain available."
+        text="Customise your business’s QR card and download an SVG or high-resolution PNG."
       />
       <div className="qr-editor">
         <Panel className="qr-controls">
           <h2>Customise your QR card</h2>
-          <label className="field">
+          <p className="muted">Live preview · Save to publish and export.</p>
+          <Field>
             Location
             <select
               aria-label="Location"
               value={selected}
               disabled={pending}
-              onChange={(e) => {
+              onChange={(event) => {
                 if (
                   dirty &&
                   !window.confirm('Discard unsaved changes for this location?')
                 )
                   return;
-                const next = list.find((l) => l.id === e.target.value);
+                const next = list.find(
+                  (location) => location.id === event.target.value,
+                );
                 if (!next) return;
                 setSelected(next.id);
                 setDraft(input(next));
                 setError('');
+                setFailureAction(null);
+                setPreview(false);
               }}
             >
-              {list.map((l) => (
-                <option key={l.id} value={l.id}>
-                  {l.locationName}
+              {list.map((location) => (
+                <option key={location.id} value={location.id}>
+                  {location.locationName}
                 </option>
               ))}
             </select>
-          </label>
-          <p className="muted">
-            These are location-specific display overrides. Your business name
-            and onboarding branding stay unchanged.
-          </p>
+          </Field>
           <fieldset disabled={!owner || pending} className="qr-settings-fields">
-            <label className="field">
+            <Field>
               Display name override
               <input
                 value={draft.displayName}
                 maxLength={100}
                 placeholder={saved.businessName}
-                onChange={(e) => update({ displayName: e.target.value })}
+                aria-describedby="qr-name-help"
+                onChange={(event) =>
+                  update({ displayName: event.target.value })
+                }
               />
-            </label>
-            <label className="field">
+            </Field>
+            <p className="field-help" id="qr-name-help">
+              Blank inherits your business name. This override is for the QR
+              card only.
+            </p>
+            <Field>
               Display text
               <input
                 value={draft.displayText}
                 maxLength={120}
-                onChange={(e) => update({ displayText: e.target.value })}
+                aria-invalid={!textValid}
+                aria-describedby={!textValid ? 'qr-text-error' : undefined}
+                onChange={(event) =>
+                  update({ displayText: event.target.value })
+                }
               />
-            </label>
+            </Field>
+            {!textValid && (
+              <p className="error-note" id="qr-text-error">
+                Enter display text before saving or exporting.
+              </p>
+            )}
             <BrandColour
               label="Brand colour override"
               value={color}
               onChange={(value) => update({ brandColor: value })}
+              pickerLabel="Custom brand colour"
             />
             <Button
               variant="ghost"
+              size="small"
               onClick={() => update({ brandColor: null })}
             >
               Use business colour
             </Button>
-            <label className="field">
+            {qrColor !== color && (
+              <p className="field-help" role="status">
+                A darker QR colour keeps the code readable; your accent is
+                preserved on the card.
+              </p>
+            )}
+            <Field as="div">
               Choose a layout
-              <select
-                aria-label="Choose a layout"
+              <Tabs.Root
                 value={draft.layout}
-                onChange={(e) =>
-                  update({
-                    layout: e.target.value as QrSettingsInput['layout'],
-                  })
+                onValueChange={(layout) =>
+                  update({ layout: layout as QrSettingsInput['layout'] })
                 }
               >
-                <option>Counter card</option>
-                <option>Minimal poster</option>
-              </select>
-            </label>
-            <label className="field">
-              Google review URL
-              <input
-                type="url"
-                value={draft.googleReviewUrl}
-                maxLength={500}
-                placeholder="https://g.page/r/…/review"
-                onChange={(e) => update({ googleReviewUrl: e.target.value })}
-              />
-            </label>
-            <p className="field-help">
-              Supported: g.page/r/…/review,
-              search.google.com/local/writereview?placeid=…, or Google Maps
-              /maps?cid=…. Short Maps redirects are not supported.
-            </p>
-            <label className="check-label">
-              <input
-                type="checkbox"
-                checked={draft.enabled}
-                onChange={(e) => update({ enabled: e.target.checked })}
-              />{' '}
-              Enable customer page
-            </label>
+                <Tabs.List
+                  className="template-tabs"
+                  aria-label="QR card layout"
+                >
+                  {(['Counter card', 'Minimal poster'] as const).map(
+                    (layout) => (
+                      <Tabs.Trigger
+                        key={layout}
+                        value={layout}
+                        id={`real-qr-${layout === 'Counter card' ? 'card' : 'poster'}-tab`}
+                        aria-controls={`real-qr-${layout === 'Counter card' ? 'card' : 'poster'}-panel`}
+                      >
+                        <QrIcon size={21} />
+                        {layout}
+                      </Tabs.Trigger>
+                    ),
+                  )}
+                </Tabs.List>
+                <Tabs.Content
+                  value="Counter card"
+                  id="real-qr-card-panel"
+                  aria-labelledby="real-qr-card-tab"
+                  className="field-help"
+                >
+                  Rounded card with a branded border, designed for your counter.
+                </Tabs.Content>
+                <Tabs.Content
+                  value="Minimal poster"
+                  id="real-qr-poster-panel"
+                  aria-labelledby="real-qr-poster-tab"
+                  className="field-help"
+                >
+                  A clean, straight-edged layout for display on a wall or
+                  mirror.
+                </Tabs.Content>
+              </Tabs.Root>
+            </Field>
+            <details className="qr-page-settings">
+              <summary>Customer page settings</summary>
+              <Field>
+                Google review URL
+                <input
+                  type="url"
+                  value={draft.googleReviewUrl}
+                  maxLength={500}
+                  aria-invalid={!googleValid}
+                  aria-describedby="qr-google-help"
+                  placeholder="https://g.page/r/…/review"
+                  onChange={(event) =>
+                    update({ googleReviewUrl: event.target.value })
+                  }
+                />
+              </Field>
+              <p className="field-help" id="qr-google-help">
+                Supported: g.page/r/…/review,
+                search.google.com/local/writereview?placeid=…, or Google Maps
+                /maps?cid=…. Short Maps redirects are not supported.
+              </p>
+              {!googleValid && (
+                <p className="error-note">
+                  Use a supported HTTPS Google review or Maps URL.
+                </p>
+              )}
+              <label className="check-label">
+                <input
+                  type="checkbox"
+                  checked={draft.enabled}
+                  onChange={(event) =>
+                    update({ enabled: event.target.checked })
+                  }
+                />{' '}
+                Enable customer page
+              </label>
+            </details>
             <Button
+              variant="secondary"
+              className="w-full"
               disabled={
                 !dirty || !qrSettingsInputSchema.safeParse(draft).success
               }
-              aria-busy={pending}
-              onClick={() =>
-                void run(async () => {
-                  const next = await authRequest(
-                    `workspaces/${workspaceId}/locations/${saved.id}/qr`,
-                    'qrSettings',
-                    draft,
-                    'PUT',
-                  );
-                  setList((items) =>
-                    items.map((l) => (l.id === next.id ? next : l)),
-                  );
-                  setDraft(input(next));
-                  toast('QR settings saved');
-                })
-              }
+              aria-busy={activity === 'save'}
+              onClick={() => void run('save', save)}
             >
-              {pending ? 'Saving…' : 'Save QR settings'}
+              {activity === 'save' && <InlineSpinner />}
+              <ActionLabel
+                label="Save QR settings"
+                busy={activity === 'save'}
+                pendingLabel="Saving…"
+              />
             </Button>
           </fieldset>
           {!owner && (
-            <p>
+            <p className="field-help">
               Staff can preview and export saved settings. Only owners can edit.
             </p>
           )}
-          {dirty && (
-            <p role="status">
-              Unsaved changes. Save before exporting or opening the customer
-              page.
-            </p>
-          )}
-          {!!error && (
-            <p role="alert" className="error-note">
-              {error} Reload to resolve a version conflict; copy your changes
-              first.
-            </p>
-          )}
-          <div className="qr-actions">
-            <Button
-              variant="secondary"
-              disabled={dirty || pending || !saved.enabled}
-              onClick={() => void run(() => download('svg'))}
-            >
-              Download SVG card
-            </Button>
-            <Button
-              variant="secondary"
-              disabled={dirty || pending || !saved.enabled}
-              onClick={() => void run(() => download('png'))}
-            >
-              Download PNG card
-            </Button>
-            <Button
-              variant="secondary"
-              disabled={dirty || pending}
-              onClick={() =>
-                void run(async () => {
-                  await navigator.clipboard.writeText(saved.customerUrl);
-                  toast('Customer link copied');
-                })
-              }
-            >
-              Copy customer link
-            </Button>
-            <Button asChild variant="secondary">
-              <a
-                href={saved.customerUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-disabled={dirty}
-                onClick={(e) => {
-                  if (dirty) e.preventDefault();
-                }}
-              >
-                Preview customer experience
-              </a>
-            </Button>
-          </div>
-          <p className="field-help">
-            PNG width: 1680 pixels. At 300 dpi this is 5.6 inches wide; test
-            your final print and scan distance. No physical scan has been
-            certified.
+          <p role="status" className="field-help">
+            {dirty
+              ? 'Unsaved changes. Save before exporting or opening the customer page.'
+              : 'Saved settings · Ready to preview and export.'}
           </p>
-          {['localhost', '127.0.0.1', '[::1]'].includes(
-            new URL(saved.customerUrl).hostname,
-          ) && (
-            <p className="info-note">
-              Local-only link: a phone cannot reach your computer’s localhost.
-              Configure a reachable customer web origin before printing.
+          <div className="form-divider" />
+          <div className="info-note">
+            <CheckCircle2 size={18} />
+            <p>
+              {localOnly
+                ? 'Local-only link: a phone cannot reach your computer’s localhost. Configure a reachable customer web origin before printing.'
+                : 'This QR opens your saved customer page. Both review and private feedback choices remain available.'}
             </p>
+          </div>
+          <Button
+            disabled={dirty || pending || !saved.enabled}
+            aria-busy={activity === 'svg'}
+            onClick={() => void run('svg', () => download('svg'))}
+          >
+            {activity === 'svg' ? <InlineSpinner /> : <Download size={17} />}
+            <ActionLabel
+              label="Download SVG card"
+              busy={activity === 'svg'}
+              pendingLabel="Exporting…"
+            />
+          </Button>
+          <Button
+            variant="secondary"
+            disabled={dirty || pending || !saved.enabled}
+            aria-busy={activity === 'png'}
+            onClick={() => void run('png', () => download('png'))}
+          >
+            {activity === 'png' ? <InlineSpinner /> : <Download size={17} />}
+            <ActionLabel
+              label="Download PNG card"
+              busy={activity === 'png'}
+              pendingLabel="Exporting…"
+            />
+          </Button>
+          <Button
+            variant="ghost"
+            disabled={dirty || pending}
+            aria-busy={activity === 'copy'}
+            onClick={() => void run('copy', copy)}
+          >
+            {activity === 'copy' ? <InlineSpinner /> : <Copy size={17} />}
+            <ActionLabel
+              label="Copy customer link"
+              busy={activity === 'copy'}
+              pendingLabel="Copying…"
+            />
+          </Button>
+          <Button
+            variant="secondary"
+            disabled={dirty || pending || !saved.enabled}
+            onClick={() => setPreview(true)}
+          >
+            Preview customer experience <ArrowUpRight size={16} />
+          </Button>
+          {!!error && (
+            <div role="alert" className="info-note qr-action-error">
+              <p className="error-note">
+                {error} Your changes are preserved. For a version conflict, copy
+                your draft before reloading.
+              </p>
+              {failureAction && (
+                <Button
+                  variant="secondary"
+                  disabled={
+                    pending ||
+                    (failureAction === 'save'
+                      ? !owner ||
+                        !dirty ||
+                        !qrSettingsInputSchema.safeParse(draft).success
+                      : dirty ||
+                        ((failureAction === 'svg' || failureAction === 'png') &&
+                          !saved.enabled))
+                  }
+                  onClick={retry}
+                >
+                  {failureAction === 'save'
+                    ? 'Retry saving settings'
+                    : failureAction === 'copy'
+                      ? 'Retry copying link'
+                      : 'Retry SVG export'}
+                </Button>
+              )}
+            </div>
           )}
         </Panel>
-        <section className="qr-preview-area" aria-label="QR card preview">
+        <section className="qr-canvas bg-section" aria-label="QR card preview">
+          <div className="canvas-label">
+            <span>LIVE PREVIEW</span>
+            <span>{draft.layout}</span>
+          </div>
           <div
             className={`qr-print-card ${draft.layout === 'Minimal poster' ? 'poster' : ''}`}
             style={{ borderTopColor: color }}
           >
-            {saved.hasLogo && (
+            {saved.hasLogo ? (
               <img
                 src={logoUrl}
                 width={80}
@@ -383,11 +538,13 @@ export function RealQrStudio({
                   )
                 }
               />
+            ) : (
+              <Leaf size={33} style={{ color: qrColor }} />
             )}
             <h2 style={{ color: qrColor }}>{name}</h2>
             <span className="salon-sub">{saved.locationName}</span>
             <QrCode value={saved.customerUrl} color={qrColor} />
-            <h3>{draft.displayText}</h3>
+            <h3>{draft.displayText || 'Share your experience'}</h3>
             <p>
               Scan to share an honest review
               <br />
@@ -397,15 +554,65 @@ export function RealQrStudio({
               a little ping, powered by RevuPing
             </span>
           </div>
-          {qrColor !== color && (
-            <p className="field-help">
-              A darker QR colour keeps the code readable; your accent is
-              preserved on the card.
-            </p>
-          )}
+          <span className="canvas-footnote">
+            SVG or PNG download ·{' '}
+            {dirty
+              ? 'Unsaved preview'
+              : saved.enabled
+                ? 'Links to your customer page'
+                : 'Customer page disabled'}
+          </span>
           <p className="qr-customer-url">{saved.customerUrl}</p>
+          <details className="qr-export-details">
+            <summary>Export resolution & print guidance</summary>
+            <p className="field-help">
+              PNG width: 1680 pixels. At 300 dpi this is 5.6 inches wide; test
+              your final print and scan distance. No physical scan has been
+              certified.
+            </p>
+          </details>
         </section>
       </div>
+      <Dialog
+        open={preview}
+        onOpenChange={setPreview}
+        title="Preview the customer experience"
+        description="This preview uses saved settings. Customers can always choose a Google review or private feedback, regardless of their rating."
+      >
+        <div className="preview-customer">
+          {saved.hasLogo ? (
+            <img
+              src={logoUrl}
+              width={100}
+              height={60}
+              alt={`${saved.businessName} logo`}
+              className="qr-business-logo"
+            />
+          ) : (
+            <Leaf
+              size={30}
+              style={{ color: printableColor(saved.effectiveColor) }}
+            />
+          )}
+          <h3>{saved.effectiveName}</h3>
+          <p>{saved.locationName}</p>
+          <p>{saved.displayText}</p>
+          <p className="field-help">
+            {saved.googleReviewUrl
+              ? 'Google review and private feedback are both available.'
+              : 'No Google review link is configured. Private feedback is available.'}
+          </p>
+          <Button asChild>
+            <a
+              href={saved.customerUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Open customer page <ArrowRight size={16} />
+            </a>
+          </Button>
+        </div>
+      </Dialog>
     </>
   );
 }

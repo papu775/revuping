@@ -2531,3 +2531,14 @@
 @media (max-width: 600px) { .customer-choices { grid-template-columns: 1fr; } .real-customer-page .customer-card { padding: 24px 20px; } }
 .real-customer-page .customer-brand h1, .real-customer-page h2 { color: var(--business-focus-light); }
 .dark .real-customer-page .customer-brand h1, .dark .real-customer-page h2 { color: var(--business-focus-dark); }
+
+/* Saved-workspace controls retain the demo QR studio composition. */
+.qr-page-settings summary, .qr-export-details summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--muted); }
+.qr-page-settings summary::before, .qr-export-details summary::before { content: '+'; color: var(--violet); }
+.qr-page-settings[open] summary::before, .qr-export-details[open] summary::before { content: '−'; }
+.qr-page-settings > .field { margin-top: 12px; }
+.qr-page-settings .field-help { margin-bottom: 16px; }
+.qr-canvas .qr-customer-url { margin: 0; max-width: 100%; }
+.qr-export-details { width: 100%; }
+.qr-action-error { flex-direction: column; align-items: stretch; margin-top: 20px; }
+.qr-action-error .error-note { margin: 0; }
