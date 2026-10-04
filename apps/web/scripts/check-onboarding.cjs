@@ -840,7 +840,7 @@ async function returningRouting(context, completedId) {
     );
     assert.equal(new URL(page.url()).searchParams.has('step'), false);
     await page.unroute('**/workspace*');
-    await expect(page.locator('main')).toContainText('No customer activity');
+    await expect(page.locator('main')).toContainText('Activity reporting and the Feedback Inbox are not available yet.');
     await expect(page.locator('main')).not.toContainText('4.8');
     await photoMatrix('real-dashboard');
     await page.reload();

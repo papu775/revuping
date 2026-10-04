@@ -97,6 +97,7 @@ function SessionNavigation({ reduced }: { reduced: boolean }) {
       <Stack.Protected guard={!!session}>
         <Stack.Screen name="workspace" />
         <Stack.Screen name="account-dashboard" />
+        <Stack.Screen name="account-qr-studio" />
       </Stack.Protected>
       <Stack.Protected guard={demo}>
         <Stack.Screen name="(tabs)" />

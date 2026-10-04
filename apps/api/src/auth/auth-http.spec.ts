@@ -12,6 +12,7 @@ describe('production cookie and CSRF policy', () => {
     REDIS_URL: 'redis://localhost',
     CORS_ORIGINS: 'https://app.example.test',
     WEB_URL: 'https://app.example.test',
+    PUBLIC_CUSTOMER_BASE_URL: 'https://app.example.test',
     SMTP_HOST: 'smtp.example.test',
     SMTP_FROM: 'accounts@example.test',
   });

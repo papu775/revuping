@@ -3,10 +3,12 @@ import { useEffect, useState } from 'react';
 import QRCode from 'qrcode';
 import { printPalette, printableColor } from '@/lib/print-palette';
 export function QrCode({
+  value,
   color = '#22213e',
   onReady,
   decorative = false,
 }: {
+  value?: string;
   color?: string;
   onReady?: (svg: string) => void;
   decorative?: boolean;
@@ -28,9 +30,10 @@ export function QrCode({
       }
     }, 10000);
     QRCode.toString(
-      decorative
-        ? 'RevuPing illustration: explore the demo to create a business QR card.'
-        : `${window.location.origin}/r/demo-salon`,
+      value ??
+        (decorative
+          ? 'RevuPing illustration: explore the demo to create a business QR card.'
+          : `${window.location.origin}/r/demo-salon`),
       {
         type: 'svg',
         margin: 4,
@@ -58,7 +61,7 @@ export function QrCode({
       active = false;
       clearTimeout(deadline);
     };
-  }, [foreground, onReady, decorative, attempt]);
+  }, [value, foreground, onReady, decorative, attempt]);
   if (error)
     return (
       <div className="qr-code" role="alert">
@@ -82,7 +85,9 @@ export function QrCode({
       aria-label={
         decorative
           ? 'Illustrative QR pattern, not a customer link'
-          : 'QR code linking to the demo salon customer page'
+          : value
+            ? 'QR code linking to the customer page'
+            : 'QR code linking to the demo salon customer page'
       }
       dangerouslySetInnerHTML={{ __html: svg }}
     />

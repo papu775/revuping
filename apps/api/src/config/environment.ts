@@ -35,6 +35,19 @@ const environmentSchema = z.object({
         !url.password
       );
     }),
+  PUBLIC_CUSTOMER_BASE_URL: z
+    .string()
+    .url()
+    .default('http://localhost:3000')
+    .refine((value) => {
+      const url = new URL(value);
+      return (
+        ['http:', 'https:'].includes(url.protocol) &&
+        url.origin === value &&
+        !url.username &&
+        !url.password
+      );
+    }),
   S3_ENDPOINT: serviceUrl(['http:', 'https:']).optional(),
   S3_REGION: z.string().min(1).default('us-east-1'),
   S3_BUCKET: z
@@ -135,7 +148,11 @@ export function validateEnvironment(input: Record<string, unknown>) {
     throw new Error(
       'Invalid production auth configuration: WEB_URL, SMTP_HOST, SMTP_FROM, SMTP_USER/SMTP_PASSWORD.',
     );
-  if (result.data.TRUSTED_PROXIES.some((proxy) => Number(proxy.split('/')[1]) === 0))
+  if (
+    result.data.TRUSTED_PROXIES.some(
+      (proxy) => Number(proxy.split('/')[1]) === 0,
+    )
+  )
     throw new Error(
       'Trust explicit proxy networks, not all network addresses.',
     );
@@ -148,6 +165,14 @@ export function validateEnvironment(input: Record<string, unknown>) {
         !result.data.S3_ENDPOINT.startsWith('https://')))
   )
     throw new Error('Production CORS origins and S3 endpoints require HTTPS.');
+  if (
+    result.data.NODE_ENV === 'production' &&
+    (!input.PUBLIC_CUSTOMER_BASE_URL ||
+      !result.data.PUBLIC_CUSTOMER_BASE_URL.startsWith('https://'))
+  )
+    throw new Error(
+      'Production requires an explicit HTTPS PUBLIC_CUSTOMER_BASE_URL.',
+    );
   if (!!result.data.S3_ACCESS_KEY_ID !== !!result.data.S3_SECRET_ACCESS_KEY)
     throw new Error(
       'Configure both S3 credential fields or use the server credential chain.',

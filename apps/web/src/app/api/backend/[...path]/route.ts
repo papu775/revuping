@@ -42,6 +42,17 @@ async function proxy(
   const path = (await context.params).path.join('/');
   const methods =
     allowed[path] ??
+    (/^public\/locations\/[0-9a-f-]{36}(?:\/logo)?$/i.test(path)
+      ? ['GET']
+      : /^public\/locations\/[0-9a-f-]{36}\/feedback$/i.test(path)
+        ? ['POST']
+        : /^workspaces\/[0-9a-f-]{36}\/locations$/i.test(path)
+          ? ['GET']
+          : /^workspaces\/[0-9a-f-]{36}\/locations\/[0-9a-f-]{36}\/qr$/i.test(
+                path,
+              )
+            ? ['PUT']
+            : undefined) ??
     (/^workspaces\/[0-9a-f-]{36}\/onboarding$/i.test(path)
       ? ['GET', 'PUT']
       : /^workspaces\/[0-9a-f-]{36}\/logo$/i.test(path)
@@ -68,7 +79,8 @@ async function proxy(
     )
     .map(({ name, value }) => `${name}=${value}`)
     .join('; ');
-  if (cookie) headers.set('Cookie', cookie);
+  if (cookie && !path.toLowerCase().startsWith('public/'))
+    headers.set('Cookie', cookie);
   for (const name of ['Origin', 'X-CSRF-Token']) {
     const value = request.headers.get(name);
     if (value) headers.set(name, value);

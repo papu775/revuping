@@ -61,6 +61,7 @@
     "jest-environment-node": "~30.3.0",
     "jest-util": "~30.3.0",
     "jsonc-eslint-parser": "^2.1.0",
+    "jsqr": "1.4.0",
     "nx": "23.2.0",
     "prettier": "^3.8.1",
     "react-test-renderer": "^19.2.3",

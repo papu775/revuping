@@ -1,4 +1,6 @@
 import {
+  qrLocationsSchema,
+  qrSettingsSchema,
   onboardingSchema,
   ApiRequestError,
   apiErrorSchema,
@@ -10,6 +12,8 @@ import {
 } from 'api-contracts';
 
 const schemas = {
+  qrLocations: qrLocationsSchema,
+  qrSettings: qrSettingsSchema,
   onboarding: onboardingSchema,
   session: sessionSchema,
   workspace: workspaceSchema,

@@ -10,6 +10,33 @@ const local = {
 };
 
 describe('API environment validation', () => {
+  it('requires a safe customer origin and explicit HTTPS production configuration', () => {
+    for (const PUBLIC_CUSTOMER_BASE_URL of [
+      'javascript:alert(1)',
+      'https://user:password@app.example.test',
+      'https://app.example.test/path',
+      'https://app.example.test?redirect=evil',
+      'https://app.example.test/#token',
+    ]) {
+      expect(() =>
+        validateEnvironment({ ...local, PUBLIC_CUSTOMER_BASE_URL }),
+      ).toThrow('PUBLIC_CUSTOMER_BASE_URL');
+    }
+    const production = {
+      ...local,
+      NODE_ENV: 'production',
+      CORS_ORIGINS: local.WEB_URL,
+    };
+    expect(() => validateEnvironment(production)).toThrow(
+      'explicit HTTPS PUBLIC_CUSTOMER_BASE_URL',
+    );
+    expect(() =>
+      validateEnvironment({
+        ...production,
+        PUBLIC_CUSTOMER_BASE_URL: 'http://localhost:3000',
+      }),
+    ).toThrow('explicit HTTPS PUBLIC_CUSTOMER_BASE_URL');
+  });
   it('requires explicit database, Redis and origins without exposing their values', () => {
     expect(() => validateEnvironment({})).toThrow(
       /DATABASE_URL, REDIS_URL, CORS_ORIGINS/,
@@ -57,6 +84,7 @@ describe('API environment validation', () => {
       validateEnvironment({
         ...local,
         NODE_ENV: 'production',
+        PUBLIC_CUSTOMER_BASE_URL: 'https://app.example.test',
         CORS_ORIGINS: local.WEB_URL,
       }).API_DOCS_ENABLED,
     ).toBe(false);
@@ -64,6 +92,7 @@ describe('API environment validation', () => {
       validateEnvironment({
         ...local,
         NODE_ENV: 'production',
+        PUBLIC_CUSTOMER_BASE_URL: 'https://app.example.test',
         CORS_ORIGINS: local.WEB_URL,
         API_DOCS_ENABLED: 'true',
       }).API_DOCS_ENABLED,
@@ -76,11 +105,34 @@ describe('API environment validation', () => {
 
   it('rejects universal proxy trust and insecure production service origins', () => {
     for (const TRUSTED_PROXIES of ['0.0.0.0/0', '::/0', '0.0.0.0/00']) {
-      expect(() => validateEnvironment({ ...local, TRUSTED_PROXIES })).toThrow('Trust explicit proxy networks');
+      expect(() => validateEnvironment({ ...local, TRUSTED_PROXIES })).toThrow(
+        'Trust explicit proxy networks',
+      );
     }
-    const production = { ...local, NODE_ENV: 'production', CORS_ORIGINS: local.WEB_URL };
-    expect(() => validateEnvironment({ ...production, CORS_ORIGINS: 'http://app.example.test' })).toThrow('require HTTPS');
-    expect(() => validateEnvironment({ ...production, S3_ENDPOINT: 'http://storage.example.test' })).toThrow('require HTTPS');
-    expect(() => validateEnvironment({ ...production, S3_LOCAL_EMULATOR: 'true', S3_ENDPOINT: 'https://storage.example.test' })).toThrow('forbidden in production');
+    const production = {
+      ...local,
+      NODE_ENV: 'production',
+      PUBLIC_CUSTOMER_BASE_URL: 'https://app.example.test',
+      CORS_ORIGINS: local.WEB_URL,
+    };
+    expect(() =>
+      validateEnvironment({
+        ...production,
+        CORS_ORIGINS: 'http://app.example.test',
+      }),
+    ).toThrow('require HTTPS');
+    expect(() =>
+      validateEnvironment({
+        ...production,
+        S3_ENDPOINT: 'http://storage.example.test',
+      }),
+    ).toThrow('require HTTPS');
+    expect(() =>
+      validateEnvironment({
+        ...production,
+        S3_LOCAL_EMULATOR: 'true',
+        S3_ENDPOINT: 'https://storage.example.test',
+      }),
+    ).toThrow('forbidden in production');
   });
 });

@@ -1,4 +1,7 @@
 import {
+  qrLocationsSchema,
+  qrSettingsSchema,
+  type QrSettingsInput,
   onboardingSchema,
   type SaveOnboardingInput,
   ApiRequestError,
@@ -301,6 +304,20 @@ export class NativeAuthClient {
         { revision },
         'DELETE',
         signal,
+      ),
+    );
+  }
+  async qrLocations(id: string) {
+    return qrLocationsSchema.parse(
+      await this.request(`workspaces/${id}/locations`),
+    );
+  }
+  async saveQr(id: string, location: string, input: QrSettingsInput) {
+    return qrSettingsSchema.parse(
+      await this.request(
+        `workspaces/${id}/locations/${location}/qr`,
+        input,
+        'PUT',
       ),
     );
   }

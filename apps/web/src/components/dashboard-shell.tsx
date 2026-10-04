@@ -188,6 +188,19 @@ export function DashboardShell({
                 <LayoutDashboard size={19} />
                 Overview
               </Link>
+              {real && (
+                <Link
+                  href={`/workspace/qr-studio?workspace=${real.workspace.id}`}
+                  className={path === '/workspace/qr-studio' ? 'active' : ''}
+                  aria-current={
+                    path === '/workspace/qr-studio' ? 'page' : undefined
+                  }
+                  onClick={() => setOpen(false)}
+                >
+                  <QrCode size={19} />
+                  QR studio
+                </Link>
+              )}
               {demo && (
                 <>
                   <Link
@@ -302,7 +315,13 @@ export function DashboardShell({
             </button>
             <span>
               Workspace <span className="breadcrumb-slash">/</span>{' '}
-              <strong>{real ? 'Overview' : sectionLabel(path)}</strong>
+              <strong>
+                {real
+                  ? path === '/workspace/qr-studio'
+                    ? 'QR studio'
+                    : 'Overview'
+                  : sectionLabel(path)}
+              </strong>
             </span>
           </div>
           <div className="topbar-right !gap-2">

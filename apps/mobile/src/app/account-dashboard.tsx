@@ -166,15 +166,24 @@ export default function AccountDashboard() {
                 )}
               </View>
             </Card>
+            <Button
+              title="QR studio"
+              onPress={() =>
+                router.push({
+                  pathname: '/account-qr-studio',
+                  params: { workspace: state.workspace.id },
+                })
+              }
+            />
             <Card>
               <View style={{ gap: 12 }}>
                 <Text style={{ color: colors.ink, fontSize: 22 }}>
                   Activity
                 </Text>
                 <Text style={{ color: colors.muted }}>
-                  No customer activity to show. Feedback collection, campaigns
-                  and integrations are not available for real workspaces yet.
-                  Nothing has been sent or connected.
+                  Activity reporting and the Feedback Inbox are not available
+                  yet. QR feedback is saved privately. Campaigns and
+                  integrations remain unavailable.
                 </Text>
               </View>
             </Card>

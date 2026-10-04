@@ -63,18 +63,26 @@ export default async function Page({
             Your business details, hours and brand colour are ready to review.
           </p>
           <p>
-            Feedback collection, campaigns and integrations are not available
-            for real workspaces yet. Nothing has been sent or connected.
+            Create your location’s QR card to collect private feedback and link
+            to Google reviews. Campaigns and integrations remain unavailable.
           </p>
-          <Button asChild variant="secondary">
-            <Link href="/dashboard">Explore the separate fictional demo</Link>
-          </Button>
+          <div className="flex flex-wrap gap-3">
+            <Button asChild>
+              <Link href={`/workspace/qr-studio?workspace=${workspace.id}`}>
+                Open QR studio
+              </Link>
+            </Button>
+            <Button asChild variant="secondary">
+              <Link href="/dashboard">Explore the separate fictional demo</Link>
+            </Button>
+          </div>
         </section>
         <section className="setup-card lg:col-span-2">
           <h2>Activity</h2>
           <p>
-            No customer activity to show. This workspace has no collected
-            reviews, feedback or campaigns.
+            Activity reporting and the Feedback Inbox are not available yet. QR
+            feedback is saved privately; Google review clicks do not confirm a
+            published review.
           </p>
         </section>
       </div>

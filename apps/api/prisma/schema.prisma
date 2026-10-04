@@ -38,6 +38,7 @@ model Workspace {
   business    Business?
   locations   Location[]
   creations   WorkspaceCreation[]
+  feedback    PrivateFeedback[]
 }
 
 enum SessionKind {
@@ -145,6 +146,15 @@ model Business {
 }
 
 model Location {
+  publicId String @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  customerEnabled Boolean @default(true)
+  qrRevision Int @default(0)
+  qrDisplayName String @default("") @db.VarChar(100)
+  qrDisplayText String @default("How was your visit?") @db.VarChar(120)
+  qrBrandColor String? @db.VarChar(7)
+  qrLayout String @default("Counter card")
+  googleReviewUrl String? @db.VarChar(500)
+  feedback PrivateFeedback[]
   closedDays  Json?
   timezone    String    @default("UTC")
   hours       Json?
@@ -159,6 +169,26 @@ model Location {
   workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   business    Business  @relation(fields: [businessId, workspaceId], references: [id, workspaceId], onDelete: Cascade, onUpdate: Cascade)
 
+  @@unique([id, workspaceId])
   @@index([workspaceId])
   @@index([businessId, workspaceId])
+}
+
+model PrivateFeedback {
+  id String @id @default(uuid()) @db.Uuid
+  workspaceId String @db.Uuid
+  locationId String @db.Uuid
+  submissionKey String @db.Uuid
+  payloadHash String @db.Char(64)
+  rating Int
+  message String @db.VarChar(2000)
+  name String? @db.VarChar(100)
+  email String? @db.VarChar(254)
+  status String @default("UNRESOLVED")
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  location Location @relation(fields: [locationId, workspaceId], references: [id, workspaceId], onDelete: Cascade, onUpdate: NoAction)
+  @@unique([locationId, submissionKey])
+  @@index([workspaceId, createdAt])
+  @@index([locationId, status, createdAt])
 }
