@@ -14,7 +14,7 @@ export function apiBase(): string {
       : undefined);
   return validateApiBaseUrl(configured);
 }
-export async function serverSession(): Promise<SessionResponse | null> {
+export async function serverApi(path: string): Promise<Response> {
   const jar = await cookies();
   const names = ['rp_session', '__Host-rp_session'];
   const cookie = names
@@ -25,12 +25,21 @@ export async function serverSession(): Promise<SessionResponse | null> {
         : [];
     })
     .join('; ');
-  if (!cookie) return null;
-  const response = await fetch(`${apiBase()}/auth/session`, {
+  return fetch(`${apiBase()}/${path}`, {
     headers: { Cookie: cookie },
     cache: 'no-store',
     signal: AbortSignal.timeout(5000),
   });
+}
+export async function serverSession(): Promise<SessionResponse | null> {
+  const jar = await cookies();
+  if (
+    !['rp_session', '__Host-rp_session'].some((name) =>
+      /^[A-Za-z0-9_-]{43}$/.test(jar.get(name)?.value ?? ''),
+    )
+  )
+    return null;
+  const response = await serverApi('auth/session');
   if (response.status === 401) return null;
   if (!response.ok) throw new Error('Session unavailable');
   return sessionSchema.parse(await response.json());

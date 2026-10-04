@@ -136,7 +136,7 @@ export default function SignupScreen() {
             <View style={styles.header}>
               <Logo />
               <Text style={[styles.title, { color: colors.ink }]}>
-                Create your account
+                {registeredEmail ? 'Check your email' : 'Create your account'}
               </Text>
               <Text style={[styles.subtitle, { color: colors.muted }]}>
                 Verify your email, then create your workspace. No sample records
@@ -144,51 +144,55 @@ export default function SignupScreen() {
               </Text>
             </View>
             <FeedbackPreview compact />
-            <View style={styles.form}>
-              <Field
-                inputRef={nameInput}
-                label="Your name"
-                editable={!registeredEmail}
-                value={name}
-                onChangeText={setName}
-                placeholder="Your name"
-                maxLength={100}
-                autoCapitalize="words"
-                error={
-                  error && !name.trim() ? 'Your name is required' : undefined
-                }
-              />
-              <Field
-                inputRef={emailInput}
-                label="Email"
-                editable={!registeredEmail}
-                value={email}
-                onChangeText={setEmail}
-                placeholder="you@example.com"
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-                error={error && !email.trim() ? 'Email is required' : undefined}
-              />
-              <Field
-                secureTextEntry
-                autoCapitalize="none"
-                autoCorrect={false}
-                inputRef={passwordInput}
-                label="Password"
-                editable={!registeredEmail}
-                value={password}
-                onChangeText={setPassword}
-                placeholder="12–128 characters"
-                onBlur={() => setPasswordTouched(true)}
-                error={passwordError}
-              />
-              <Button
-                title="Create account"
-                onPress={() => void handleSignup()}
-                disabled={pending || !!registeredEmail}
-              />
-            </View>
+            {!registeredEmail && (
+              <View style={styles.form}>
+                <Field
+                  inputRef={nameInput}
+                  label="Your name"
+                  editable={!registeredEmail}
+                  value={name}
+                  onChangeText={setName}
+                  placeholder="Your name"
+                  maxLength={100}
+                  autoCapitalize="words"
+                  error={
+                    error && !name.trim() ? 'Your name is required' : undefined
+                  }
+                />
+                <Field
+                  inputRef={emailInput}
+                  label="Email"
+                  editable={!registeredEmail}
+                  value={email}
+                  onChangeText={setEmail}
+                  placeholder="you@example.com"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  error={
+                    error && !email.trim() ? 'Email is required' : undefined
+                  }
+                />
+                <Field
+                  secureTextEntry
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  inputRef={passwordInput}
+                  label="Password"
+                  editable={!registeredEmail}
+                  value={password}
+                  onChangeText={setPassword}
+                  placeholder="12–128 characters"
+                  onBlur={() => setPasswordTouched(true)}
+                  error={passwordError}
+                />
+                <Button
+                  title="Create account"
+                  onPress={() => void handleSignup()}
+                  disabled={pending || !!registeredEmail}
+                />
+              </View>
+            )}
             {!!error && (
               <Text accessibilityRole="alert" style={{ color: colors.danger }}>
                 {error}

@@ -35,7 +35,7 @@ export function ThemeControl() {
       icon={
         <motion.span
           key={mounted ? theme : 'system'}
-          initial={{ opacity: reduced ? 1 : 0, rotate: reduced ? 0 : -20 }}
+          initial={false}
           animate={{ opacity: 1, rotate: 0 }}
           transition={{ duration: reduced ? 0 : 0.16 }}
         >

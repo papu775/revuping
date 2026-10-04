@@ -13,7 +13,13 @@ export default [
   },
   {
     // This explicit server entry point imports server-only session authorization.
-    files: ['src/app/workspace/page.tsx'],
+    files: [
+      'src/app/workspace/page.tsx',
+      'src/app/workspace/layout.tsx',
+      'src/app/workspace/dashboard/page.tsx',
+      'src/app/(account)/login/page.tsx',
+      'src/app/(account)/signup/page.tsx',
+    ],
     rules: { 'no-restricted-imports': 'off' },
   },
   {

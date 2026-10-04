@@ -12,6 +12,12 @@ let stage = 'startup';
 const errors = [];
 fs.mkdirSync(output, { recursive: true });
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+// Cleanup must also tolerate a notification that has already auto-dismissed.
+async function dismissNotifications(page) {
+  await page
+    .getByRole('button', { name: 'Dismiss notification' })
+    .evaluateAll((buttons) => buttons.forEach((button) => button.click()));
+}
 
 async function intercepted(page, native = false) {
   let plan = { status: 200, delay: 700 };
@@ -127,7 +133,7 @@ async function main() {
         await expect(page.locator('.info-banner')).toContainText(success);
         await expect(
           page.getByRole('button', { name: 'Create account', exact: true }),
-        ).toBeDisabled();
+        ).toHaveCount(0);
         assert.ok(
           await page.evaluate(
             () => document.documentElement.scrollWidth <= window.innerWidth,
@@ -163,7 +169,7 @@ async function main() {
     );
     await expect(
       page.getByRole('button', { name: 'Create account', exact: true }),
-    ).toBeDisabled();
+    ).toHaveCount(0);
     mock.set({ status: 200, delay: 300 });
     await page
       .getByRole('button', { name: 'Resend verification email', exact: true })
@@ -189,7 +195,7 @@ async function main() {
     assert.ok(
       !(await page.locator('body').innerText()).includes('INTERNAL_SECRET'),
     );
-    await page.getByRole('button', { name: 'Dismiss notification' }).click();
+    await dismissNotifications(page);
     mock.set({ network: true, delay: 400 });
     await webForm(page);
     await page
@@ -197,7 +203,7 @@ async function main() {
       .click();
     await expect(page.locator('.error-note')).toContainText('couldn’t confirm');
     await expect(page.locator('.auth-blocking-overlay')).toHaveCount(0);
-    await page.getByRole('button', { name: 'Dismiss notification' }).click();
+    await dismissNotifications(page);
     mock.set({ hang: true });
     await webForm(page, 'forgot-password');
     await page.getByRole('button', { name: 'Request reset link' }).click();
@@ -208,7 +214,7 @@ async function main() {
     await expect(page.locator('.error-note')).toContainText(
       'Unable to complete',
     );
-    await page.getByRole('button', { name: 'Dismiss notification' }).click();
+    await dismissNotifications(page);
     await page.getByRole('button', { name: 'Request reset link' }).click();
     await expect(page.locator('.auth-blocking-overlay')).toBeVisible();
     await page.goto(`${web}/login`);
@@ -218,14 +224,13 @@ async function main() {
     stage = 'verification and reset submissions';
     mock.set({ status: 200, delay: 450 });
     await page.goto(`${web}/verify-email#token=${token}`);
-    await page
-      .getByRole('button', { name: 'Verify email', exact: true })
-      .click();
     await expect(page.locator('.auth-blocking-panel')).toContainText(
       'Verifying your email',
     );
-    await expect(page.locator('.info-banner')).toContainText('Email verified');
-    await page.getByRole('button', { name: 'Dismiss notification' }).click();
+    await expect(
+      page.getByRole('heading', { name: 'Email verified', exact: true }),
+    ).toBeVisible();
+    await dismissNotifications(page);
     await page.goto(`${web}/reset-password#token=${token}`);
     await page
       .getByLabel('New password', { exact: true })
@@ -273,7 +278,9 @@ async function main() {
     await keyboardContext.close();
 
     // Supplemental Expo browser rendering only; this does not verify Android runtime.
-    for (const theme of ['light', 'dark']) {
+    for (const theme of process.env.AUTH_FEEDBACK_WEB_ONLY
+      ? []
+      : ['light', 'dark']) {
       stage = `Expo browser ${theme}`;
       const context = await browser.newContext({
         viewport: { width: 320, height: 640 },
@@ -334,7 +341,7 @@ async function main() {
       await page.screenshot({
         path: path.join(output, `expo-${theme}-success.png`),
       });
-      await page.getByRole('button', { name: 'Dismiss notification' }).click();
+      await dismissNotifications(page);
       mock.set({
         status: 503,
         code: 'REGISTRATION_VERIFICATION_UNAVAILABLE',
@@ -361,7 +368,7 @@ async function main() {
       );
       await expect(
         page.getByRole('button', { name: 'Create account', exact: true }),
-      ).toBeDisabled();
+      ).toHaveCount(0);
       assert.ok(
         await page.evaluate(
           () => document.documentElement.scrollWidth <= window.innerWidth,
@@ -371,7 +378,7 @@ async function main() {
     }
     assert.deepEqual(errors, []);
     console.log(
-      'PASS: Next browser themes/sizes, slow/partial/error/network/timeout/navigation/repeated submission, verification/reset; supplemental Expo browser rendering. No real email or accounts.',
+      `PASS: Next browser themes/sizes, slow/partial/error/network/timeout/navigation/repeated submission, verification/reset${process.env.AUTH_FEEDBACK_WEB_ONLY ? '' : '; supplemental Expo browser rendering'}. No real email or accounts.`,
     );
   } finally {
     await browser.close();

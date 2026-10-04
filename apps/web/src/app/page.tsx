@@ -60,6 +60,47 @@ export default function Landing() {
           </HeroIntro>
           <HeroArtwork />
         </section>
+        <section
+          className="business-photo-section wrap"
+          aria-labelledby="business-photo-title"
+        >
+          <div>
+            <span className="eyebrow">Made for local businesses</span>
+            <h2 id="business-photo-title">
+              Stay close to the people you serve.
+            </h2>
+            <p>
+              From a morning coffee to flowers for a special occasion, everyday
+              conversations help you understand what matters to your customers.
+            </p>
+          </div>
+          <div className="business-photo-grid">
+            <figure>
+              <img
+                src="/images/customer-service.webp"
+                width={1200}
+                height={800}
+                loading="lazy"
+                alt="Illustrative photograph of a café owner talking with a customer"
+              />
+              <figcaption>A moment to listen.</figcaption>
+            </figure>
+            <figure>
+              <img
+                src="/images/flower-shop.webp"
+                width={1200}
+                height={800}
+                loading="lazy"
+                alt="Illustrative photograph of a florist preparing flowers while talking with a customer"
+              />
+              <figcaption>A thoughtful next step.</figcaption>
+            </figure>
+          </div>
+          <small>
+            Original illustrative photography. These businesses and people are
+            fictional examples.
+          </small>
+        </section>
         <section className="value-strip" aria-label="Product capabilities">
           <div className="wrap">
             <div>

@@ -34,19 +34,32 @@ export function Avatar({
   size = 'default',
   tone = 'lavender',
   className,
+  demoPortrait = false,
 }: {
   name?: string;
   initials?: string;
   size?: 'small' | 'default' | 'large';
   tone?: 'lavender' | 'peach' | 'sage' | 'neutral';
   className?: string;
+  /** Explicitly fictional examples only; real people always use initials or uploads. */
+  demoPortrait?: boolean;
 }) {
   return (
     <span
       aria-hidden="true"
       className={twMerge(avatar({ size, tone }), className)}
     >
-      {initials?.trim().slice(0, 2).toUpperCase() || initialsFor(name || '')}
+      {demoPortrait ? (
+        <img
+          src="/images/james-demo.webp"
+          width={160}
+          height={160}
+          alt=""
+          className="size-full object-cover"
+        />
+      ) : (
+        initials?.trim().slice(0, 2).toUpperCase() || initialsFor(name || '')
+      )}
     </span>
   );
 }

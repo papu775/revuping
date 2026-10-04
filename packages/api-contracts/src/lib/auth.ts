@@ -76,3 +76,15 @@ export function authErrorMessage(error: unknown): string {
     return 'Too many attempts. Please wait 15 minutes before trying again.';
   return 'Unable to complete this request. Check your connection and try again.';
 }
+
+/** Route from authoritative session and selected workspace onboarding state. */
+export function accountDestination(
+  session: SessionResponse | null,
+  workspace: { id: string } | undefined,
+  completedAt: string | null,
+): 'login' | 'verification' | 'setup' | 'dashboard' {
+  if (!session) return 'login';
+  if (!session.user.emailVerified) return 'verification';
+  if (!workspace || !completedAt) return 'setup';
+  return 'dashboard';
+}

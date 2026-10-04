@@ -17,6 +17,7 @@ const email = `phase3-web-${randomUUID()}@example.test`,
 const inbox = 'http://127.0.0.1:8025',
   artifacts = process.env.PHASE3_ARTIFACTS || '/tmp/revuping-phase3-browser';
 const messages = [];
+const browserErrors = [];
 let browser,
   page,
   stage = 'startup';
@@ -167,6 +168,137 @@ async function heading(text) {
     page.getByRole('heading', { name: text, exact: true }),
   ).toBeVisible();
 }
+
+async function photoMatrix(prefix) {
+  for (const appearance of ['Light', 'Dark']) {
+    if (await page.getByRole('combobox', { name: 'Color theme' }).count())
+      await theme(appearance);
+    else
+      await page.evaluate(
+        (value) =>
+          document.documentElement.classList.toggle('dark', value === 'Dark'),
+        appearance,
+      );
+    for (const width of [1280, 390]) {
+      await page.setViewportSize({ width, height: 900 });
+      await page.evaluate(() =>
+        Promise.all(
+          [...document.images]
+            .filter((img) => img.getClientRects().length)
+            .map((img) => img.decode()),
+        ),
+      );
+      assert.equal(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth > innerWidth,
+        ),
+        false,
+      );
+      await shot(`${prefix}-${width}-${appearance.toLowerCase()}`);
+    }
+  }
+  await page.setViewportSize({ width: 1280, height: 900 });
+  if (await page.getByRole('combobox', { name: 'Color theme' }).count())
+    await theme('Light');
+  else
+    await page.evaluate(() =>
+      document.documentElement.classList.remove('dark'),
+    );
+}
+async function returningRouting(context, completedId) {
+  await page.goto(`${base}/workspace?workspace=${completedId}&step=2`);
+  await page.waitForURL('**/workspace/dashboard?workspace=*');
+  assert.equal(new URL(page.url()).searchParams.has('step'), false);
+  await page.getByRole('button', { name: 'Log out', exact: true }).click();
+  await page.waitForURL('**/login');
+  await page.goBack();
+  await expect(
+    page.getByRole('heading', { name: 'Log in', exact: true }),
+  ).toBeVisible();
+  await page.evaluate(() => {
+    window.__routingDocument = 'login';
+  });
+  await page.getByLabel('Email address', { exact: true }).fill(email);
+  await page.getByLabel('Password', { exact: true }).fill(password);
+  await page.getByRole('button', { name: 'Log in', exact: true }).click();
+  await page.waitForURL('**/workspace/dashboard?workspace=*');
+  assert.equal(
+    await page.evaluate(() => window.__routingDocument),
+    'login',
+    'Login reloaded the document',
+  );
+  // Create an independent incomplete workspace through the real CSRF-protected API.
+  const second = await page.evaluate(async () => {
+    const csrf = await (await fetch('/api/backend/auth/csrf')).json();
+    const result = await fetch('/api/backend/workspaces', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': csrf.csrfToken,
+      },
+      body: JSON.stringify({
+        name: 'Second studio',
+        key: 'second-routing-workspace',
+      }),
+    });
+    if (!result.ok) throw new Error('Workspace creation failed');
+    return result.json();
+  });
+  await page.reload(); // Newly created workspace list is server-authoritative.
+  await page.getByRole('combobox', { name: 'Workspace', exact: true }).click();
+  await page
+    .getByRole('option', { name: 'Second studio', exact: true })
+    .click();
+  await heading('Business');
+  assert.equal(new URL(page.url()).searchParams.get('workspace'), second.id);
+  await page.getByRole('button', { name: 'Log out', exact: true }).click();
+  await page.waitForURL('**/login');
+  await page.getByLabel('Email address', { exact: true }).fill(email);
+  await page.getByLabel('Password', { exact: true }).fill(password);
+  await page.getByRole('button', { name: 'Log in', exact: true }).click();
+  await page.waitForURL('**/workspace');
+  await heading('Business');
+  await expect(page.getByLabel('Business name', { exact: true })).toHaveValue(
+    'Second studio',
+  );
+  await page.getByRole('combobox', { name: 'Workspace', exact: true }).click();
+  await page.getByRole('option', { name: /Juniper Studio/ }).click();
+  await page.waitForURL('**/workspace/dashboard?workspace=*');
+  assert.equal(new URL(page.url()).searchParams.get('workspace'), completedId);
+  await pool.query(
+    `UPDATE "Membership" SET role='STAFF' WHERE "workspaceId"=$1`,
+    [second.id],
+  );
+  await page.goto(`${base}/workspace?workspace=${second.id}&edit=business`);
+  await expect(page.getByRole('heading', { name: '404' })).toBeVisible();
+  await pool.query(
+    `UPDATE "Membership" SET role='OWNER' WHERE "workspaceId"=$1`,
+    [second.id],
+  );
+  // An unrecognized selection cannot fall back to another tenant.
+  await page.goto(`${base}/workspace/dashboard?workspace=${randomUUID()}`);
+  await expect(page.getByRole('heading', { name: '404' })).toBeVisible();
+  await page.goto(`${base}/workspace?workspace=${completedId}&step=1`);
+  await page.waitForURL('**/workspace/dashboard?workspace=*');
+  await page
+    .getByRole('link', {
+      name: 'Explore the separate fictional demo',
+      exact: true,
+    })
+    .click();
+  await page.waitForURL('**/dashboard');
+  await expect(page.locator('.demo-label')).toContainText('Demo workspace');
+  await page.goto(`${base}/workspace/dashboard?workspace=${completedId}`);
+  const anonymous = await context.browser().newContext();
+  const visitor = await anonymous.newPage();
+  await visitor.goto(`${base}/workspace/dashboard?workspace=${completedId}`);
+  await visitor.waitForURL('**/login');
+  await expect(
+    visitor.getByText('Juniper Studio', { exact: false }),
+  ).toHaveCount(0);
+  await anonymous.close();
+}
+
 (async () => {
   await fs.mkdir(artifacts, { recursive: true });
   browser = await chromium.launch({ headless: true });
@@ -176,9 +308,11 @@ async function heading(text) {
     reducedMotion: 'reduce',
   });
   page = await context.newPage();
-  page.on('pageerror', (error) =>
-    console.error('Browser error:', error.message),
-  );
+  page.on('pageerror', error => { browserErrors.push(`${stage} at ${new URL(page.url()).pathname}: ${error.message}`); });
+  page.on('console', message => {
+    if (message.type() === 'error' && /hydrated.*attributes|server rendered HTML/i.test(message.text()))
+      browserErrors.push(`${stage} hydration: ${message.text()}`);
+  });
   try {
     stage = 'landing';
     await page.goto(base);
@@ -224,6 +358,8 @@ async function heading(text) {
     const toast = await page.locator('.toast-stack').boundingBox();
     assert.ok(toast.y < 30 && toast.x > 850);
     await shot('signup-toast');
+    await expect(page.locator('form')).toHaveCount(0);
+    await photoMatrix('signup-success');
     const mail = await capture();
     const link = mail.Text.match(/https?:\/\/\S+#token=[A-Za-z0-9_-]{43}/)?.[0];
     assert.ok(link?.startsWith(base));
@@ -250,7 +386,7 @@ async function heading(text) {
     await page.getByLabel('Email address', { exact: true }).fill(email);
     await page.getByLabel('Password', { exact: true }).fill(password);
     await page.getByRole('button', { name: 'Log in', exact: true }).click();
-    await page.waitForURL('**/workspace');
+    await page.waitForURL('**/verify-email');
     await heading('Verify your email');
     stage = 'second tab verification';
     const verify = await context.newPage();
@@ -284,9 +420,24 @@ async function heading(text) {
       }
     await verify.close();
     await page.bringToFront();
-    await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+    await page.goto(`${base}/workspace`);
     await heading('Let’s set up your business');
+    await page.getByRole('button', { name: 'Log out', exact: true }).click();
+    await page.waitForURL('**/login');
+    await page.evaluate(() => {
+      window.__verifiedLogin = true;
+    });
+    await page.getByLabel('Email address', { exact: true }).fill(email);
+    await page.getByLabel('Password', { exact: true }).fill(password);
+    await page.getByRole('button', { name: 'Log in', exact: true }).click();
+    await page.waitForURL('**/workspace');
+    await heading('Let’s set up your business');
+    assert.equal(await page.evaluate(() => window.__verifiedLogin), true);
     await matrix('initial-setup');
+    await page.evaluate(() => {
+      window.__routingDocument = 'wizard';
+      window.__wizardShell = document.querySelector('.setup-shell');
+    });
     stage = 'workspace';
     await page
       .getByLabel('Business name', { exact: true })
@@ -427,6 +578,10 @@ async function heading(text) {
     ).toContainText(selectedTimezone);
     await page.getByRole('button', { name: 'Continue', exact: true }).click();
     await heading('Hours & branding');
+    await page.evaluate(() => {
+      window.__routingDocument = 'wizard';
+      window.__wizardShell = document.querySelector('.setup-shell');
+    });
     stage = 'hours';
     await page.getByLabel('Brand colour hex').fill('#oops');
     await page.getByRole('button', { name: 'Continue', exact: true }).click();
@@ -520,6 +675,12 @@ async function heading(text) {
       })
       .toBe(true);
     await shot('review-desktop-light');
+    assert.equal(await page.evaluate(() => window.__routingDocument), 'wizard');
+    assert.ok(
+      await page.evaluate(
+        () => window.__wizardShell === document.querySelector('.setup-shell'),
+      ),
+    );
     stage = 'navigation and themes';
     await page.goBack();
     await heading('Hours & branding');
@@ -538,17 +699,125 @@ async function heading(text) {
         );
       }
     }
-    stage = 'complete';
+    stage = 'required completion validation';
+    const rejected = await page.evaluate(async () => {
+      const id = new URLSearchParams(location.search).get('workspace');
+      const state = await (
+        await fetch(`/api/backend/workspaces/${id}/onboarding`)
+      ).json();
+      const csrf = await (await fetch('/api/backend/auth/csrf')).json();
+      return (
+        await fetch(`/api/backend/workspaces/${id}/onboarding`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': csrf.csrfToken,
+          },
+          body: JSON.stringify({
+            draft: { ...state.draft, category: '', locationName: '' },
+            revision: state.revision,
+            complete: true,
+          }),
+        })
+      ).status;
+    });
+    assert.equal(rejected, 400);
+    stage = 'completion failure preserves review';
+    const workspaceId = new URL(page.url()).searchParams.get('workspace');
+    const before = await pool.query(
+      'SELECT "completedAt" FROM "Business" WHERE "workspaceId"=$1',
+      [workspaceId],
+    );
+    assert.equal(before.rows[0].completedAt, null);
+    await page.route(
+      '**/api/backend/workspaces/*/onboarding',
+      async (route) => {
+        if (
+          route.request().method() === 'PUT' &&
+          route.request().postDataJSON()?.complete
+        )
+          await route.fulfill({
+            status: 503,
+            contentType: 'application/json',
+            body: JSON.stringify({
+              error: {
+                code: 'SERVICE_UNAVAILABLE',
+                message: 'Service unavailable',
+                requestId: randomUUID(),
+              },
+            }),
+          });
+        else await route.continue();
+      },
+    );
     await page
       .getByRole('button', { name: 'Finish setup', exact: true })
       .click();
-    await heading('Your business is ready');
+    await expect(
+      page.locator('.setup-card [role="alert"]').first(),
+    ).toContainText('Unable to save');
+    await heading('Review');
+    assert.equal(new URL(page.url()).pathname, '/workspace');
+    await expect(page.locator('.setup-card')).toContainText('Juniper Studio');
+    await page.unroute('**/api/backend/workspaces/*/onboarding');
+    await page.evaluate(() => {
+      window.__routingDocument = 'completion';
+      window.__accountHeader = document.querySelector('.account-header');
+    });
+    stage = 'complete on a slow route';
+    await page.route('**/workspace*', async (route) => {
+      if (route.request().headers()['next-action'])
+        await new Promise((resolve) => setTimeout(resolve, 700));
+      await route.continue();
+    });
+    const completionResponse = page.waitForResponse(
+      (response) =>
+        response.request().method() === 'PUT' &&
+        response.url().includes('/onboarding') &&
+        response.request().postDataJSON()?.complete === true,
+    );
+    await page
+      .getByRole('button', { name: 'Finish setup', exact: true })
+      .click();
+    await expect(page.locator('.account-header')).toBeVisible();
+    await expect(page.locator('.auth-blocking-panel')).toBeVisible();
+    const authoritative = await (await completionResponse).json();
+    assert.ok(authoritative.completedAt);
+    await page.waitForURL('**/workspace/dashboard?workspace=*');
+    await expect(
+      page.getByRole('heading', { name: 'Activity', exact: true }),
+    ).toBeVisible();
+    assert.equal(
+      await page.evaluate(() => window.__routingDocument),
+      'completion',
+      'Completion reloaded the document',
+    );
+    assert.ok(
+      await page.evaluate(
+        () =>
+          window.__accountHeader === document.querySelector('.account-header'),
+      ),
+      'Shared account header remounted',
+    );
+    assert.equal(new URL(page.url()).searchParams.has('step'), false);
+    await page.unroute('**/workspace*');
+    await expect(page.locator('main')).toContainText('No customer activity');
+    await expect(page.locator('main')).not.toContainText('4.8');
+    await photoMatrix('real-dashboard');
     await page.reload();
-    await heading('Your business is ready');
-    await matrix('completion');
-    await expect(page.locator('.hours-summary')).toContainText('Closed');
-    await expect(page.locator('.hours-summary')).toContainText('Not provided');
-    const workspaceId = new URL(page.url()).searchParams.get('workspace');
+    await expect(
+      page.getByRole('heading', { name: 'Activity', exact: true }),
+    ).toBeVisible();
+    const persisted = await pool.query(
+      'SELECT "completedAt", draft FROM "Business" WHERE "workspaceId"=$1',
+      [workspaceId],
+    );
+    assert.equal(
+      persisted.rows[0].completedAt.toISOString(),
+      authoritative.completedAt,
+    );
+    assert.ok(persisted.rows[0].draft.name.startsWith('Juniper Studio'));
+    await returningRouting(context, workspaceId);
     const location = await pool.query(
       'SELECT hours, timezone, "closedDays" FROM "Location" WHERE "workspaceId"=$1 AND "isPrimary"=true',
       [workspaceId],
@@ -558,14 +827,9 @@ async function heading(text) {
     assert.equal(location.rows[0].closedDays[3], false);
     assert.deepEqual(location.rows[0].hours[0], location.rows[0].hours[1]);
     await shot('ready-desktop');
-    await expect(
-      page.getByText('Your business details are saved.', {
-        exact: false,
-      }),
-    ).toBeVisible();
     stage = 'edit';
     await page
-      .getByRole('button', { name: 'Edit business', exact: true })
+      .getByRole('link', { name: 'Edit business details', exact: true })
       .click();
     await heading('Business');
     await page
@@ -641,7 +905,11 @@ async function heading(text) {
       .getByLabel('Password', { exact: true })
       .fill('Updated synthetic passphrase 456');
     await page.getByRole('button', { name: 'Log in', exact: true }).click();
-    await page.waitForURL('**/workspace');
+    await page.waitForURL('**/workspace/dashboard?workspace=*');
+    await expect(
+      page.getByRole('heading', { name: 'Activity', exact: true }),
+    ).toBeVisible();
+    assert.deepEqual(browserErrors, [], 'Unexpected browser errors');
     console.log(`Phase3 browser journey passed; screenshots: ${artifacts}`);
   } catch (error) {
     await shot('failure').catch(() => undefined);

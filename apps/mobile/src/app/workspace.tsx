@@ -1,6 +1,6 @@
 import { BusinessSetup } from '../features/business-setup';
 import { Select } from 'mobile-ui';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ScrollView,
   Text,
@@ -9,7 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useTheme } from 'mobile-tokens';
 import {
   Button,
@@ -21,13 +21,27 @@ import {
   useToast,
 } from 'mobile-ui';
 import { useAuthAction } from '../features/use-auth-action';
-import { authErrorMessage, type WorkspaceResponse } from 'api-contracts';
+import {
+  accountDestination,
+  authErrorMessage,
+  type WorkspaceResponse,
+} from 'api-contracts';
 import { useAuth } from '../data-access/auth-context';
+import {
+  rememberedWorkspace,
+  rememberWorkspace,
+} from '../data-access/workspace-selection';
 
 export default function WorkspaceScreen() {
   const { client, session } = useAuth();
   const { colors } = useTheme();
   const router = useRouter();
+  const scroll = useRef<ScrollView>(null);
+  const resetStepScroll = useCallback(
+    () => scroll.current?.scrollTo({ y: 0, animated: false }),
+    [],
+  );
+  const query = useLocalSearchParams<{ workspace?: string; edit?: string }>();
   const authAction = useAuthAction();
   const { showToast } = useToast();
   const [workspaces, setWorkspaces] = useState<WorkspaceResponse[]>([]);
@@ -36,6 +50,7 @@ export default function WorkspaceScreen() {
   const [pending, setPending] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [invalidSelection, setInvalidSelection] = useState(false);
   const [notice, setNotice] = useState('');
   const busy = useRef(false);
   const generation = useRef(0);
@@ -62,10 +77,50 @@ export default function WorkspaceScreen() {
       const current = await client.current();
       const list = current.user.emailVerified ? await client.workspaces() : [];
       if (currentGeneration !== generation.current) return;
+      if (!current.user.emailVerified) {
+        router.replace('/verify-email');
+        return;
+      }
+      const remembered = await rememberedWorkspace(current.user.id);
+      if (currentGeneration !== generation.current) return;
+      const chosen = query.workspace
+        ? list.find((item) => item.id === query.workspace)
+        : (list.find(
+            (item) => item.id === selected || item.id === remembered,
+          ) ?? list[0]);
+      if (query.workspace && !chosen) {
+        setWorkspaces([]);
+        setSelected('');
+        setInvalidSelection(true);
+        setError('This workspace is unavailable.');
+        return;
+      }
+      if (query.edit === 'business' && chosen?.role !== 'OWNER') {
+        setWorkspaces([]);
+        setSelected('');
+        setInvalidSelection(true);
+        setError('Business editing requires owner access.');
+        return;
+      }
+      if (chosen) {
+        const onboarding = await client.onboarding(chosen.id);
+        if (currentGeneration !== generation.current) return;
+        await rememberWorkspace(current.user.id, chosen.id);
+        if (
+          accountDestination(current, chosen, onboarding.completedAt) ===
+            'dashboard' &&
+          query.edit !== 'business'
+        ) {
+          router.replace({
+            pathname: '/account-dashboard',
+            params: { workspace: chosen.id },
+          });
+          return;
+        }
+      }
+      setInvalidSelection(false);
       setWorkspaces(list);
-      setSelected((value) =>
-        list.some((item) => item.id === value) ? value : (list[0]?.id ?? ''),
-      );
+      setSelected(chosen?.id ?? '');
       setError('');
     } catch (error) {
       if (currentGeneration === generation.current)
@@ -87,7 +142,13 @@ export default function WorkspaceScreen() {
     };
     // The client instance is stable; each account remounts this protected screen.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [client, session?.user.id, session?.user.emailVerified]);
+  }, [
+    client,
+    session?.user.id,
+    session?.user.emailVerified,
+    query.workspace,
+    query.edit,
+  ]);
   const run = async (action: () => Promise<void>) => {
     const currentAccount = session?.user.id;
     if (busy.current) return;
@@ -114,6 +175,7 @@ export default function WorkspaceScreen() {
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
           <ScrollView
+            ref={scroll}
             contentContainerStyle={{ padding: 24, gap: 20, paddingBottom: 48 }}
             keyboardShouldPersistTaps="handled"
           >
@@ -182,7 +244,13 @@ export default function WorkspaceScreen() {
                   />
                 </View>
               </Card>
-            ) : loading && !workspace ? (
+            ) : invalidSelection ? (
+              <Button
+                title="Open authorized workspaces"
+                onPress={() => router.replace('/workspace')}
+              />
+            ) : (loading && !workspace) ||
+              (query.workspace && query.workspace !== selected) ? (
               <Text
                 accessibilityLiveRegion="polite"
                 style={{ color: colors.muted }}
@@ -201,9 +269,14 @@ export default function WorkspaceScreen() {
                     }
                     options={workspaceOptions}
                     onChange={(value) =>
-                      setSelected(
-                        workspaces[workspaceOptions.indexOf(value)]?.id ?? '',
-                      )
+                      router.replace({
+                        pathname: '/workspace',
+                        params: {
+                          workspace:
+                            workspaces[workspaceOptions.indexOf(value)]?.id ??
+                            '',
+                        },
+                      })
                     }
                   />
                 )}
@@ -212,6 +285,8 @@ export default function WorkspaceScreen() {
                     key={workspace.id}
                     id={workspace.id}
                     owner={workspace.role === 'OWNER'}
+                    edit={query.edit === 'business'}
+                    onStepChange={resetStepScroll}
                   />
                 ) : (
                   <Card>
@@ -256,7 +331,7 @@ export default function WorkspaceScreen() {
                   () => client.logout(),
                   () => {
                     showToast('You’re logged out.');
-                    router.replace('/welcome');
+                    router.replace('/login');
                   },
                   (error) => {
                     const message = authErrorMessage(error);
@@ -276,7 +351,7 @@ export default function WorkspaceScreen() {
                   () => client.logout(true),
                   () => {
                     showToast('All sessions logged out.');
-                    router.replace('/welcome');
+                    router.replace('/login');
                   },
                   (error) => {
                     const message = authErrorMessage(error);

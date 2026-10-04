@@ -1,5 +1,10 @@
 import { useReducedMotion } from 'mobile-tokens';
-import { Stack } from 'expo-router';
+import {
+  Stack,
+  useRootNavigationState,
+  useRouter,
+  useSegments,
+} from 'expo-router';
 import { AuthProvider, useAuth } from '../data-access/auth-context';
 import { Screen, Button } from 'mobile-ui';
 import { StatusBar } from 'expo-status-bar';
@@ -41,6 +46,22 @@ export default function RootLayout() {
 function SessionNavigation({ reduced }: { reduced: boolean }) {
   const { ready, error, retry, session, demo, enterDemo } = useAuth();
   const { colors } = useTheme();
+  const router = useRouter();
+  const segments = useSegments();
+  const navigation = useRootNavigationState();
+  const entry = segments[segments.length - 1];
+  useEffect(() => {
+    if (
+      ready &&
+      navigation?.key &&
+      session &&
+      !demo &&
+      ['login', 'signup', 'welcome'].includes(entry ?? '')
+    )
+      router.replace(
+        session.user.emailVerified ? '/workspace' : '/verify-email',
+      );
+  }, [ready, navigation?.key, session, demo, entry, router]);
   if (!ready)
     return (
       <Screen>
@@ -68,12 +89,14 @@ function SessionNavigation({ reduced }: { reduced: boolean }) {
     <Stack
       screenOptions={{
         headerShown: false,
-        animation: reduced ? 'none' : 'slide_from_right',
+        animation: reduced ? 'none' : 'fade',
+        animationDuration: 180,
       }}
     >
       <Stack.Screen name="(auth)" />
       <Stack.Protected guard={!!session}>
         <Stack.Screen name="workspace" />
+        <Stack.Screen name="account-dashboard" />
       </Stack.Protected>
       <Stack.Protected guard={demo}>
         <Stack.Screen name="(tabs)" />

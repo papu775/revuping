@@ -5,9 +5,11 @@ export default function AuthLayout() {
   const reduced = useReducedMotion();
   return (
     <Stack
+      initialRouteName="login"
       screenOptions={{
         headerShown: false,
-        animation: reduced ? 'none' : 'slide_from_right',
+        animation: reduced ? 'none' : 'fade',
+        animationDuration: 180,
       }}
     >
       <Stack.Screen name="welcome" />

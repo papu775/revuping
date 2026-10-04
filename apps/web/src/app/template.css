@@ -6235,3 +6235,136 @@
     translate: none;
   }
 }
+
+/* Related account routes keep their shell; only incoming content gently settles. */
+@keyframes account-content-enter {
+  from {
+    opacity: 0.88;
+    transform: translateY(3px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.auth-form,
+.route-content {
+  animation: account-content-enter 180ms ease-out;
+}
+.real-dashboard .sidebar {
+  top: 77px;
+  height: calc(100dvh - 77px);
+}
+.real-dashboard .dashboard-topbar {
+  top: 77px;
+  z-index: 30;
+}
+@media (prefers-reduced-motion: reduce) {
+  .auth-form,
+  .route-content {
+    animation: none;
+  }
+}
+
+.auth-page > .auth-blocking-content {
+  min-width: 0;
+}
+.auth-page > .auth-blocking-content > .auth-form-side {
+  min-height: 100vh;
+}
+.auth-photograph {
+  margin: 28px 0 18px;
+}
+.auth-photograph img {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 3 / 2;
+  object-fit: cover;
+  border-radius: 18px;
+}
+.auth-photograph figcaption {
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+.auth-photo-demo {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  background: var(--surface-section);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  color: var(--ink);
+}
+.auth-photo-demo strong {
+  font-size: 13px;
+}
+.auth-photo-demo p {
+  margin: 4px 0 0;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+.business-photo-section {
+  padding-block: 48px 64px;
+}
+.business-photo-section > div:first-child {
+  max-width: 650px;
+  margin-bottom: 26px;
+}
+.business-photo-section h2 {
+  font-size: clamp(26px, 3vw, 40px);
+  line-height: 1.2;
+  margin-block: 14px;
+  color: var(--ink);
+}
+.business-photo-section p {
+  color: var(--muted);
+  line-height: 1.8;
+}
+.business-photo-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+.business-photo-grid figure {
+  min-width: 0;
+}
+.business-photo-grid img {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 3 / 2;
+  object-fit: cover;
+  border-radius: 20px;
+}
+.business-photo-grid figcaption {
+  padding-block: 12px;
+  font-size: 15px;
+  color: var(--ink);
+}
+.business-photo-section > small {
+  display: block;
+  margin-top: 10px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+@media (max-width: 600px) {
+  .business-photo-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
+
+.auth-photo-demo {
+  --ink: var(--page-ink);
+  --muted: var(--page-muted);
+}
+
+.real-dashboard .setup-card > .button {
+  margin-top: 18px;
+}
+.real-dashboard .setup-card > p + p {
+  margin-top: 10px;
+}

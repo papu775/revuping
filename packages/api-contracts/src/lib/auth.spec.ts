@@ -1,4 +1,5 @@
 import {
+  accountDestination,
   authErrorMessage,
   nativeSessionSchema,
   registrationVerificationUnavailable,
@@ -61,5 +62,21 @@ describe('public authentication contracts', () => {
         role: 'ADMIN',
       }).success,
     ).toBe(false);
+  });
+});
+
+describe('account routing policy', () => {
+  const verified = { ...safe, user: { ...safe.user, emailVerified: true } };
+  const workspace = { id: 'workspace' };
+  it('requires session, verification and authoritative selected completion', () => {
+    expect(accountDestination(null, workspace, '2026-10-04')).toBe('login');
+    expect(accountDestination(safe, workspace, '2026-10-04')).toBe(
+      'verification',
+    );
+    expect(accountDestination(verified, undefined, null)).toBe('setup');
+    expect(accountDestination(verified, workspace, null)).toBe('setup');
+    expect(accountDestination(verified, workspace, '2026-10-04')).toBe(
+      'dashboard',
+    );
   });
 });

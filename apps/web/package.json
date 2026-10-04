@@ -147,6 +147,13 @@
         "options": {
           "command": "node apps/web/scripts/check-verification-states.cjs"
         }
+      },
+      "routing-check": {
+        "executor": "nx:run-commands",
+        "cache": false,
+        "options": {
+          "command": "node apps/web/scripts/check-navigation.cjs"
+        }
       }
     },
     "tags": [

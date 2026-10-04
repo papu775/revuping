@@ -1,9 +1,10 @@
 'use client';
+import { refreshAccountRoutes } from '@/app/account-actions';
 import { BrandScene } from '@/components/brand-scene';
 import { BusinessSetup } from './business-setup';
 import { Select } from '@/components/ui/select';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
   ApiRequestError,
@@ -13,8 +14,7 @@ import {
 } from 'api-contracts';
 import { authRequest } from '@/data-access/auth-client';
 import { Button } from '@/components/ui/button';
-import { Field, Logo } from '@/components/shared';
-import { ThemeControl } from '@/components/theme';
+import { Field } from '@/components/shared';
 import { PageHeading } from '@/components/ui/page-heading';
 import { useAuthAction } from './use-auth-action';
 import { AuthBlocker } from './auth-blocker';
@@ -26,6 +26,7 @@ export function Workspace({
   initialSession: SessionResponse;
 }) {
   const router = useRouter();
+  const requestedWorkspace = useSearchParams().get('workspace');
   const authAction = useAuthAction();
   const toast = useToast();
   const [session, setSession] = useState(initialSession);
@@ -46,7 +47,6 @@ export function Workspace({
         setWorkspaces([]);
         setSelected('');
         router.replace('/login');
-        router.refresh();
       } else setError(authErrorMessage(error));
     },
     [router],
@@ -65,22 +65,45 @@ export function Workspace({
         setNotice('');
       }
       setSession(restored);
+      if (!restored.user.emailVerified) {
+        router.replace('/verify-email');
+        return;
+      }
       const list = restored.user.emailVerified
         ? await authRequest('workspaces', 'workspaces')
         : [];
       if (current !== generation.current) return;
       setSession(restored);
       setWorkspaces(list);
+      const requested = requestedWorkspace;
+      if (requested && !list.some((item) => item.id === requested)) {
+        setError('This workspace is unavailable.');
+        setSelected('');
+        return;
+      }
+      const chosen =
+        list.find((item) => item.id === requested) ??
+        list.find((item) =>
+          document.cookie
+            .split('; ')
+            .includes(`rp_workspace_${restored.user.id}=${item.id}`),
+        ) ??
+        list[0];
+      if (chosen)
+        document.cookie = `rp_workspace_${restored.user.id}=${chosen.id}; Path=/; SameSite=Lax; Max-Age=31536000${location.protocol === 'https:' ? '; Secure' : ''}`;
+
       setSelected((id) =>
-        list.some((item) => item.id === id)
-          ? id
-          : (list.find(
-              (item) =>
-                item.id ===
-                new URLSearchParams(window.location.search).get('workspace'),
-            )?.id ??
-            list[0]?.id ??
-            ''),
+        requested && list.some((item) => item.id === requested)
+          ? requested
+          : list.some((item) => item.id === id)
+            ? id
+            : (list.find(
+                (item) =>
+                  item.id ===
+                  new URLSearchParams(window.location.search).get('workspace'),
+              )?.id ??
+              chosen?.id ??
+              ''),
       );
       setError('');
     } catch (error) {
@@ -88,7 +111,7 @@ export function Workspace({
     } finally {
       if (current === generation.current) setLoading(false);
     }
-  }, [fail]);
+  }, [fail, requestedWorkspace]);
   useEffect(() => {
     void load();
     const onFocus = () => {
@@ -125,37 +148,6 @@ export function Workspace({
     <AuthBlocker label={authAction.label}>
       <div className="dashboard-shell visual-shell min-h-screen bg-canvas">
         <BrandScene backdrop />
-        <header className="dashboard-topbar flex min-h-[77px] items-center justify-between gap-3 border-b border-line px-6 py-3 max-[600px]:px-4">
-          <Logo />
-          <div className="topbar-right !gap-2">
-            <ThemeControl />
-            <Button
-              variant="secondary"
-              disabled={pending}
-              onClick={() =>
-                void authAction.run(
-                  'Logging you out…',
-                  (signal) =>
-                    authRequest('auth/logout', 'message', {}, 'POST', signal),
-                  () => {
-                    generation.current++;
-                    setWorkspaces([]);
-                    setSelected('');
-                    router.replace('/login');
-                    router.refresh();
-                    toast('You’re logged out.');
-                  },
-                  (error) => {
-                    fail(error);
-                    toast(authErrorMessage(error), 'error');
-                  },
-                )
-              }
-            >
-              Log out
-            </Button>
-          </div>
-        </header>
         <main className="setup-shell break-words">
           <PageHeading
             eyebrow="Your account"
@@ -216,7 +208,8 @@ export function Workspace({
                 I’ve verified my email
               </Button>
             </section>
-          ) : loading && !workspace ? (
+          ) : (requestedWorkspace && workspace?.id !== requestedWorkspace) ||
+            (loading && !workspace) ? (
             <p role="status">Loading your workspaces…</p>
           ) : (
             <>
@@ -225,7 +218,11 @@ export function Workspace({
                   <Select
                     label="Workspace"
                     value={selected}
-                    onValueChange={setSelected}
+                    onValueChange={async (id) => {
+                      await refreshAccountRoutes();
+                      document.cookie = `rp_workspace_${session.user.id}=${id}; Path=/; SameSite=Lax; Max-Age=31536000${location.protocol === 'https:' ? '; Secure' : ''}`;
+                      router.replace(`/workspace?workspace=${id}`);
+                    }}
                     options={workspaces.map((item) => ({
                       value: item.id,
                       label: `${item.name} · ${item.role}`,
@@ -257,6 +254,7 @@ export function Workspace({
                             'workspace',
                             { name, key: 'initial-workspace' },
                           );
+                          await refreshAccountRoutes();
                           setSelected(created.id);
                           await load();
                           toast('Workspace created.');
@@ -301,19 +299,22 @@ export function Workspace({
                 onClick={() =>
                   void authAction.run(
                     'Logging out all sessions…',
-                    (signal) =>
-                      authRequest(
+                    async (signal) => {
+                      const result = await authRequest(
                         'auth/logout-all',
                         'message',
                         {},
                         'POST',
                         signal,
-                      ),
+                      );
+                      await refreshAccountRoutes();
+                      return result;
+                    },
                     () => {
                       generation.current++;
                       setWorkspaces([]);
                       router.replace('/login');
-                      router.refresh();
+
                       toast('All sessions logged out.');
                     },
                     (error) => {

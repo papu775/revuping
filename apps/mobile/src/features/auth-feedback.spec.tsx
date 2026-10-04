@@ -173,10 +173,8 @@ describe('native authentication feedback rendering', () => {
     expect(
       view.getByRole('button', { name: 'Resend verification email' }),
     ).toBeTruthy();
-    expect(
-      view.getByRole('button', { name: 'Create account' }).props
-        .accessibilityState.disabled,
-    ).toBe(true);
+    expect(view.queryByRole('button', { name: 'Create account' })).toBeNull();
+    expect(view.getByText('Check your email')).toBeTruthy();
   });
   it('uses confirmed partial creation to offer resend, never a false success', async () => {
     mockRegister.mockRejectedValue(

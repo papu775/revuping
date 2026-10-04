@@ -178,6 +178,7 @@ export function ProductShowcase() {
                             onClick={() => demo.select(f.id)}
                           >
                             <Avatar
+                              demoPortrait={f.name === 'James Wilson'}
                               initials={f.initials}
                               tone={f.id === 1 ? 'peach' : 'lavender'}
                             />

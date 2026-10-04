@@ -1,8 +1,17 @@
-import { useEffect, useState } from 'react';
-import { AppState, Image, Text, View } from 'react-native';
+import { useRouter } from 'expo-router';
+import { useEffect, useRef, useState } from 'react';
+import {
+  AccessibilityInfo,
+  Animated,
+  AppState,
+  findNodeHandle,
+  Image,
+  Text,
+  View,
+} from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Button, Card, Field, Select, AuthBlocker, useToast } from 'mobile-ui';
-import { useTheme } from 'mobile-tokens';
+import { useTheme, useReducedMotion } from 'mobile-tokens';
 import {
   ApiRequestError,
   businessBrand,
@@ -24,7 +33,18 @@ const days = [
   'Saturday',
   'Sunday',
 ];
-export function BusinessSetup({ id, owner }: { id: string; owner: boolean }) {
+export function BusinessSetup({
+  id,
+  owner,
+  edit = false,
+  onStepChange,
+}: {
+  id: string;
+  owner: boolean;
+  edit?: boolean;
+  onStepChange?: () => void;
+}) {
+  const router = useRouter();
   const { client } = useAuth();
   const { colors } = useTheme();
   const { showToast } = useToast();
@@ -32,6 +52,30 @@ export function BusinessSetup({ id, owner }: { id: string; owner: boolean }) {
   const [state, setState] = useState<OnboardingResponse | null>(null);
   const [draft, setDraft] = useState<OnboardingDraft | null>(null);
   const [step, setStep] = useState(0);
+  const reduced = useReducedMotion();
+  const opacity = useRef(new Animated.Value(1)).current;
+  const heading = useRef<Text>(null);
+  useEffect(() => {
+    opacity.stopAnimation();
+    opacity.setValue(reduced ? 1 : 0.88);
+    if (!reduced)
+      Animated.timing(opacity, {
+        toValue: 1,
+        duration: 180,
+        useNativeDriver: true,
+      }).start();
+    onStepChange?.();
+    let alive = true;
+    void AccessibilityInfo.isScreenReaderEnabled().then((enabled) => {
+      const handle = findNodeHandle(heading.current);
+      if (alive && enabled && handle)
+        AccessibilityInfo.setAccessibilityFocus(handle);
+    });
+    return () => {
+      alive = false;
+      opacity.stopAnimation();
+    };
+  }, [step, reduced, opacity, onStepChange]);
   const [editing, setEditing] = useState(false);
   const [error, setError] = useState('');
   const [saved, setSaved] = useState(false);
@@ -46,13 +90,21 @@ export function BusinessSetup({ id, owner }: { id: string; owner: boolean }) {
       .onboarding(id)
       .then((result) => {
         if (alive) {
+          if (result.completedAt && !(edit && owner)) {
+            router.replace({
+              pathname: '/account-dashboard',
+              params: { workspace: id },
+            });
+            return;
+          }
+          setEditing(edit && owner);
           setState(result);
           setDraft(
             result.revision === 0
               ? { ...result.draft, timezone: deviceTimezone() }
               : result.draft,
           );
-          setStep(result.draft.step);
+          setStep(edit ? 0 : result.draft.step);
         }
       })
       .catch(() => {
@@ -62,7 +114,7 @@ export function BusinessSetup({ id, owner }: { id: string; owner: boolean }) {
     return () => {
       alive = false;
     };
-  }, [client, id]);
+  }, [client, id, edit, owner, router]);
   useEffect(() => {
     let alive = true;
     const refreshLogo = () => {
@@ -128,7 +180,16 @@ export function BusinessSetup({ id, owner }: { id: string; owner: boolean }) {
       (result) => {
         apply(result);
         setStep(next);
-        if (complete) setEditing(false);
+        if (complete) {
+          if (!result.completedAt) {
+            setError('Completion was not confirmed. Please retry.');
+            return;
+          }
+          router.replace({
+            pathname: '/account-dashboard',
+            params: { workspace: id },
+          });
+        }
         setSaved(true);
         if (complete) showToast('Business details saved.');
       },
@@ -223,6 +284,7 @@ export function BusinessSetup({ id, owner }: { id: string; owner: boolean }) {
             />
           )}
           <Text
+            ref={heading}
             accessibilityRole="header"
             style={{ color: colors.ink, fontSize: 24, fontWeight: '600' }}
           >
@@ -262,301 +324,305 @@ export function BusinessSetup({ id, owner }: { id: string; owner: boolean }) {
                 Step {step + 1} of 4 ·{' '}
                 {saved ? 'Saved' : 'Progress saves when you continue.'}
               </Text>
-              {step === 0 && (
-                <>
-                  <Field
-                    label="Business name"
-                    value={draft.name}
-                    onChangeText={(name) => update({ name })}
-                    maxLength={100}
-                    editable={owner}
-                  />
-                  <Select
-                    label="Category"
-                    value={draft.category || 'Choose a category'}
-                    options={[
-                      'Salon & beauty',
-                      'Restaurant & café',
-                      'Retail',
-                      'Health & wellness',
-                      'Professional services',
-                      'Other',
-                    ]}
-                    onChange={(category) => {
-                      if (owner) update({ category });
-                    }}
-                  />
-                  {owner && (
-                    <>
-                      <Text style={{ color: colors.muted }}>
-                        Optional logo: PNG, JPEG or WebP, up to 2 MB and 4096 ×
-                        4096 pixels.
-                      </Text>
-                      <Button
-                        title={logo ? 'Replace logo' : 'Choose logo'}
-                        variant="secondary"
-                        onPress={() => void pick()}
-                      />
-                      {logo && (
-                        <Button
-                          title="Remove logo"
-                          variant="ghost"
-                          onPress={() =>
-                            void action.run(
-                              'Removing logo…',
-                              (signal) =>
-                                client.removeLogo(id, state.revision, signal),
-                              (result) => {
-                                setState(result);
-                                showToast('Logo removed.');
-                              },
-                              fail,
-                            )
-                          }
-                        />
-                      )}
-                    </>
-                  )}
-                </>
-              )}
-              {step === 1 && (
-                <>
-                  <Field
-                    label="Location name"
-                    value={draft.locationName}
-                    onChangeText={(locationName) => update({ locationName })}
-                    editable={owner}
-                  />
-                  <Field
-                    label="Address (optional)"
-                    value={draft.address}
-                    onChangeText={(address) => update({ address })}
-                    maxLength={500}
-                    multiline
-                    editable={owner}
-                  />
-                  {owner ? (
-                    <Select
-                      label="Timezone"
-                      value={draft.timezone}
-                      options={supportedTimezones(draft.timezone)}
-                      optionLabel={timezoneLabel}
-                      searchable
-                      onChange={(timezone) => update({ timezone })}
+              <Animated.View style={{ gap: 16, opacity }}>
+                {step === 0 && (
+                  <>
+                    <Field
+                      label="Business name"
+                      value={draft.name}
+                      onChangeText={(name) => update({ name })}
+                      maxLength={100}
+                      editable={owner}
                     />
-                  ) : (
-                    <Text style={{ color: colors.ink }}>{draft.timezone}</Text>
-                  )}
-                  <Text style={{ color: colors.muted }}>
-                    Choose your city or region.
-                  </Text>
-                </>
-              )}
-              {step === 2 && (
-                <>
-                  <Field
-                    label="Brand colour (#RRGGBB)"
-                    value={draft.brandColor}
-                    onChangeText={(brandColor) => update({ brandColor })}
-                    editable={owner}
-                  />
-                  <Text style={{ color: colors.muted }}>
-                    Hours are optional. Use HH:mm within one day. Overnight
-                    intervals are not supported.
-                  </Text>
-                  <View
-                    style={{
-                      padding: 16,
-                      borderRadius: 12,
-                      backgroundColor: brand.accent,
-                    }}
-                  >
-                    <Text
+                    <Select
+                      label="Category"
+                      value={draft.category || 'Choose a category'}
+                      options={[
+                        'Salon & beauty',
+                        'Restaurant & café',
+                        'Retail',
+                        'Health & wellness',
+                        'Professional services',
+                        'Other',
+                      ]}
+                      onChange={(category) => {
+                        if (owner) update({ category });
+                      }}
+                    />
+                    {owner && (
+                      <>
+                        <Text style={{ color: colors.muted }}>
+                          Optional logo: PNG, JPEG or WebP, up to 2 MB and 4096
+                          × 4096 pixels.
+                        </Text>
+                        <Button
+                          title={logo ? 'Replace logo' : 'Choose logo'}
+                          variant="secondary"
+                          onPress={() => void pick()}
+                        />
+                        {logo && (
+                          <Button
+                            title="Remove logo"
+                            variant="ghost"
+                            onPress={() =>
+                              void action.run(
+                                'Removing logo…',
+                                (signal) =>
+                                  client.removeLogo(id, state.revision, signal),
+                                (result) => {
+                                  setState(result);
+                                  showToast('Logo removed.');
+                                },
+                                fail,
+                              )
+                            }
+                          />
+                        )}
+                      </>
+                    )}
+                  </>
+                )}
+                {step === 1 && (
+                  <>
+                    <Field
+                      label="Location name"
+                      value={draft.locationName}
+                      onChangeText={(locationName) => update({ locationName })}
+                      editable={owner}
+                    />
+                    <Field
+                      label="Address (optional)"
+                      value={draft.address}
+                      onChangeText={(address) => update({ address })}
+                      maxLength={500}
+                      multiline
+                      editable={owner}
+                    />
+                    {owner ? (
+                      <Select
+                        label="Timezone"
+                        value={draft.timezone}
+                        options={supportedTimezones(draft.timezone)}
+                        optionLabel={timezoneLabel}
+                        searchable
+                        onChange={(timezone) => update({ timezone })}
+                      />
+                    ) : (
+                      <Text style={{ color: colors.ink }}>
+                        {draft.timezone}
+                      </Text>
+                    )}
+                    <Text style={{ color: colors.muted }}>
+                      Choose your city or region.
+                    </Text>
+                  </>
+                )}
+                {step === 2 && (
+                  <>
+                    <Field
+                      label="Brand colour (#RRGGBB)"
+                      value={draft.brandColor}
+                      onChangeText={(brandColor) => update({ brandColor })}
+                      editable={owner}
+                    />
+                    <Text style={{ color: colors.muted }}>
+                      Hours are optional. Use HH:mm within one day. Overnight
+                      intervals are not supported.
+                    </Text>
+                    <View
                       style={{
-                        color: brand.foreground,
-                        fontSize: 18,
-                        fontWeight: '600',
+                        padding: 16,
+                        borderRadius: 12,
+                        backgroundColor: brand.accent,
                       }}
                     >
-                      {draft.name}
-                    </Text>
-                    <Text style={{ color: brand.foreground }}>
-                      {saved
-                        ? 'Your saved business branding'
-                        : 'Live business preview · unsaved changes'}
-                    </Text>
-                  </View>
-                  {copyFrom !== null && (
-                    <View style={{ gap: 8 }}>
-                      <Text style={{ color: colors.ink }}>
-                        Copy {days[copyFrom]} hours to selected days
-                      </Text>
-                      {days.map(
-                        (day, n) =>
-                          n !== copyFrom && (
-                            <Button
-                              key={day}
-                              title={`${destinations.includes(n) ? '✓ ' : ''}${day}`}
-                              variant="secondary"
-                              onPress={() =>
-                                setDestinations((current) =>
-                                  current.includes(n)
-                                    ? current.filter((i) => i !== n)
-                                    : [...current, n],
-                                )
-                              }
-                            />
-                          ),
-                      )}
-                      <Button
-                        title="Copy to selected days"
-                        disabled={!destinations.length}
-                        onPress={() => {
-                          update({
-                            hours: draft.hours.map((value, n) =>
-                              destinations.includes(n)
-                                ? draft.hours[copyFrom].map((item) => ({
-                                    ...item,
-                                  }))
-                                : value,
-                            ),
-                            closedDays: draft.closedDays.map((value, n) =>
-                              destinations.includes(n)
-                                ? draft.closedDays[copyFrom]
-                                : value,
-                            ),
-                          });
-                          setCopyFrom(null);
+                      <Text
+                        style={{
+                          color: brand.foreground,
+                          fontSize: 18,
+                          fontWeight: '600',
                         }}
-                      />
-                      <Button
-                        title="Cancel copy"
-                        variant="ghost"
-                        onPress={() => setCopyFrom(null)}
-                      />
-                    </View>
-                  )}
-                  {days.map((day, i) => (
-                    <View key={day} style={{ gap: 8 }}>
-                      <Text style={{ color: colors.ink, fontWeight: '600' }}>
-                        {day}
+                      >
+                        {draft.name}
                       </Text>
-                      <Select
-                        label={`${day} status`}
-                        value={
-                          draft.hours[i].length
-                            ? 'Open'
-                            : draft.closedDays[i]
-                              ? 'Closed'
-                              : 'Not provided'
-                        }
-                        options={['Not provided', 'Open', 'Closed']}
-                        onChange={(value) =>
-                          update({
-                            hours: draft.hours.map((items, n) =>
-                              n === i
-                                ? value === 'Open'
-                                  ? [{ open: '09:00', close: '17:00' }]
-                                  : []
-                                : items,
+                      <Text style={{ color: brand.foreground }}>
+                        {saved
+                          ? 'Your saved business branding'
+                          : 'Live business preview · unsaved changes'}
+                      </Text>
+                    </View>
+                    {copyFrom !== null && (
+                      <View style={{ gap: 8 }}>
+                        <Text style={{ color: colors.ink }}>
+                          Copy {days[copyFrom]} hours to selected days
+                        </Text>
+                        {days.map(
+                          (day, n) =>
+                            n !== copyFrom && (
+                              <Button
+                                key={day}
+                                title={`${destinations.includes(n) ? '✓ ' : ''}${day}`}
+                                variant="secondary"
+                                onPress={() =>
+                                  setDestinations((current) =>
+                                    current.includes(n)
+                                      ? current.filter((i) => i !== n)
+                                      : [...current, n],
+                                  )
+                                }
+                              />
                             ),
-                            closedDays: draft.closedDays.map((v, n) =>
-                              n === i ? value === 'Closed' : v,
-                            ),
-                          })
-                        }
-                      />
-                      {(draft.hours[i].length > 0 || draft.closedDays[i]) && (
+                        )}
                         <Button
-                          title={`Copy ${day} hours`}
-                          variant="ghost"
+                          title="Copy to selected days"
+                          disabled={!destinations.length}
                           onPress={() => {
-                            setCopyFrom(i);
-                            setDestinations([]);
+                            update({
+                              hours: draft.hours.map((value, n) =>
+                                destinations.includes(n)
+                                  ? draft.hours[copyFrom].map((item) => ({
+                                      ...item,
+                                    }))
+                                  : value,
+                              ),
+                              closedDays: draft.closedDays.map((value, n) =>
+                                destinations.includes(n)
+                                  ? draft.closedDays[copyFrom]
+                                  : value,
+                              ),
+                            });
+                            setCopyFrom(null);
                           }}
                         />
-                      )}
-                      {!draft.hours[i].length && (
-                        <Text style={{ color: colors.muted }}>
-                          {draft.closedDays[i] ? 'Closed' : 'Not provided'}
+                        <Button
+                          title="Cancel copy"
+                          variant="ghost"
+                          onPress={() => setCopyFrom(null)}
+                        />
+                      </View>
+                    )}
+                    {days.map((day, i) => (
+                      <View key={day} style={{ gap: 8 }}>
+                        <Text style={{ color: colors.ink, fontWeight: '600' }}>
+                          {day}
                         </Text>
-                      )}
-                      {draft.hours[i].map((interval, j) => (
-                        <View key={j}>
-                          {(['open', 'close'] as const).map((key) => (
-                            <Field
-                              key={key}
-                              label={`${day} ${key} ${j + 1}`}
-                              value={interval[key]}
-                              onChangeText={(value) =>
-                                update({
-                                  hours: draft.hours.map((items, n) =>
-                                    n === i
-                                      ? items.map((item, m) =>
-                                          m === j
-                                            ? { ...item, [key]: value }
-                                            : item,
-                                        )
-                                      : items,
-                                  ),
-                                })
-                              }
-                              editable={owner}
-                            />
-                          ))}
-                          {owner && (
+                        <Select
+                          label={`${day} status`}
+                          value={
+                            draft.hours[i].length
+                              ? 'Open'
+                              : draft.closedDays[i]
+                                ? 'Closed'
+                                : 'Not provided'
+                          }
+                          options={['Not provided', 'Open', 'Closed']}
+                          onChange={(value) =>
+                            update({
+                              hours: draft.hours.map((items, n) =>
+                                n === i
+                                  ? value === 'Open'
+                                    ? [{ open: '09:00', close: '17:00' }]
+                                    : []
+                                  : items,
+                              ),
+                              closedDays: draft.closedDays.map((v, n) =>
+                                n === i ? value === 'Closed' : v,
+                              ),
+                            })
+                          }
+                        />
+                        {(draft.hours[i].length > 0 || draft.closedDays[i]) && (
+                          <Button
+                            title={`Copy ${day} hours`}
+                            variant="ghost"
+                            onPress={() => {
+                              setCopyFrom(i);
+                              setDestinations([]);
+                            }}
+                          />
+                        )}
+                        {!draft.hours[i].length && (
+                          <Text style={{ color: colors.muted }}>
+                            {draft.closedDays[i] ? 'Closed' : 'Not provided'}
+                          </Text>
+                        )}
+                        {draft.hours[i].map((interval, j) => (
+                          <View key={j}>
+                            {(['open', 'close'] as const).map((key) => (
+                              <Field
+                                key={key}
+                                label={`${day} ${key} ${j + 1}`}
+                                value={interval[key]}
+                                onChangeText={(value) =>
+                                  update({
+                                    hours: draft.hours.map((items, n) =>
+                                      n === i
+                                        ? items.map((item, m) =>
+                                            m === j
+                                              ? { ...item, [key]: value }
+                                              : item,
+                                          )
+                                        : items,
+                                    ),
+                                  })
+                                }
+                                editable={owner}
+                              />
+                            ))}
+                            {owner && (
+                              <Button
+                                title={`Remove ${day} interval ${j + 1}`}
+                                variant="ghost"
+                                onPress={() =>
+                                  update({
+                                    hours: draft.hours.map((items, n) =>
+                                      n === i
+                                        ? items.filter((_, m) => m !== j)
+                                        : items,
+                                    ),
+                                  })
+                                }
+                              />
+                            )}
+                          </View>
+                        ))}
+                        {owner &&
+                          !draft.closedDays[i] &&
+                          draft.hours[i].length < 4 && (
                             <Button
-                              title={`Remove ${day} interval ${j + 1}`}
+                              title={`Add ${day} interval`}
                               variant="ghost"
                               onPress={() =>
                                 update({
                                   hours: draft.hours.map((items, n) =>
                                     n === i
-                                      ? items.filter((_, m) => m !== j)
+                                      ? [
+                                          ...items,
+                                          { open: '09:00', close: '17:00' },
+                                        ]
                                       : items,
                                   ),
                                 })
                               }
                             />
                           )}
-                        </View>
-                      ))}
-                      {owner &&
-                        !draft.closedDays[i] &&
-                        draft.hours[i].length < 4 && (
-                          <Button
-                            title={`Add ${day} interval`}
-                            variant="ghost"
-                            onPress={() =>
-                              update({
-                                hours: draft.hours.map((items, n) =>
-                                  n === i
-                                    ? [
-                                        ...items,
-                                        { open: '09:00', close: '17:00' },
-                                      ]
-                                    : items,
-                                ),
-                              })
-                            }
-                          />
-                        )}
-                    </View>
-                  ))}
-                </>
-              )}
-              {step === 3 && (
-                <>
-                  {summary}
-                  {owner && (
-                    <Button
-                      title="Edit business"
-                      variant="ghost"
-                      onPress={() => setStep(0)}
-                    />
-                  )}
-                </>
-              )}
+                      </View>
+                    ))}
+                  </>
+                )}
+                {step === 3 && (
+                  <>
+                    {summary}
+                    {owner && (
+                      <Button
+                        title="Edit business"
+                        variant="ghost"
+                        onPress={() => setStep(0)}
+                      />
+                    )}
+                  </>
+                )}
+              </Animated.View>
               {!!error && (
                 <Text
                   accessibilityRole="alert"

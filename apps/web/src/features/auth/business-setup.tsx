@@ -1,4 +1,6 @@
 'use client';
+import { refreshAccountRoutes } from '@/app/account-actions';
+import { useRouter } from 'next/navigation';
 import {
   useCallback,
   useEffect,
@@ -38,6 +40,8 @@ const days = [
   'Sunday',
 ];
 export function BusinessSetup({ id, owner }: { id: string; owner: boolean }) {
+  const router = useRouter();
+  const [navigating, setNavigating] = useState(false);
   const [state, setState] = useState<OnboardingResponse | null>(null);
   const [draft, setDraft] = useState<OnboardingDraft | null>(null);
   const [step, setStep] = useState(0);
@@ -58,6 +62,13 @@ export function BusinessSetup({ id, owner }: { id: string; owner: boolean }) {
         `workspaces/${id}/onboarding`,
         'onboarding',
       );
+      const edit =
+        new URLSearchParams(window.location.search).get('edit') === 'business';
+      if (result.completedAt && !(edit && owner)) {
+        router.replace(`/workspace/dashboard?workspace=${id}`);
+        return;
+      }
+      setEditing(edit && owner);
       setState(result);
       setDraft(
         result.revision === 0
@@ -67,14 +78,14 @@ export function BusinessSetup({ id, owner }: { id: string; owner: boolean }) {
       setSaved(true);
       const query = Number(
         new URLSearchParams(window.location.search).get('step') ??
-          result.draft.step,
+          (edit ? 0 : result.draft.step),
       );
       setStep(Math.max(0, Math.min(3, Number.isInteger(query) ? query : 0)));
       setError('');
     } catch {
       setError('Unable to load business setup. Please retry.');
     }
-  }, [id]);
+  }, [id, owner, router]);
   useEffect(() => {
     void load();
     const pop = () => {
@@ -114,7 +125,11 @@ export function BusinessSetup({ id, owner }: { id: string; owner: boolean }) {
   const go = (next: number) => {
     setEditing(true);
     setStep(next);
-    window.history.pushState(null, '', `?workspace=${id}&step=${next}`);
+    window.history.pushState(
+      null,
+      '',
+      `?workspace=${id}&step=${next}${new URLSearchParams(window.location.search).get('edit') === 'business' ? '&edit=business' : ''}`,
+    );
   };
 
   const apply = (result: OnboardingResponse) => {
@@ -157,21 +172,35 @@ export function BusinessSetup({ id, owner }: { id: string; owner: boolean }) {
     if (!checked.success) return;
     await action.run(
       complete ? 'Finishing your setup…' : 'Saving your progress…',
-      (signal) =>
-        authRequest(
+      async (signal) => {
+        const result = await authRequest(
           `workspaces/${id}/onboarding`,
           'onboarding',
           { draft: checked.data, revision: state.revision, complete },
           'PUT',
           signal,
-        ),
+        );
+        if (complete && result.completedAt) await refreshAccountRoutes();
+        return result;
+      },
       (result) => {
         apply(result);
         setStep(next);
-        window.history.pushState(null, '', `?workspace=${id}&step=${next}`);
+        window.history.pushState(
+          null,
+          '',
+          `?workspace=${id}&step=${next}${new URLSearchParams(window.location.search).get('edit') === 'business' ? '&edit=business' : ''}`,
+        );
         if (complete) {
-          setEditing(false);
+          if (!result.completedAt) {
+            setError(
+              'Completion was not confirmed. Your details are saved; please retry.',
+            );
+            return;
+          }
+          setNavigating(true);
           toast('Business setup saved.');
+          router.replace(`/workspace/dashboard?workspace=${id}`);
         } else setSaved(true);
       },
       fail,
@@ -385,7 +414,9 @@ export function BusinessSetup({ id, owner }: { id: string; owner: boolean }) {
           ? progress < 100
             ? `Uploading your logo… ${progress}%`
             : 'Processing your image…'
-          : action.label
+          : navigating
+            ? 'Opening your dashboard…'
+            : action.label
       }
     >
       <div className="setup-grid business-brand" style={brandStyle}>
@@ -440,215 +471,217 @@ export function BusinessSetup({ id, owner }: { id: string; owner: boolean }) {
                   disabled={!owner || action.pending}
                   className="setup-fields"
                 >
-                  {step === 0 && (
-                    <>
-                      <Field>
-                        Business name
-                        <input
-                          required
-                          maxLength={100}
-                          aria-label="Business name"
-                          value={draft.name}
-                          {...invalid('name')}
-                          onBlur={() => {
-                            if (!draft.name.trim())
+                  <div key={step} className="step-content route-content">
+                    {step === 0 && (
+                      <>
+                        <Field>
+                          Business name
+                          <input
+                            required
+                            maxLength={100}
+                            aria-label="Business name"
+                            value={draft.name}
+                            {...invalid('name')}
+                            onBlur={() => {
+                              if (!draft.name.trim())
+                                setFieldErrors((current) => ({
+                                  ...current,
+                                  name: 'Enter a business name.',
+                                }));
+                            }}
+                            onChange={(event) =>
+                              update({ name: event.target.value })
+                            }
+                          />
+                          {fieldError('name')}
+                        </Field>
+                        <Field as="div">
+                          Category
+                          <Select
+                            label="Business category"
+                            value={draft.category}
+                            className={
+                              fieldErrors.category ? 'border-danger' : ''
+                            }
+                            options={[
+                              'Salon & beauty',
+                              'Restaurant & café',
+                              'Retail',
+                              'Health & wellness',
+                              'Professional services',
+                              'Other',
+                            ].map((value) => ({ value, label: value }))}
+                            onValueChange={(category) => {
+                              update({ category });
                               setFieldErrors((current) => ({
                                 ...current,
-                                name: 'Enter a business name.',
+                                category: '',
                               }));
-                          }}
-                          onChange={(event) =>
-                            update({ name: event.target.value })
-                          }
-                        />
-                        {fieldError('name')}
-                      </Field>
-                      <Field as="div">
-                        Category
-                        <Select
-                          label="Business category"
-                          value={draft.category}
-                          className={
-                            fieldErrors.category ? 'border-danger' : ''
-                          }
-                          options={[
-                            'Salon & beauty',
-                            'Restaurant & café',
-                            'Retail',
-                            'Health & wellness',
-                            'Professional services',
-                            'Other',
-                          ].map((value) => ({ value, label: value }))}
-                          onValueChange={(category) => {
-                            update({ category });
-                            setFieldErrors((current) => ({
-                              ...current,
-                              category: '',
-                            }));
-                          }}
-                          {...invalid('category')}
-                        />
-                        {fieldError('category')}
-                      </Field>
-                      <LogoPicker
-                        logo={logo}
-                        progress={progress}
-                        error={logoError}
-                        disabled={action.pending}
-                        onUpload={(file) => void changeLogo(file)}
-                        onRemove={() =>
-                          void action.run(
-                            'Removing your logo…',
-                            (signal) =>
-                              authRequest(
-                                `workspaces/${id}/logo`,
-                                'onboarding',
-                                { revision: state.revision },
-                                'DELETE',
-                                signal,
-                              ),
-                            (result) => {
-                              setState(result);
-                              setLogoError('');
-                              toast('Logo removed.');
-                            },
-                            fail,
-                          )
-                        }
-                      />
-                    </>
-                  )}
-                  {step === 1 && (
-                    <>
-                      <Field>
-                        Location name
-                        <input
-                          required
-                          maxLength={100}
-                          aria-label="Location name"
-                          value={draft.locationName}
-                          {...invalid('locationName')}
-                          onChange={(event) =>
-                            update({ locationName: event.target.value })
-                          }
-                        />
-                        {fieldError('locationName')}
-                      </Field>
-                      <Field>
-                        Address <span className="field-helper">Optional</span>
-                        <textarea
-                          maxLength={500}
-                          aria-label="Address"
-                          rows={3}
-                          value={draft.address}
-                          {...invalid('address')}
-                          onChange={(event) =>
-                            update({ address: event.target.value })
-                          }
-                        />
-                        {fieldError('address')}
-                      </Field>
-                      <Field>
-                        Timezone
-                        <TimezoneSelect
-                          value={draft.timezone}
-                          onChange={(timezone) => update({ timezone })}
-                        />
-                        <span className="field-helper">
-                          Search for your city or region.
-                        </span>
-                        {fieldError('timezone')}
-                      </Field>
-                    </>
-                  )}
-                  {step === 2 && (
-                    <>
-                      <section className="brand-editor">
-                        <h3>Business branding</h3>
-                        <p className="field-helper">
-                          Your business accent. Appearance follows your existing
-                          Light, Dark or System setting.
-                        </p>
-                        <Field>
-                          Brand colour
-                          <div className="brand-colour-control">
-                            <input
-                              type="color"
-                              value={
-                                /^#[0-9a-f]{6}$/i.test(draft.brandColor)
-                                  ? draft.brandColor
-                                  : '#7253bf'
-                              }
-                              aria-label="Brand colour"
-                              onChange={(event) =>
-                                update({ brandColor: event.target.value })
-                              }
-                            />
-                            <input
-                              aria-label="Brand colour hex"
-                              value={draft.brandColor}
-                              maxLength={7}
-                              {...invalid('brandColor')}
-                              onChange={(event) =>
-                                update({ brandColor: event.target.value })
-                              }
-                              onBlur={() => {
-                                if (!/^#[0-9a-f]{6}$/i.test(draft.brandColor))
-                                  setFieldErrors((current) => ({
-                                    ...current,
-                                    brandColor:
-                                      'Use a hex colour such as #7253BF.',
-                                  }));
-                              }}
-                            />
-                          </div>
-                          {fieldError('brandColor')}
+                            }}
+                            {...invalid('category')}
+                          />
+                          {fieldError('category')}
                         </Field>
-                        <div
-                          className="brand-preset-group"
-                          aria-label="Brand colour presets"
-                        >
-                          {brandColourPresets.map((colour) => (
-                            <button
-                              key={colour}
-                              type="button"
-                              className="brand-preset"
-                              aria-label={`Select colour ${colour}`}
-                              aria-pressed={
-                                draft.brandColor.toLowerCase() === colour
-                              }
-                              style={{
-                                backgroundColor: colour,
-                                color: businessBrand(colour).foreground,
-                              }}
-                              onClick={() => update({ brandColor: colour })}
-                            >
-                              {draft.brandColor.toLowerCase() === colour
-                                ? '✓'
-                                : ''}
-                            </button>
-                          ))}
-                        </div>
-                      </section>
-                      <HoursEditor
-                        draft={draft}
-                        update={update}
-                        error={fieldErrors.hours}
-                        invalidDays={invalidHoursDays}
-                      />
-                      {fieldErrors.hours && (
-                        <p
-                          className="field-error"
-                          role="alert"
-                          id="setup-hours-error"
-                          tabIndex={-1}
-                        >
-                          {fieldErrors.hours}
-                        </p>
-                      )}
-                    </>
-                  )}
-                  {step === 3 && summary}
+                        <LogoPicker
+                          logo={logo}
+                          progress={progress}
+                          error={logoError}
+                          disabled={action.pending}
+                          onUpload={(file) => void changeLogo(file)}
+                          onRemove={() =>
+                            void action.run(
+                              'Removing your logo…',
+                              (signal) =>
+                                authRequest(
+                                  `workspaces/${id}/logo`,
+                                  'onboarding',
+                                  { revision: state.revision },
+                                  'DELETE',
+                                  signal,
+                                ),
+                              (result) => {
+                                setState(result);
+                                setLogoError('');
+                                toast('Logo removed.');
+                              },
+                              fail,
+                            )
+                          }
+                        />
+                      </>
+                    )}
+                    {step === 1 && (
+                      <>
+                        <Field>
+                          Location name
+                          <input
+                            required
+                            maxLength={100}
+                            aria-label="Location name"
+                            value={draft.locationName}
+                            {...invalid('locationName')}
+                            onChange={(event) =>
+                              update({ locationName: event.target.value })
+                            }
+                          />
+                          {fieldError('locationName')}
+                        </Field>
+                        <Field>
+                          Address <span className="field-helper">Optional</span>
+                          <textarea
+                            maxLength={500}
+                            aria-label="Address"
+                            rows={3}
+                            value={draft.address}
+                            {...invalid('address')}
+                            onChange={(event) =>
+                              update({ address: event.target.value })
+                            }
+                          />
+                          {fieldError('address')}
+                        </Field>
+                        <Field>
+                          Timezone
+                          <TimezoneSelect
+                            value={draft.timezone}
+                            onChange={(timezone) => update({ timezone })}
+                          />
+                          <span className="field-helper">
+                            Search for your city or region.
+                          </span>
+                          {fieldError('timezone')}
+                        </Field>
+                      </>
+                    )}
+                    {step === 2 && (
+                      <>
+                        <section className="brand-editor">
+                          <h3>Business branding</h3>
+                          <p className="field-helper">
+                            Your business accent. Appearance follows your
+                            existing Light, Dark or System setting.
+                          </p>
+                          <Field>
+                            Brand colour
+                            <div className="brand-colour-control">
+                              <input
+                                type="color"
+                                value={
+                                  /^#[0-9a-f]{6}$/i.test(draft.brandColor)
+                                    ? draft.brandColor
+                                    : '#7253bf'
+                                }
+                                aria-label="Brand colour"
+                                onChange={(event) =>
+                                  update({ brandColor: event.target.value })
+                                }
+                              />
+                              <input
+                                aria-label="Brand colour hex"
+                                value={draft.brandColor}
+                                maxLength={7}
+                                {...invalid('brandColor')}
+                                onChange={(event) =>
+                                  update({ brandColor: event.target.value })
+                                }
+                                onBlur={() => {
+                                  if (!/^#[0-9a-f]{6}$/i.test(draft.brandColor))
+                                    setFieldErrors((current) => ({
+                                      ...current,
+                                      brandColor:
+                                        'Use a hex colour such as #7253BF.',
+                                    }));
+                                }}
+                              />
+                            </div>
+                            {fieldError('brandColor')}
+                          </Field>
+                          <div
+                            className="brand-preset-group"
+                            aria-label="Brand colour presets"
+                          >
+                            {brandColourPresets.map((colour) => (
+                              <button
+                                key={colour}
+                                type="button"
+                                className="brand-preset"
+                                aria-label={`Select colour ${colour}`}
+                                aria-pressed={
+                                  draft.brandColor.toLowerCase() === colour
+                                }
+                                style={{
+                                  backgroundColor: colour,
+                                  color: businessBrand(colour).foreground,
+                                }}
+                                onClick={() => update({ brandColor: colour })}
+                              >
+                                {draft.brandColor.toLowerCase() === colour
+                                  ? '✓'
+                                  : ''}
+                              </button>
+                            ))}
+                          </div>
+                        </section>
+                        <HoursEditor
+                          draft={draft}
+                          update={update}
+                          error={fieldErrors.hours}
+                          invalidDays={invalidHoursDays}
+                        />
+                        {fieldErrors.hours && (
+                          <p
+                            className="field-error"
+                            role="alert"
+                            id="setup-hours-error"
+                            tabIndex={-1}
+                          >
+                            {fieldErrors.hours}
+                          </p>
+                        )}
+                      </>
+                    )}
+                    {step === 3 && summary}
+                  </div>
                 </fieldset>
                 {error && (
                   <p className="error-note mt-4" role="alert">

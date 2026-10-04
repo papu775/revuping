@@ -256,7 +256,11 @@ export function Overview() {
               href={`/dashboard/feedback?item=${f.id}`}
               key={f.id}
             >
-              <Avatar initials={f.initials} tone="lavender" />
+              <Avatar
+                demoPortrait={f.name === 'James Wilson'}
+                initials={f.initials}
+                tone="lavender"
+              />
               <div>
                 <div className="activity-title">
                   <strong>{f.name}</strong>
@@ -744,7 +748,11 @@ export function FeedbackInbox({
                 }}
               >
                 <div className="feedback-row-top">
-                  <Avatar initials={f.initials} tone="lavender" />
+                  <Avatar
+                    demoPortrait={f.name === 'James Wilson'}
+                    initials={f.initials}
+                    tone="lavender"
+                  />
                   <div>
                     <strong>{f.name}</strong>
                     <small>{f.date}</small>
@@ -796,7 +804,12 @@ export function FeedbackInbox({
                 <span>{detail.date}</span>
               </div>
               <div className="detail-person">
-                <Avatar initials={detail.initials} tone="peach" size="large" />
+                <Avatar
+                  demoPortrait={detail.name === 'James Wilson'}
+                  initials={detail.initials}
+                  tone="peach"
+                  size="large"
+                />
                 <div>
                   <h2>{detail.name}</h2>
                   <span>
