@@ -11,6 +11,7 @@ import { AudioLines, CheckCircle2, MapPin } from 'lucide-react';
 import {
   ApiRequestError,
   businessBrand,
+  deviceTimezone,
   onboardingDraftSchema,
   type OnboardingDraft,
   type OnboardingResponse,
@@ -24,6 +25,8 @@ import { useToast } from '@/components/ui/toaster';
 import { useAuthAction } from './use-auth-action';
 import { AuthBlocker } from './auth-blocker';
 import { HoursEditor, LogoPicker } from './business-controls';
+import { brandColourPresets } from '@/components/ui/brand-colour';
+import { TimezoneSelect } from './timezone-select';
 const steps = ['Business', 'Location', 'Hours & branding', 'Review'];
 const days = [
   'Monday',
@@ -56,7 +59,11 @@ export function BusinessSetup({ id, owner }: { id: string; owner: boolean }) {
         'onboarding',
       );
       setState(result);
-      setDraft(result.draft);
+      setDraft(
+        result.revision === 0
+          ? { ...result.draft, timezone: deviceTimezone() }
+          : result.draft,
+      );
       setSaved(true);
       const query = Number(
         new URLSearchParams(window.location.search).get('step') ??
@@ -360,9 +367,7 @@ export function BusinessSetup({ id, owner }: { id: string; owner: boolean }) {
         <MapPin size={18} />
         <strong>{draft.locationName || 'Your location'}</strong>
         <p>{draft.address || 'Your location details will appear here.'}</p>
-        <span className="business-accent-chip">
-          {draft.name || 'Your business'}
-        </span>
+        <span className="business-accent-chip">Brand colour sample</span>
       </div>
       <p className="preview-caption">
         {ready
@@ -545,40 +550,15 @@ export function BusinessSetup({ id, owner }: { id: string; owner: boolean }) {
                       </Field>
                       <Field>
                         Timezone
-                        <input
-                          required
-                          aria-label="Timezone"
-                          list="timezones"
+                        <TimezoneSelect
                           value={draft.timezone}
-                          {...invalid('timezone')}
-                          onChange={(event) =>
-                            update({ timezone: event.target.value })
-                          }
+                          onChange={(timezone) => update({ timezone })}
                         />
-                        <datalist id="timezones">
-                          {['UTC', ...Intl.supportedValuesOf('timeZone')].map(
-                            (zone) => (
-                              <option key={zone} value={zone} />
-                            ),
-                          )}
-                        </datalist>
                         <span className="field-helper">
                           Search for your city or region.
                         </span>
                         {fieldError('timezone')}
                       </Field>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        onClick={() =>
-                          update({
-                            timezone:
-                              Intl.DateTimeFormat().resolvedOptions().timeZone,
-                          })
-                        }
-                      >
-                        Use device timezone
-                      </Button>
                     </>
                   )}
                   {step === 2 && (
@@ -594,16 +574,61 @@ export function BusinessSetup({ id, owner }: { id: string; owner: boolean }) {
                           <div className="brand-colour-control">
                             <input
                               type="color"
-                              value={draft.brandColor}
+                              value={
+                                /^#[0-9a-f]{6}$/i.test(draft.brandColor)
+                                  ? draft.brandColor
+                                  : '#7253bf'
+                              }
                               aria-label="Brand colour"
                               onChange={(event) =>
                                 update({ brandColor: event.target.value })
                               }
                             />
-                            <span>{draft.brandColor.toUpperCase()}</span>
+                            <input
+                              aria-label="Brand colour hex"
+                              value={draft.brandColor}
+                              maxLength={7}
+                              {...invalid('brandColor')}
+                              onChange={(event) =>
+                                update({ brandColor: event.target.value })
+                              }
+                              onBlur={() => {
+                                if (!/^#[0-9a-f]{6}$/i.test(draft.brandColor))
+                                  setFieldErrors((current) => ({
+                                    ...current,
+                                    brandColor:
+                                      'Use a hex colour such as #7253BF.',
+                                  }));
+                              }}
+                            />
                           </div>
                           {fieldError('brandColor')}
                         </Field>
+                        <div
+                          className="brand-preset-group"
+                          aria-label="Brand colour presets"
+                        >
+                          {brandColourPresets.map((colour) => (
+                            <button
+                              key={colour}
+                              type="button"
+                              className="brand-preset"
+                              aria-label={`Select colour ${colour}`}
+                              aria-pressed={
+                                draft.brandColor.toLowerCase() === colour
+                              }
+                              style={{
+                                backgroundColor: colour,
+                                color: businessBrand(colour).foreground,
+                              }}
+                              onClick={() => update({ brandColor: colour })}
+                            >
+                              {draft.brandColor.toLowerCase() === colour
+                                ? '✓'
+                                : ''}
+                            </button>
+                          ))}
+                        </div>
                       </section>
                       <HoursEditor
                         draft={draft}

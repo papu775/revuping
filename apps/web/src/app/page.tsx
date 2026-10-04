@@ -1,4 +1,5 @@
 'use client';
+import { BrandScene } from '@/components/brand-scene';
 import { SectionLink } from '@/components/ui/section-link';
 import Link from 'next/link';
 import {
@@ -21,7 +22,8 @@ export default function Landing() {
   return (
     <>
       <MarketingHeader />
-      <main>
+      <main className="visual-shell landing-visual">
+        <BrandScene backdrop />
         <section className="hero wrap relative isolate">
           <HeroIntro>
             <span className="eyebrow">

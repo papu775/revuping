@@ -42,10 +42,11 @@ async function capture() {
   throw new Error('Email not captured');
 }
 async function shot(name) {
+  await page.mouse.move(0, 0);
   await page.waitForTimeout(250);
   await page.screenshot({
     path: `${artifacts}/${name}.png`,
-    fullPage: !/(dropdown|pending|copy-hours|loader|toast)/.test(name),
+    fullPage: !/(dropdown|timezone|pending|copy-hours|loader|toast)/.test(name),
   });
 }
 async function theme(value) {
@@ -73,9 +74,83 @@ async function matrix(prefix) {
   if (process.env.POLISH_FAST) return;
   for (const appearance of ['Light', 'Dark']) {
     await theme(appearance);
-    for (const width of [1280, 390]) {
+    for (const width of [1280, 768, 390]) {
       await page.setViewportSize({ width, height: 900 });
       await shot(`${prefix}-${width}-${appearance.toLowerCase()}`);
+      if (prefix === 'location') {
+        await page
+          .getByRole('button', { name: 'Timezone', exact: true })
+          .click();
+        await page
+          .getByRole('combobox', { name: 'Search timezones' })
+          .fill('New York');
+        await expect(page.getByRole('option')).toHaveCount(1);
+        await page.screenshot({
+          path: `${artifacts}/timezone-search-${width}-${appearance.toLowerCase()}.png`,
+        });
+        await page.keyboard.press('Escape');
+        await expect(
+          page.getByRole('button', { name: 'Timezone', exact: true }),
+        ).toBeFocused();
+      }
+      const control = page.locator('.setup-card .button:visible').first();
+      if (await control.count()) {
+        await control.scrollIntoViewIfNeeded();
+        await page.mouse.move(0, 0);
+        const before = await control.boundingBox();
+        const geometry = () =>
+          control.evaluate((el) => {
+            const css = getComputedStyle(el);
+            return {
+              padding: css.padding,
+              border: css.borderWidth,
+              font: css.fontWeight,
+              transform: css.transform,
+              icon: el.querySelector('svg')?.getBoundingClientRect().toJSON(),
+            };
+          });
+        const rest = await geometry();
+        await control.hover();
+        await page.waitForTimeout(250);
+        assert.deepEqual(
+          await control.boundingBox(),
+          before,
+          'Hover moved a control',
+        );
+        assert.deepEqual(
+          await geometry(),
+          rest,
+          'Hover changed padding, border, weight or icon position',
+        );
+        await page.screenshot({
+          path: `${artifacts}/${prefix}-${width}-${appearance.toLowerCase()}-hover.png`,
+          fullPage: true,
+        });
+        await control.focus();
+        assert.deepEqual(
+          await geometry(),
+          rest,
+          'Focus shifted control geometry',
+        );
+        await page.mouse.down();
+        assert.deepEqual(
+          await geometry(),
+          rest,
+          'Active state shifted control geometry',
+        );
+        await page.mouse.move(0, 0);
+        await page.mouse.up();
+        if (await control.evaluate((el) => el instanceof HTMLButtonElement)) {
+          await control.evaluate((el) => (el.disabled = true));
+          assert.deepEqual(
+            await geometry(),
+            rest,
+            'Disabled state shifted control geometry',
+          );
+          await control.evaluate((el) => (el.disabled = false));
+        }
+        await page.mouse.move(0, 0);
+      }
       assert.equal(
         await page.evaluate(
           () => document.documentElement.scrollWidth > innerWidth,
@@ -97,6 +172,8 @@ async function heading(text) {
   browser = await chromium.launch({ headless: true });
   const context = await browser.newContext({
     viewport: { width: 1280, height: 900 },
+    timezoneId: 'Asia/Kolkata',
+    reducedMotion: 'reduce',
   });
   page = await context.newPage();
   page.on('pageerror', (error) =>
@@ -184,14 +261,32 @@ async function heading(text) {
     await expect(
       verify.getByRole('button', { name: 'Resend verification email' }),
     ).toHaveCount(0);
-    await verify.screenshot({
-      path: `${artifacts}/email-verified.png`,
-      fullPage: true,
-    });
+    if (
+      await verify.getByRole('button', { name: 'Dismiss notification' }).count()
+    )
+      await verify
+        .getByRole('button', { name: 'Dismiss notification' })
+        .click();
+    for (const appearance of ['light', 'dark'])
+      for (const width of [1280, 768, 390]) {
+        await verify.setViewportSize({ width, height: 900 });
+        await verify.evaluate((appearance) => {
+          document.documentElement.classList.toggle(
+            'dark',
+            appearance === 'dark',
+          );
+        }, appearance);
+        await verify.mouse.move(0, 0);
+        await verify.screenshot({
+          path: `${artifacts}/verification-authenticated-success-${width}-${appearance}.png`,
+          fullPage: true,
+        });
+      }
     await verify.close();
     await page.bringToFront();
     await page.evaluate(() => window.dispatchEvent(new Event('focus')));
     await heading('Let’s set up your business');
+    await matrix('initial-setup');
     stage = 'workspace';
     await page
       .getByLabel('Business name', { exact: true })
@@ -290,8 +385,29 @@ async function heading(text) {
     stage = 'location';
     await page.getByRole('button', { name: 'Continue', exact: true }).click();
     await heading('Location');
+    await expect(
+      page.getByRole('button', { name: 'Timezone', exact: true }),
+    ).toContainText('Calcutta');
     await page.getByLabel('Location name', { exact: true }).fill('Main studio');
-    await page.getByLabel('Timezone', { exact: true }).fill('Asia/Kolkata');
+    await page.getByRole('button', { name: 'Timezone', exact: true }).click();
+    await page
+      .getByRole('combobox', { name: 'Search timezones' })
+      .fill('not-a-real-zone');
+    await expect(page.getByRole('option')).toHaveCount(0);
+    await page.keyboard.press('Escape');
+    await expect(
+      page.getByRole('button', { name: 'Timezone', exact: true }),
+    ).toBeFocused();
+    await page.getByRole('button', { name: 'Timezone', exact: true }).click();
+    await page
+      .getByRole('combobox', { name: 'Search timezones' })
+      .fill('New York');
+    await page.keyboard.press('ArrowDown');
+    await shot('timezone-search');
+    await page.keyboard.press('Enter');
+    const selectedTimezone = await page
+      .getByRole('button', { name: 'Timezone', exact: true })
+      .innerText();
     await page
       .getByLabel('Address', { exact: false })
       .fill(
@@ -304,11 +420,39 @@ async function heading(text) {
     await heading('Hours & branding');
     await page.reload();
     await heading('Hours & branding');
+    await page.getByRole('button', { name: 'Back', exact: true }).click();
+    await heading('Location');
+    await expect(
+      page.getByRole('button', { name: 'Timezone', exact: true }),
+    ).toContainText(selectedTimezone);
+    await page.getByRole('button', { name: 'Continue', exact: true }).click();
+    await heading('Hours & branding');
     stage = 'hours';
+    await page.getByLabel('Brand colour hex').fill('#oops');
+    await page.getByRole('button', { name: 'Continue', exact: true }).click();
+    await expect(page.locator('#setup-brandColor-error')).toBeVisible();
+    await page.getByLabel('Brand colour hex').fill('#7253bf');
+    await matrix('hours-empty');
     await page
       .getByRole('button', { name: 'Add Monday interval', exact: true })
       .click();
     await page.waitForTimeout(250);
+    await matrix('hours-one');
+    const statusBox = await page
+      .getByRole('combobox', { name: 'Monday status' })
+      .boundingBox();
+    const timeBox = await page.getByLabel('Monday open 1').boundingBox();
+    const dayBox = await page.locator('.hours-day-label').first().boundingBox();
+    assert.ok(
+      Math.abs(dayBox.y - statusBox.y) < 1 &&
+        Math.abs(dayBox.height - statusBox.height) < 1,
+      'Day label must align with first interval',
+    );
+    assert.ok(
+      Math.abs(statusBox.y - timeBox.y) < 1 &&
+        Math.abs(statusBox.height - timeBox.height) < 1,
+      'Hours controls must align',
+    );
     await page.getByLabel('Monday open 1').fill('22:00');
     await page.getByLabel('Monday close 1').fill('02:00');
     await page.getByRole('button', { name: 'Continue', exact: true }).click();
@@ -338,7 +482,7 @@ async function heading(text) {
     await expect(page.getByLabel('Tuesday open 2')).toHaveValue('13:00');
     for (const appearance of ['Light', 'Dark']) {
       await theme(appearance);
-      for (const width of [1280, 390]) {
+      for (const width of [1280, 768, 390]) {
         await page.setViewportSize({ width, height: 900 });
         for (const colour of ['#ffffff', '#000000', '#ffff00']) {
           await page.getByLabel('Brand colour', { exact: true }).fill(colour);
@@ -401,13 +545,15 @@ async function heading(text) {
     await heading('Your business is ready');
     await page.reload();
     await heading('Your business is ready');
+    await matrix('completion');
     await expect(page.locator('.hours-summary')).toContainText('Closed');
     await expect(page.locator('.hours-summary')).toContainText('Not provided');
     const workspaceId = new URL(page.url()).searchParams.get('workspace');
     const location = await pool.query(
-      'SELECT hours, "closedDays" FROM "Location" WHERE "workspaceId"=$1 AND "isPrimary"=true',
+      'SELECT hours, timezone, "closedDays" FROM "Location" WHERE "workspaceId"=$1 AND "isPrimary"=true',
       [workspaceId],
     );
+    assert.ok(selectedTimezone.includes(location.rows[0].timezone));
     assert.equal(location.rows[0].closedDays[6], true);
     assert.equal(location.rows[0].closedDays[3], false);
     assert.deepEqual(location.rows[0].hours[0], location.rows[0].hours[1]);

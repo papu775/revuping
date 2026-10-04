@@ -1,4 +1,5 @@
 'use client';
+import { BrandScene } from '@/components/brand-scene';
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { CheckCircle2 } from 'lucide-react';
@@ -120,17 +121,18 @@ export function EmailAction({ kind }: { kind: 'verify' | 'forgot' | 'reset' }) {
         : 'Choose a new password';
   return (
     <AuthBlocker label={label}>
-      <main className="auth-page">
-        <section className="auth-story">
-          <Logo light />
-          <div className="auth-story-copy">
-            <h2>A fresh start.</h2>
-            <p>Keep your account secure and your workspace yours.</p>
-          </div>
-        </section>
-        <section className="auth-form-side">
-          <div className="auth-form">
-            <Logo />
+      <main className="email-action-page visual-shell">
+        <BrandScene backdrop />
+        <header className="email-action-brand">
+          <Logo />
+        </header>
+        <section className="email-action-composition">
+          <aside className="email-action-art">
+            <BrandScene />
+            <h2>Your next chapter starts here.</h2>
+            <p>Secure your account, then make your business feel at home.</p>
+          </aside>
+          <div className="auth-form email-action-card">
             {success && <CheckCircle2 size={40} className="text-accent mb-5" />}
             <h1>{title}</h1>
             {success ? (
@@ -280,8 +282,9 @@ export function EmailAction({ kind }: { kind: 'verify' | 'forgot' | 'reset' }) {
                   )}
                 </form>
                 <p className="auth-switch">
-                  <Link href="/login">Back to login</Link> ·{' '}
-                  <Link href="/workspace">Open workspace</Link>
+                  <Link href={authenticated ? '/workspace' : '/login'}>
+                    {authenticated ? 'Back to workspace' : 'Back to login'}
+                  </Link>
                 </p>
               </>
             )}

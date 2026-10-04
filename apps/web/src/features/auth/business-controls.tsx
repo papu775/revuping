@@ -179,11 +179,18 @@ export function HoursEditor({
         Add times within the same day. For overnight opening, leave hours not
         provided for now.
       </p>
+      <div className="hours-grid-head" aria-hidden="true">
+        <span>Day</span>
+        <span>Status</span>
+        <span>Opening</span>
+        <span>Closing</span>
+        <span />
+      </div>
       <div className="hours-days">
         {days.map((day, i) => (
           <div className="setup-day" key={day}>
+            <strong className="hours-day-label">{day}</strong>
             <div className="hours-day-heading">
-              <strong>{day}</strong>
               <Select
                 label={`${day} status`}
                 value={
@@ -208,31 +215,43 @@ export function HoursEditor({
               />
             </div>
             <div className="hours-day-times">
+              {!draft.hours[i].length && (
+                <p className="hours-empty">
+                  {draft.closedDays[i]
+                    ? 'Closed all day'
+                    : 'Hours not provided'}
+                </p>
+              )}
               {draft.hours[i].map((interval, position) => (
                 <div className="setup-interval" key={position}>
                   {(['open', 'close'] as const).map((key) => (
-                    <input
-                      key={key}
-                      type="time"
-                      aria-invalid={!!error && invalidDays.includes(i)}
-                      aria-describedby={
-                        error && invalidDays.includes(i)
-                          ? 'setup-hours-error'
-                          : undefined
-                      }
-                      aria-label={`${day} ${key} ${position + 1}`}
-                      value={interval[key]}
-                      onChange={(event) =>
-                        setDay(
-                          i,
-                          draft.hours[i].map((item, j) =>
-                            j === position
-                              ? { ...item, [key]: event.target.value }
-                              : item,
-                          ),
-                        )
-                      }
-                    />
+                    <label key={key}>
+                      <span className="hours-mobile-label">
+                        {key === 'open' ? 'Opening' : 'Closing'}
+                      </span>
+                      <input
+                        key={key}
+                        type="time"
+                        aria-invalid={!!error && invalidDays.includes(i)}
+                        aria-describedby={
+                          error && invalidDays.includes(i)
+                            ? 'setup-hours-error'
+                            : undefined
+                        }
+                        aria-label={`${day} ${key} ${position + 1}`}
+                        value={interval[key]}
+                        onChange={(event) =>
+                          setDay(
+                            i,
+                            draft.hours[i].map((item, j) =>
+                              j === position
+                                ? { ...item, [key]: event.target.value }
+                                : item,
+                            ),
+                          )
+                        }
+                      />
+                    </label>
                   ))}
                   <Button
                     type="button"

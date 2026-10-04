@@ -1,4 +1,5 @@
 'use client';
+import { BrandScene } from '@/components/brand-scene';
 import { BusinessSetup } from './business-setup';
 import { Select } from '@/components/ui/select';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -122,7 +123,8 @@ export function Workspace({
   }, [workspace?.id, workspace?.name]);
   return (
     <AuthBlocker label={authAction.label}>
-      <div className="dashboard-shell min-h-screen bg-canvas">
+      <div className="dashboard-shell visual-shell min-h-screen bg-canvas">
+        <BrandScene backdrop />
         <header className="dashboard-topbar flex min-h-[77px] items-center justify-between gap-3 border-b border-line px-6 py-3 max-[600px]:px-4">
           <Logo />
           <div className="topbar-right !gap-2">
@@ -238,72 +240,93 @@ export function Workspace({
                   owner={workspace.role === 'OWNER'}
                 />
               ) : (
-                <section className="setup-card max-w-[640px]">
-                  <h2>Let’s set up your business</h2>
-                  <p>
-                    Start with your business name. We’ll use it for your
-                    workspace too.
-                  </p>
-                  <form
-                    className="setup-fields"
-                    onSubmit={(event) => {
-                      event.preventDefault();
-                      void run(async () => {
-                        const created = await authRequest(
-                          'workspaces',
-                          'workspace',
-                          { name, key: 'initial-workspace' },
-                        );
-                        setSelected(created.id);
-                        await load();
-                        toast('Workspace created.');
-                      });
-                    }}
-                  >
-                    <Field>
-                      Business name
-                      <input
-                        value={name}
-                        onChange={(event) => setName(event.target.value)}
-                        required
-                        maxLength={100}
-                      />
-                    </Field>
-                    <Button type="submit" disabled={pending || !name.trim()}>
-                      Continue setup
-                    </Button>
-                  </form>
+                <section className="setup-card initial-setup">
+                  <div>
+                    <h2>Let’s set up your business</h2>
+                    <p>
+                      Start with your business name. We’ll use it for your
+                      workspace too.
+                    </p>
+                    <form
+                      className="setup-fields"
+                      onSubmit={(event) => {
+                        event.preventDefault();
+                        void run(async () => {
+                          const created = await authRequest(
+                            'workspaces',
+                            'workspace',
+                            { name, key: 'initial-workspace' },
+                          );
+                          setSelected(created.id);
+                          await load();
+                          toast('Workspace created.');
+                        });
+                      }}
+                    >
+                      <Field>
+                        Business name
+                        <input
+                          value={name}
+                          onChange={(event) => setName(event.target.value)}
+                          required
+                          maxLength={100}
+                        />
+                      </Field>
+                      <Button type="submit" disabled={pending || !name.trim()}>
+                        Continue setup
+                      </Button>
+                    </form>
+                  </div>
+                  <aside className="initial-guidance">
+                    <BrandScene />
+                    <h3>A familiar face for your business</h3>
+                    <p>
+                      Add your logo, location and hours. Review everything
+                      before finishing.
+                    </p>
+                  </aside>
                 </section>
               )}
             </>
           )}
-          <p className="auth-switch">
-            <Link href="/dashboard">Explore the separate fictional demo</Link>
-          </p>
-          <Button
-            variant="ghost"
-            disabled={pending}
-            onClick={() =>
-              void authAction.run(
-                'Logging out all sessions…',
-                (signal) =>
-                  authRequest('auth/logout-all', 'message', {}, 'POST', signal),
-                () => {
-                  generation.current++;
-                  setWorkspaces([]);
-                  router.replace('/login');
-                  router.refresh();
-                  toast('All sessions logged out.');
-                },
-                (error) => {
-                  fail(error);
-                  toast(authErrorMessage(error), 'error');
-                },
-              )
-            }
-          >
-            Log out all sessions
-          </Button>
+          <footer className="setup-account-footer">
+            <Button asChild variant="ghost" size="small">
+              <Link href="/dashboard">Explore the separate fictional demo</Link>
+            </Button>
+            <details>
+              <summary>Account actions</summary>
+              <Button
+                variant="ghost"
+                disabled={pending}
+                onClick={() =>
+                  void authAction.run(
+                    'Logging out all sessions…',
+                    (signal) =>
+                      authRequest(
+                        'auth/logout-all',
+                        'message',
+                        {},
+                        'POST',
+                        signal,
+                      ),
+                    () => {
+                      generation.current++;
+                      setWorkspaces([]);
+                      router.replace('/login');
+                      router.refresh();
+                      toast('All sessions logged out.');
+                    },
+                    (error) => {
+                      fail(error);
+                      toast(authErrorMessage(error), 'error');
+                    },
+                  )
+                }
+              >
+                Log out all sessions
+              </Button>
+            </details>
+          </footer>
         </main>
       </div>
     </AuthBlocker>

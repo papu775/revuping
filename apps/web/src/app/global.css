@@ -2099,3 +2099,408 @@
 .setup-card h2:focus {
   outline: none;
 }
+/* Local storefront/message artwork, shared by account and product shells. */
+.visual-shell {
+  position: relative;
+  isolation: isolate;
+}
+.setup-shell,
+.email-action-brand,
+.email-action-composition,
+.auth-form-side {
+  position: relative;
+}
+.brand-scene,
+.brand-backdrop {
+  --scene-paper: #fcfaf8;
+  --scene-tint: #eee7f8;
+  color: #8061bf;
+}
+.dark .brand-scene,
+.dark .brand-backdrop {
+  --scene-paper: #25293c;
+  --scene-tint: #39304e;
+  color: #b09ad8;
+}
+.brand-scene svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.brand-backdrop {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: -1;
+}
+.brand-backdrop svg {
+  position: absolute;
+  width: min(1100px, 110vw);
+  right: -260px;
+  top: 80px;
+  opacity: 0.28;
+}
+.auth-page .auth-form-side {
+  background: transparent;
+}
+.auth-page .auth-form {
+  padding: 32px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--surface-work);
+}
+.auth-page .auth-story {
+  overflow: hidden;
+}
+.dashboard-shell:not(:has(.setup-shell)) > .brand-backdrop svg,
+.landing-visual > .brand-backdrop svg {
+  opacity: 0.1;
+}
+.email-action-page {
+  min-height: 100svh;
+  padding: 40px 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.email-action-brand {
+  width: min(940px, 100%);
+  margin: 0 auto 32px;
+}
+.email-action-composition {
+  width: min(940px, 100%);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 48px;
+  align-items: center;
+}
+.email-action-art h2 {
+  font-size: 24px;
+  line-height: 1.3;
+  margin: 12px 0;
+}
+.email-action-art p {
+  color: var(--muted);
+  max-width: 340px;
+  line-height: 1.65;
+}
+.email-action-card {
+  width: 100%;
+  padding: 32px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--surface-work);
+}
+.email-action-card h1 {
+  font-size: 30px;
+}
+.initial-setup {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr);
+  gap: 36px;
+  align-items: center;
+}
+.initial-guidance h3 {
+  margin-bottom: 10px;
+}
+.initial-guidance p {
+  font-size: 14px;
+}
+.setup-account-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 24px;
+  border-top: 1px solid var(--border);
+  padding-top: 16px;
+}
+.setup-account-footer > .button {
+  margin-left: -12px;
+}
+.setup-account-footer details {
+  text-align: right;
+}
+.setup-account-footer summary {
+  cursor: pointer;
+  padding: 12px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.timezone-trigger {
+  width: 100%;
+  justify-content: space-between;
+  text-align: left;
+  white-space: normal;
+  font-weight: 400;
+}
+.timezone-trigger span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.timezone-search {
+  width: 100%;
+  min-height: 48px;
+  border: 1px solid var(--control-border);
+  background: var(--surface-input);
+  color: var(--ink);
+  border-radius: 8px;
+  padding: 12px;
+}
+.timezone-options {
+  max-height: 300px;
+  overflow-y: auto;
+  margin-top: 12px;
+}
+.timezone-option {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  text-align: left;
+  padding: 12px;
+  min-height: 48px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  font-size: 13px;
+}
+.timezone-option.is-active,
+.timezone-option:hover {
+  background: var(--surface-selected);
+}
+.brand-colour-control input[type='color'] {
+  flex: none;
+  width: 48px;
+  height: 48px;
+}
+.brand-colour-control input:not([type='color']) {
+  width: 150px;
+  min-height: 48px;
+  font-family: monospace;
+  font-weight: 400;
+}
+.business-accent-chip {
+  border-radius: 0;
+  padding: 18px 14px;
+  border-left: 5px solid var(--business-foreground);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.setup-preview {
+  top: 100px;
+}
+.setup-summary .section-heading {
+  align-items: center;
+}
+.hours-grid-head,
+.setup-day {
+  display: grid;
+  grid-template-columns: 65px 120px minmax(0, 1fr);
+  gap: 10px;
+}
+.hours-grid-head {
+  grid-template-columns: 65px 120px minmax(0, 1fr) minmax(0, 1fr) 36px;
+  color: var(--muted);
+  font-size: 11px;
+  margin-top: 18px;
+}
+.hours-days {
+  margin-top: 0;
+}
+.hours-day-label {
+  font-size: 12px;
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+}
+.hours-day-heading {
+  display: block;
+}
+.hours-day-heading [role='combobox'] {
+  height: 42px;
+  min-height: 42px;
+  width: 100%;
+  min-width: 0;
+  font-size: 12px;
+  padding: 8px;
+}
+.setup-interval {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 36px;
+  gap: 8px;
+  align-items: start;
+}
+.setup-interval label {
+  min-width: 0;
+}
+.setup-interval input {
+  width: 100%;
+  min-width: 0;
+  height: 42px;
+  padding: 5px;
+}
+.setup-interval .button {
+  width: 36px;
+  height: 42px;
+  min-height: 42px;
+  padding: 6px;
+}
+.hours-mobile-label {
+  display: none;
+}
+.hours-empty {
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+}
+.hours-row-actions {
+  gap: 4px;
+  margin-left: -8px;
+}
+@media (max-width: 760px) {
+  .brand-backdrop svg {
+    right: -230px;
+    top: 50px;
+    width: 800px;
+    opacity: 0.18;
+  }
+  .email-action-page {
+    padding: 28px 20px;
+    justify-content: start;
+  }
+  .email-action-brand {
+    margin-bottom: 16px;
+  }
+  .email-action-composition {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+  }
+  .email-action-art .brand-scene {
+    max-width: 280px;
+    margin: auto;
+  }
+  .email-action-art h2 {
+    font-size: 19px;
+    margin-top: 0;
+  }
+  .email-action-art p {
+    font-size: 13px;
+  }
+  .email-action-card,
+  .auth-page .auth-form {
+    padding: 24px 20px;
+  }
+  .email-action-card h1 {
+    font-size: 26px;
+  }
+  .initial-setup {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+  }
+  .initial-guidance {
+    border-top: 1px solid var(--border);
+    padding-top: 16px;
+  }
+  .initial-guidance .brand-scene {
+    max-width: 290px;
+    margin: auto;
+  }
+  .hours-grid-head {
+    display: none;
+  }
+  .setup-day {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.8fr);
+    gap: 10px;
+    padding: 12px 0;
+  }
+  .hours-day-times {
+    grid-column: 1 / -1;
+  }
+  .hours-day-heading [role='combobox'] {
+    min-width: 0;
+  }
+  .hours-mobile-label {
+    display: block;
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 5px;
+  }
+  .setup-interval .button {
+    margin-top: 21px;
+  }
+  .hours-empty {
+    min-height: 0;
+  }
+}
+.email-action-page > .brand-backdrop svg {
+  opacity: 0.11;
+}
+/* Stable shared control geometry in every interaction state. */
+.button,
+.icon-button {
+  transform: none;
+  border-width: 1px;
+  border-style: solid;
+}
+.button:is(:hover, :focus, :active, :disabled),
+.icon-button:is(:hover, :focus, :active, :disabled) {
+  transform: none;
+  border-width: 1px;
+}
+.icon-button {
+  border-color: transparent;
+}
+.brand-preset-group {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+}
+.brand-preset {
+  width: 42px;
+  height: 42px;
+  border: 1px solid var(--control-border);
+  border-radius: 50%;
+}
+.brand-preset[aria-pressed='true'] {
+  outline: 2px solid var(--business-focus);
+  outline-offset: 3px;
+}
+.setup-day {
+  align-items: start;
+}
+.summary-business {
+  align-items: flex-start;
+}
+.summary-business .button {
+  align-self: flex-start;
+  min-height: 32px;
+  padding-block: 4px;
+}
+/* Empty days have no interval group: keep their note/action on one compact row. */
+@media (min-width: 761px) {
+  .hours-day-times:has(.hours-empty) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+    align-items: start;
+  }
+  .hours-day-times:has(.hours-empty) .hours-row-actions {
+    margin-left: 0;
+  }
+  .hours-day-times:has(.hours-empty) .button {
+    min-height: 42px;
+  }
+}
+@media (max-width: 1000px) {
+  .setup-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .setup-preview {
+    position: static;
+  }
+}

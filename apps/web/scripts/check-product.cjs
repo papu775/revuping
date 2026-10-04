@@ -1,4 +1,5 @@
 const { chromium, expect } = require('@playwright/test');
+const assert = require('node:assert/strict');
 const fs = require('node:fs/promises');
 const base = process.env.PROTOTYPE_URL || 'http://localhost:3201';
 const artifacts = process.env.PRODUCT_ARTIFACTS || '/tmp/revuping-product';
@@ -298,6 +299,7 @@ async function verifyControls(browser, errors) {
           ).toBe(true);
           const name =
             route === '/' ? 'landing' : route.slice(1).replaceAll('/', '-');
+          await page.mouse.move(0, 0);
           await page.screenshot({
             path: `${artifacts}/${name}-${theme}-${width}.png`,
           });
@@ -305,6 +307,45 @@ async function verifyControls(browser, errors) {
             path: `${artifacts}/${name}-${theme}-${width}-full.png`,
             fullPage: true,
           });
+          const control = page.locator('.button:visible').first();
+          if (await control.count()) {
+            await control.scrollIntoViewIfNeeded();
+            const geometry = () =>
+              control.evaluate((el) => {
+                const css = getComputedStyle(el);
+                return {
+                  box: el.getBoundingClientRect().toJSON(),
+                  padding: css.padding,
+                  border: css.borderWidth,
+                  font: css.fontWeight,
+                  icon: el
+                    .querySelector('svg')
+                    ?.getBoundingClientRect()
+                    .toJSON(),
+                };
+              });
+            const before = await geometry();
+            await control.hover();
+            await page.waitForTimeout(250);
+            assert.deepEqual(
+              await geometry(),
+              before,
+              `${route} hover changed control geometry`,
+            );
+            if (
+              [
+                '/',
+                '/login',
+                '/dashboard/settings',
+                '/dashboard/customers',
+                '/dashboard/onboarding',
+              ].includes(route)
+            )
+              await page.screenshot({
+                path: `${artifacts}/${name}-${theme}-${width}-hover.png`,
+              });
+            await page.mouse.move(0, 0);
+          }
           captures++;
         }
         if (width === 390) {

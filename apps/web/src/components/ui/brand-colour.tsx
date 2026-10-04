@@ -2,7 +2,7 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { Check, Pipette } from 'lucide-react';
 
-const presets = ['#6250b5', '#253c39', '#243650', '#ad5e41'];
+export const brandColourPresets = ['#6250b5', '#253c39', '#243650', '#ad5e41'];
 export function BrandColour({
   label,
   value,
@@ -74,7 +74,7 @@ export function BrandColour({
         </p>
       )}
       <div className="mt-3 flex gap-2" aria-label={`${label} presets`}>
-        {presets.map((colour) => (
+        {brandColourPresets.map((colour) => (
           <button
             key={colour}
             type="button"

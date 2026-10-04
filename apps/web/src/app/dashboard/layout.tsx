@@ -1,4 +1,5 @@
 'use client';
+import { BrandScene } from '@/components/brand-scene';
 import { AccountMenu } from '@/components/ui/account-menu';
 import { useDemoWorkspace } from '@/data-access/demo-workspace';
 import Link from 'next/link';
@@ -93,7 +94,8 @@ export default function DashboardLayout({
   const location = product.location;
   const setLocation = (location: string) => updateProduct({ location });
   return (
-    <div className="dashboard-shell flex min-h-screen bg-canvas">
+    <div className="dashboard-shell visual-shell flex min-h-screen bg-canvas">
+      <BrandScene backdrop />
       <AnimatePresence initial={false}>
         {(!mobile || open) && (
           <motion.aside

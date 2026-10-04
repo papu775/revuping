@@ -1,4 +1,5 @@
 'use client';
+import { BrandScene } from '@/components/brand-scene';
 import { PasswordField } from '@/components/ui/password-field';
 import { ConversationCurves } from '@/components/conversation-curves';
 import { FloatingSample } from '@/components/template-motion';
@@ -51,7 +52,8 @@ export function Auth({ signup = false }: { signup?: boolean }) {
     }));
   return (
     <AuthBlocker label={label}>
-      <main className="auth-page">
+      <main className="auth-page visual-shell">
+        <BrandScene backdrop />
         <section className="auth-story">
           <ConversationCurves
             variant="auth"

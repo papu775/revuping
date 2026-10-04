@@ -1,5 +1,11 @@
 import { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+} from 'react-native';
 import { useTheme } from 'mobile-tokens';
 import { radius, spacing, typography } from 'mobile-tokens';
 import { Ionicons } from '@expo/vector-icons';
@@ -10,20 +16,28 @@ export function Select({
   value,
   options,
   onChange,
+  searchable = false,
+  optionLabel = (option: string) => option,
 }: {
   label: string;
   value: string;
   options: string[];
   onChange: (value: string) => void;
+  searchable?: boolean;
+  optionLabel?: (option: string) => string;
 }) {
   const { colors } = useTheme();
+  const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
 
   return (
     <View style={styles.container}>
       <Text style={[styles.label, { color: colors.muted }]}>{label}</Text>
       <TouchableOpacity
-        onPress={() => setOpen(true)}
+        onPress={() => {
+          setQuery('');
+          setOpen(true);
+        }}
         style={[
           styles.trigger,
           {
@@ -35,36 +49,62 @@ export function Select({
         accessibilityLabel={`${label}: ${value}`}
         accessibilityState={{ expanded: open }}
       >
-        <Text style={[styles.value, { color: colors.ink }]}>{value}</Text>
+        <Text style={[styles.value, { color: colors.ink }]}>
+          {optionLabel(value)}
+        </Text>
         <Ionicons name="chevron-down" size={18} color={colors.muted} />
       </TouchableOpacity>
       <BottomSheet visible={open} onClose={() => setOpen(false)} title={label}>
-        {options.map((option) => (
-          <TouchableOpacity
-            key={option}
-            onPress={() => {
-              onChange(option);
-              setOpen(false);
-            }}
-            accessibilityState={{ selected: option === value }}
+        {searchable && (
+          <TextInput
+            accessibilityLabel={`Search ${label}`}
+            value={query}
+            onChangeText={setQuery}
+            placeholder="Search city or region"
+            placeholderTextColor={colors.muted}
             style={[
-              styles.option,
+              styles.trigger,
               {
-                backgroundColor:
-                  option === value ? colors.surfaceSelected : undefined,
+                color: colors.ink,
+                borderColor: colors.controlBorder,
+                marginBottom: 12,
               },
             ]}
-            accessibilityRole="button"
-            accessibilityLabel={option}
-          >
-            <Text style={[styles.optionText, { color: colors.ink }]}>
-              {option}
-            </Text>
-            {option === value && (
-              <Ionicons name="checkmark" size={18} color={colors.violet} />
-            )}
-          </TouchableOpacity>
-        ))}
+            autoCorrect={false}
+          />
+        )}
+        {options
+          .filter(
+            (option) =>
+              !searchable ||
+              optionLabel(option).toLowerCase().includes(query.toLowerCase()),
+          )
+          .map((option) => (
+            <TouchableOpacity
+              key={option}
+              onPress={() => {
+                onChange(option);
+                setOpen(false);
+              }}
+              accessibilityState={{ selected: option === value }}
+              style={[
+                styles.option,
+                {
+                  backgroundColor:
+                    option === value ? colors.surfaceSelected : undefined,
+                },
+              ]}
+              accessibilityRole="button"
+              accessibilityLabel={optionLabel(option)}
+            >
+              <Text style={[styles.optionText, { color: colors.ink }]}>
+                {optionLabel(option)}
+              </Text>
+              {option === value && (
+                <Ionicons name="checkmark" size={18} color={colors.violet} />
+              )}
+            </TouchableOpacity>
+          ))}
       </BottomSheet>
     </View>
   );

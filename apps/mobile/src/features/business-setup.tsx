@@ -6,6 +6,9 @@ import { useTheme } from 'mobile-tokens';
 import {
   ApiRequestError,
   businessBrand,
+  deviceTimezone,
+  supportedTimezones,
+  timezoneLabel,
   onboardingDraftSchema,
   type OnboardingDraft,
   type OnboardingResponse,
@@ -44,7 +47,11 @@ export function BusinessSetup({ id, owner }: { id: string; owner: boolean }) {
       .then((result) => {
         if (alive) {
           setState(result);
-          setDraft(result.draft);
+          setDraft(
+            result.revision === 0
+              ? { ...result.draft, timezone: deviceTimezone() }
+              : result.draft,
+          );
           setStep(result.draft.step);
         }
       })
@@ -328,23 +335,17 @@ export function BusinessSetup({ id, owner }: { id: string; owner: boolean }) {
                     multiline
                     editable={owner}
                   />
-                  <Field
-                    label="Timezone"
-                    value={draft.timezone}
-                    onChangeText={(timezone) => update({ timezone })}
-                    editable={owner}
-                  />
-                  {owner && (
-                    <Button
-                      title="Use device timezone"
-                      variant="ghost"
-                      onPress={() =>
-                        update({
-                          timezone:
-                            Intl.DateTimeFormat().resolvedOptions().timeZone,
-                        })
-                      }
+                  {owner ? (
+                    <Select
+                      label="Timezone"
+                      value={draft.timezone}
+                      options={supportedTimezones(draft.timezone)}
+                      optionLabel={timezoneLabel}
+                      searchable
+                      onChange={(timezone) => update({ timezone })}
                     />
+                  ) : (
+                    <Text style={{ color: colors.ink }}>{draft.timezone}</Text>
                   )}
                   <Text style={{ color: colors.muted }}>
                     Choose your city or region.
