@@ -62,7 +62,12 @@ export const inboxMemberSchema = z.object({
   id: z.string().uuid(),
   name: z.string(),
 });
-export const inboxMembersSchema = z.array(inboxMemberSchema);
+export const inboxMembersSchema = z.object({
+  items: z.array(inboxMemberSchema),
+  page: z.number().int(),
+  total: z.number().int(),
+  pageSize: z.literal(25),
+});
 export const inboxItemSchema = z.object({
   id: z.string().uuid(),
   locationId: z.string().uuid(),

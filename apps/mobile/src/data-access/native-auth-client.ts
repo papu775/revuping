@@ -1,4 +1,11 @@
 import {
+  workspaceSettingsSchema,
+  teamPageSchema,
+  invitationPageSchema,
+  invitationSchema,
+  businessLocationsSchema,
+  businessLocationSchema,
+  type LocationInput,
   inboxPageSchema,
   inboxItemSchema,
   inboxHistorySchema,
@@ -312,6 +319,68 @@ export class NativeAuthClient {
       ),
     );
   }
+  async settings(id: string) {
+    return workspaceSettingsSchema.parse(
+      await this.request(`workspaces/${id}/settings`),
+    );
+  }
+  async saveSettings(id: string, body: unknown) {
+    return workspaceSettingsSchema.parse(
+      await this.request(`workspaces/${id}/settings`, body, 'PATCH'),
+    );
+  }
+  async team(id: string, page = 1) {
+    return teamPageSchema.parse(
+      await this.request(`workspaces/${id}/team?page=${page}`),
+    );
+  }
+  async changeMember(id: string, member: string, body: unknown) {
+    return messageSchema.parse(
+      await this.request(`workspaces/${id}/team/${member}`, body, 'PATCH'),
+    );
+  }
+  async invitations(id: string, page = 1) {
+    return invitationPageSchema.parse(
+      await this.request(`workspaces/${id}/invitations?page=${page}`),
+    );
+  }
+  async invite(id: string, body: unknown) {
+    return invitationSchema.parse(
+      await this.request(`workspaces/${id}/invitations`, body),
+    );
+  }
+  async invitationAction(id: string, invite: string, body: unknown) {
+    return invitationSchema.parse(
+      await this.request(
+        `workspaces/${id}/invitations/${invite}`,
+        body,
+        'PATCH',
+      ),
+    );
+  }
+  async acceptInvitation(token: string) {
+    return workspaceSchema.parse(
+      await this.request('team-invitations/accept', { token }),
+    );
+  }
+  async businessLocations(id: string) {
+    return businessLocationsSchema.parse(
+      await this.request(`workspaces/${id}/business-locations`),
+    );
+  }
+  async saveBusinessLocation(
+    id: string,
+    location: string | null,
+    body: LocationInput,
+  ) {
+    return businessLocationSchema.parse(
+      await this.request(
+        `workspaces/${id}/business-locations${location ? `/${location}` : ''}`,
+        body,
+        location ? 'PUT' : 'POST',
+      ),
+    );
+  }
   async inbox(id: string, query = '') {
     return inboxPageSchema.parse(
       await this.request(
@@ -319,9 +388,9 @@ export class NativeAuthClient {
       ),
     );
   }
-  async inboxMembers(id: string) {
+  async inboxMembers(id: string, page = 1) {
     return inboxMembersSchema.parse(
-      await this.request(`workspaces/${id}/feedback/members`),
+      await this.request(`workspaces/${id}/feedback/members?page=${page}`),
     );
   }
   async inboxHistory(id: string, feedback: string, page = 1) {

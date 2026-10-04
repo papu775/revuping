@@ -22,11 +22,17 @@ This sequence follows the existing non-admin template. Features requiring extern
 
 ## Current phase
 
+Feedback Inbox commit: `4910823a9291a924269d671b36751f151bbc18fb`.
+
 Feedback Inbox implemented and verified: real authorized web/native integration, search/status/overdue and pagination, immutable notes, assignments/priorities/dates/tags, revision-protected resolve/reopen, paginated activity and conflict recovery. See [phase details and commands](FEEDBACK_INBOX.md).
 
 Verification: additive migration; all 29 sequential check tasks; sequential production builds; real API and Playwright inbox journey; actual native API adapter against the backend; desktop/mobile (1280/390) light/dark default/hover screenshots inspected against the template; Android JavaScript export; two existing Chromium smoke tests. No actual Android device/emulator verification.
 
-Next: business/location/team settings, then customer records/consent. Assignment-member paging and stronger business-timezone date handling should be reconciled in that phase.
+Business/location/team settings implemented and verified: revision-protected business profile/logo, extra locations with stable links and archive/restore, owner/staff membership management and last-owner protection, secure verified-email invitations and genuine SMTP failure/resend recovery, notification preferences/templates, paginated team/inbox staff choices and business-timezone overdue handling. See [business/team details](BUSINESS_TEAM.md).
+
+Verification: additive migration; all 29 sequential workspace check tasks; sequential production builds; real PostgreSQL/API/Mailpit settings journeys, native API adapter, 29-member pagination, owner/staff/join browser flows and preserved drafts after failure; 1280/390 light/dark settings/template/dialog screenshots visually inspected; default/hover dimensions stable, client navigation preserves the document; inbox regression; Android JavaScript export; two Chromium smoke tests. No actual Android device/emulator verification. SMTP acceptance is not recipient delivery. Preferences/templates do not yet dispatch customer messages.
+
+Next: customer records/consent; then the remaining sequential phases above.
 
 ## Configuration and outstanding limits
 

@@ -1,3 +1,4 @@
+import { workspaceDate } from './workspace-date';
 import {
   BadRequestException,
   ConflictException,
@@ -78,13 +79,18 @@ export class FeedbackService {
     if (!parsed.success) throw new BadRequestException();
     const v = parsed.data;
     return this.transaction(identity, workspaceId, async (tx) => {
+      const primary = await tx.location.findFirst({
+        where: { workspaceId, isPrimary: true },
+        select: { timezone: true },
+      });
+      const today = workspaceDate(primary?.timezone || 'UTC');
       const where: Prisma.PrivateFeedbackWhereInput = {
         workspaceId,
         ...(v.location ? { locationId: v.location } : {}),
         ...(v.status === 'OVERDUE'
           ? {
               status: { not: 'RESOLVED' },
-              dueDate: { not: '', lt: new Date().toISOString().slice(0, 10) },
+              dueDate: { not: '', lt: today },
             }
           : v.status === 'ALL'
             ? {}
@@ -121,20 +127,28 @@ export class FeedbackService {
       };
     });
   }
-  async members(identity: Identity, workspaceId: string) {
-    return this.transaction(identity, workspaceId, async (tx) =>
-      (
-        await tx.membership.findMany({
-          where: { workspaceId },
-          include: { user: { select: { id: true, displayName: true } } },
-          orderBy: [{ createdAt: 'asc' }, { userId: 'asc' }],
-          take: 100,
-        })
-      ).map((m) => ({
-        id: m.user.id,
-        name: m.user.displayName || 'Team member',
-      })),
-    );
+  async members(identity: Identity, workspaceId: string, query: unknown) {
+    const parsed = inboxQuerySchema.pick({ page: true }).safeParse(query);
+    if (!parsed.success) throw new BadRequestException();
+    return this.transaction(identity, workspaceId, async (tx) => {
+      const total = await tx.membership.count({ where: { workspaceId } });
+      const items = await tx.membership.findMany({
+        where: { workspaceId },
+        include: { user: { select: { id: true, displayName: true } } },
+        orderBy: [{ createdAt: 'asc' }, { userId: 'asc' }],
+        take: 25,
+        skip: (parsed.data.page - 1) * 25,
+      });
+      return {
+        items: items.map((m) => ({
+          id: m.user.id,
+          name: m.user.displayName || 'Team member',
+        })),
+        page: parsed.data.page,
+        total,
+        pageSize: 25 as const,
+      };
+    });
   }
   async history(
     identity: Identity,

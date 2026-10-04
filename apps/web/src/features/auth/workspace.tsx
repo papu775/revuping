@@ -240,6 +240,9 @@ export function Workspace({
                 <section className="setup-card initial-setup">
                   <div>
                     <h2>Let’s set up your business</h2>
+                    <Button asChild variant="secondary">
+                      <Link href="/join-team">Join an invited workspace</Link>
+                    </Button>
                     <p>
                       Start with your business name. We’ll use it for your
                       workspace too.

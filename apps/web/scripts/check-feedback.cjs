@@ -389,7 +389,7 @@ const plan = (item) => ({
     );
     await nativeClient.login({ email: owner.email, password });
     assert.equal((await nativeClient.inbox(id, 'query=Taylor')).total, 1);
-    assert.equal((await nativeClient.inboxMembers(id)).length, 2);
+    assert.equal((await nativeClient.inboxMembers(id)).items.length, 2);
     const nativeItem = (await nativeClient.inbox(id, 'query=Taylor')).items[0];
     await nativeClient.saveInboxNote(
       id,
@@ -425,7 +425,7 @@ const plan = (item) => ({
     ).toBeVisible();
     assert.equal(await page.evaluate(() => window.__phase5Document), 'stable');
     const csrf = await context.request.get(`${web}/api/backend/auth/csrf`);
-    const csrfValue = (await csrf.json()).csrfToken;
+    assert.ok((await csrf.json()).csrfToken);
     const missingCsrf = await context.request.put(
       `${web}/api/backend/${route}/${item.id}`,
       { data: plan(saved.body), headers: { Origin: web } },

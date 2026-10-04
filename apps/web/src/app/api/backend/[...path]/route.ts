@@ -15,6 +15,7 @@ const allowed: Record<string, string[]> = {
   'auth/reset-password': ['POST'],
   'auth/verify-email': ['POST'],
   workspaces: ['GET', 'POST'],
+  'team-invitations/accept': ['POST'],
 };
 async function proxy(
   request: NextRequest,
@@ -42,6 +43,25 @@ async function proxy(
   const path = (await context.params).path.join('/');
   const methods =
     allowed[path] ??
+    (/^workspaces\/[0-9a-f-]{36}\/settings$/i.test(path)
+      ? ['GET', 'PATCH']
+      : /^workspaces\/[0-9a-f-]{36}\/team$/i.test(path)
+        ? ['GET']
+        : /^workspaces\/[0-9a-f-]{36}\/team\/[0-9a-f-]{36}$/i.test(path)
+          ? ['PATCH']
+          : /^workspaces\/[0-9a-f-]{36}\/invitations$/i.test(path)
+            ? ['GET', 'POST']
+            : /^workspaces\/[0-9a-f-]{36}\/invitations\/[0-9a-f-]{36}$/i.test(
+                  path,
+                )
+              ? ['PATCH']
+              : /^workspaces\/[0-9a-f-]{36}\/business-locations$/i.test(path)
+                ? ['GET', 'POST']
+                : /^workspaces\/[0-9a-f-]{36}\/business-locations\/[0-9a-f-]{36}$/i.test(
+                      path,
+                    )
+                  ? ['PUT']
+                  : undefined) ??
     (/^workspaces\/[0-9a-f-]{36}\/feedback(?:\/members|\/[0-9a-f-]{36}\/history)?$/i.test(
       path,
     )

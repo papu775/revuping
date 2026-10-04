@@ -168,6 +168,13 @@
         "options": {
           "command": "node apps/web/scripts/check-feedback.cjs"
         }
+      },
+      "settings-check": {
+        "executor": "nx:run-commands",
+        "cache": false,
+        "options": {
+          "command": "node apps/web/scripts/check-settings.cjs"
+        }
       }
     },
     "tags": [

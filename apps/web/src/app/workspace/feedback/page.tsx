@@ -23,6 +23,7 @@ export default async function Page({
     `workspaces/${state.workspace.id}/feedback/members`,
   );
   if (!data.ok || !members.ok) throw new Error('Feedback unavailable');
+  const roster = inboxMembersSchema.parse(await members.json());
   return (
     <DashboardShell
       real={{
@@ -36,7 +37,9 @@ export default async function Page({
         key={state.workspace.id}
         workspaceId={state.workspace.id}
         initial={inboxPageSchema.parse(await data.json())}
-        members={inboxMembersSchema.parse(await members.json())}
+        members={roster.items}
+        memberTotal={roster.total}
+        timeZone={state.onboarding.draft.timezone}
       />
     </DashboardShell>
   );

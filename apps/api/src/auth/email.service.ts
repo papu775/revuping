@@ -40,6 +40,19 @@ export class EmailService {
       throw new ServiceUnavailableException();
     }
   }
+  async invitation(
+    to: string,
+    name: string,
+    business: string,
+    token: string,
+  ): Promise<void> {
+    const link = `${this.environment.WEB_URL}/join-team#token=${token}`;
+    await this.deliver(
+      to,
+      'Join your RevuPing team',
+      emailTemplate(false, link, { name, business }),
+    );
+  }
   async send(to: string, purpose: EmailAction, token: string): Promise<void> {
     const verify = purpose === 'VERIFY_EMAIL';
     // Fragment keeps the secret out of HTTP access logs and referrers.
@@ -48,6 +61,13 @@ export class EmailService {
       ? 'Verify your RevuPing email'
       : 'Reset your RevuPing password';
     const content = emailTemplate(verify, link);
+    await this.deliver(to, title, content);
+  }
+  private async deliver(
+    to: string,
+    title: string,
+    content: { text: string; html: string },
+  ): Promise<void> {
     try {
       const result = await this.transport.sendMail({
         from: this.environment.SMTP_FROM,

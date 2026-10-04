@@ -1,4 +1,10 @@
 import {
+  workspaceSettingsSchema,
+  teamPageSchema,
+  invitationPageSchema,
+  invitationSchema,
+  businessLocationsSchema,
+  businessLocationSchema,
   inboxPageSchema,
   inboxItemSchema,
   inboxHistorySchema,
@@ -16,6 +22,12 @@ import {
 } from 'api-contracts';
 
 const schemas = {
+  settings: workspaceSettingsSchema,
+  teamPage: teamPageSchema,
+  invitations: invitationPageSchema,
+  invitation: invitationSchema,
+  businessLocations: businessLocationsSchema,
+  businessLocation: businessLocationSchema,
   inboxPage: inboxPageSchema,
   inboxItem: inboxItemSchema,
   inboxHistory: inboxHistorySchema,

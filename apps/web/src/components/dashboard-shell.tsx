@@ -274,6 +274,19 @@ export function DashboardShell({
                   })}
                 </>
               )}
+              {real && (
+                <Link
+                  href={`/workspace/settings?workspace=${real.workspace.id}`}
+                  className={path === '/workspace/settings' ? 'active' : ''}
+                  aria-current={
+                    path === '/workspace/settings' ? 'page' : undefined
+                  }
+                  onClick={() => setOpen(false)}
+                >
+                  <Users size={19} />
+                  Business & team
+                </Link>
+              )}
               {real?.workspace.role === 'OWNER' && (
                 <Link
                   href={`/workspace?workspace=${real.workspace.id}&edit=business`}
@@ -332,9 +345,11 @@ export function DashboardShell({
                 {real
                   ? path === '/workspace/qr-studio'
                     ? 'QR studio'
-                    : path === '/workspace/feedback'
-                      ? 'Feedback inbox'
-                      : 'Overview'
+                    : path === '/workspace/settings'
+                      ? 'Business & team'
+                      : path === '/workspace/feedback'
+                        ? 'Feedback inbox'
+                        : 'Overview'
                   : sectionLabel(path)}
               </strong>
             </span>

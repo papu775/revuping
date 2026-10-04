@@ -60,7 +60,11 @@ export class QrService {
       });
       if (!member) throw new ForbiddenException();
       const locations = await this.db.client.location.findMany({
-        where: { workspaceId, business: { completedAt: { not: null } } },
+        where: {
+          workspaceId,
+          archivedAt: null,
+          business: { completedAt: { not: null } },
+        },
         include,
         orderBy: [{ isPrimary: 'desc' }, { createdAt: 'asc' }, { id: 'asc' }],
       });
@@ -90,6 +94,7 @@ export class QrService {
         const location = await tx.location.findFirst({
           where: {
             id: locationId,
+            archivedAt: null,
             workspaceId,
             business: { completedAt: { not: null } },
           },
@@ -120,6 +125,7 @@ export class QrService {
       where: {
         publicId,
         customerEnabled: true,
+        archivedAt: null,
         business: { completedAt: { not: null } },
       },
       include,
@@ -172,6 +178,7 @@ export class QrService {
           where: {
             publicId,
             customerEnabled: true,
+            archivedAt: null,
             business: { completedAt: { not: null } },
           },
         });

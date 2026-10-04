@@ -27,8 +27,9 @@ export class FeedbackController {
   @Get('members') members(
     @Req() req: AuthenticatedRequest,
     @Param('id', ParseUUIDPipe) id: string,
+    @Query() query: unknown,
   ) {
-    return this.service.members(req.identity, id);
+    return this.service.members(req.identity, id, query);
   }
   @Get(':feedback/history') history(
     @Req() req: AuthenticatedRequest,

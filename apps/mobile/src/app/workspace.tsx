@@ -297,6 +297,11 @@ export default function WorkspaceScreen() {
                       <Text style={{ color: colors.muted }}>
                         We’ll use your business name for the workspace too.
                       </Text>
+                      <Button
+                        title="Join an invited workspace"
+                        variant="secondary"
+                        onPress={() => router.push('/account-join-team')}
+                      />
                       <Field
                         label="Business name"
                         value={name}

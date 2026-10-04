@@ -23,6 +23,7 @@ import { SessionGuard, VerifiedGuard } from './auth.guard';
     VerifiedGuard,
   ],
   exports: [
+    EmailService,
     RateLimitService,
     DatabaseService,
     RedisService,

@@ -1,3 +1,8 @@
+import { SettingsService } from '../settings/settings.service';
+import {
+  SettingsController,
+  InvitationController,
+} from '../settings/settings.controller';
 import { FeedbackService } from '../feedback/feedback.service';
 import { FeedbackController } from '../feedback/feedback.controller';
 import { QrService } from '../qr/qr.service';
@@ -11,6 +16,8 @@ import { WorkspacesService } from './workspaces.service';
 
 @Module({
   controllers: [
+    SettingsController,
+    InvitationController,
     FeedbackController,
     WorkspacesController,
     OnboardingController,
@@ -18,6 +25,7 @@ import { WorkspacesService } from './workspaces.service';
     CustomerController,
   ],
   providers: [
+    SettingsService,
     FeedbackService,
     WorkspacesService,
     OnboardingService,

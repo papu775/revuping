@@ -1,3 +1,4 @@
+import { createRequestKey } from '../data-access/request-key';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import {
@@ -34,12 +35,6 @@ import {
   type InboxPlan,
 } from 'api-contracts';
 import { useAuth } from '../data-access/auth-context';
-// This identifier only deduplicates a private note; it is never a credential.
-const noteIdentifier = () =>
-  'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (v) => {
-    const n = Math.floor(Math.random() * 16);
-    return (v === 'x' ? n : (n & 3) | 8).toString(16);
-  });
 const filters = [
   'All',
   'Needs attention',
@@ -71,6 +66,7 @@ export default function AccountFeedback() {
   const [authorized, setAuthorized] = useState(false);
   const [data, setData] = useState<InboxPage | null>(null);
   const [members, setMembers] = useState<InboxMember[]>([]);
+  const [memberTotal, setMemberTotal] = useState(0);
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState('All');
   const [page, setPage] = useState(1);
@@ -107,7 +103,8 @@ export default function AccountFeedback() {
         }
         const team = await client.inboxMembers(workspace.id);
         if (alive) {
-          setMembers(team);
+          setMembers(team.items);
+          setMemberTotal(team.total);
           setAuthorized(true);
         }
       })().catch((e) => {
@@ -189,6 +186,7 @@ export default function AccountFeedback() {
               workspaceId={params.workspace!}
               item={selected}
               members={members}
+              memberTotal={memberTotal}
               onClose={() => {
                 setSelected(null);
                 setAttempt((v) => v + 1);
@@ -294,15 +292,20 @@ function NativeDetail({
   workspaceId,
   item,
   members,
+  memberTotal,
   onClose,
 }: {
   workspaceId: string;
   item: InboxItem;
   members: InboxMember[];
+  memberTotal: number;
   onClose: () => void;
 }) {
   const { client } = useAuth();
   const { colors } = useTheme();
+  const [roster, setRoster] = useState(members);
+  const [rosterPage, setRosterPage] = useState(1);
+  const [memberBusy, setMemberBusy] = useState(false);
   const plan = (v: InboxItem): InboxPlan => ({
     revision: v.revision,
     assigneeId: v.assigneeId,
@@ -339,9 +342,16 @@ function NativeDetail({
       alive = false;
     };
   }, [client, workspaceId, item.id, historyPage, attempt]);
+  const choices =
+    item.assigneeId && !roster.some((v) => v.id === item.assigneeId)
+      ? [
+          ...roster,
+          { id: item.assigneeId, name: item.assigneeName || 'Assigned member' },
+        ]
+      : roster;
   const assigneeOptions = [
     'Unassigned',
-    ...members.map((v, i) => `${v.name} · ${i + 1}`),
+    ...choices.map((v, i) => `${v.name} · ${i + 1}`),
   ];
   return (
     <>
@@ -397,7 +407,7 @@ function NativeDetail({
             value={
               draft.assigneeId
                 ? assigneeOptions[
-                    members.findIndex((v) => v.id === draft.assigneeId) + 1
+                    choices.findIndex((v) => v.id === draft.assigneeId) + 1
                   ] || 'Unassigned'
                 : 'Unassigned'
             }
@@ -407,10 +417,32 @@ function NativeDetail({
                 setDraft({
                   ...draft,
                   assigneeId:
-                    members[assigneeOptions.indexOf(v) - 1]?.id || null,
+                    choices[assigneeOptions.indexOf(v) - 1]?.id || null,
                 });
             }}
           />
+          {roster.length < memberTotal && (
+            <Button
+              title={memberBusy ? 'Loading staff…' : 'Load more staff'}
+              variant="ghost"
+              disabled={busy || memberBusy}
+              onPress={async () => {
+                setMemberBusy(true);
+                try {
+                  const next = await client.inboxMembers(
+                    workspaceId,
+                    rosterPage + 1,
+                  );
+                  setRoster((v) => [...v, ...next.items]);
+                  setRosterPage(next.page);
+                } catch (e) {
+                  setError(inboxErrorMessage(e));
+                } finally {
+                  setMemberBusy(false);
+                }
+              }}
+            />
+          )}
           <Select
             label="Follow-up priority"
             value={draft.priority}
@@ -505,7 +537,7 @@ function NativeDetail({
             disabled={busy || !note.trim()}
             onPress={async () => {
               if (!key.current.value || key.current.body !== note.trim())
-                key.current = { value: noteIdentifier(), body: note.trim() };
+                key.current = { value: createRequestKey(), body: note.trim() };
               setBusy(true);
               setError('');
               setSuccess('');

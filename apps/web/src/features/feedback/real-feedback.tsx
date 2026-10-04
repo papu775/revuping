@@ -37,8 +37,9 @@ const initials = (name: string | null) =>
     .map((v) => v[0])
     .join('')
     .toUpperCase();
-const date = (v: string) =>
-  new Date(v).toLocaleDateString(undefined, {
+const date = (v: string, timeZone = 'UTC') =>
+  new Date(v).toLocaleDateString('en-US', {
+    timeZone,
     year: 'numeric',
     month: 'short',
     day: 'numeric',
@@ -47,11 +48,18 @@ export function RealFeedback({
   workspaceId,
   initial,
   members,
+  memberTotal,
+  timeZone,
 }: {
   workspaceId: string;
   initial: InboxPage;
   members: InboxMember[];
+  memberTotal: number;
+  timeZone: string;
 }) {
+  const [roster, setRoster] = useState(members);
+  const [memberPage, setMemberPage] = useState(1);
+  const [memberBusy, setMemberBusy] = useState(false);
   const [data, setData] = useState(initial);
   const [selected, setSelected] = useState<string | null>(
     initial.items[0]?.id || null,
@@ -211,7 +219,7 @@ export function RealFeedback({
                   <Avatar initials={initials(item.name)} tone="lavender" />
                   <div>
                     <strong>{item.name || 'Anonymous customer'}</strong>
-                    <small>{date(item.createdAt)}</small>
+                    <small>{date(item.createdAt, timeZone)}</small>
                   </div>
                   <span
                     aria-hidden="true"
@@ -269,7 +277,25 @@ export function RealFeedback({
               key={detail.id}
               workspaceId={workspaceId}
               item={detail}
-              members={members}
+              timeZone={timeZone}
+              members={roster}
+              moreMembers={roster.length < memberTotal}
+              memberBusy={memberBusy}
+              onMoreMembers={async () => {
+                setMemberBusy(true);
+                try {
+                  const next = await authRequest(
+                    `workspaces/${workspaceId}/feedback/members?page=${memberPage + 1}`,
+                    'inboxMembers',
+                  );
+                  setRoster((v) => [...v, ...next.items]);
+                  setMemberPage(next.page);
+                } catch (e) {
+                  setError(inboxErrorMessage(e));
+                } finally {
+                  setMemberBusy(false);
+                }
+              }}
               onDirty={setDirty}
               onSaved={(v) => {
                 setData((current) => ({
@@ -314,12 +340,20 @@ function FeedbackDetail({
   workspaceId,
   item,
   members,
+  timeZone,
+  moreMembers,
+  memberBusy,
+  onMoreMembers,
   onDirty,
   onSaved,
 }: {
   workspaceId: string;
   item: InboxItem;
   members: InboxMember[];
+  timeZone: string;
+  moreMembers: boolean;
+  memberBusy: boolean;
+  onMoreMembers: () => void;
   onDirty: (v: boolean) => void;
   onSaved: (v: InboxItem) => void;
 }) {
@@ -407,7 +441,7 @@ function FeedbackDetail({
     <>
       <div className="detail-top">
         <Badge>PRIVATE FEEDBACK</Badge>
-        <span>{date(item.createdAt)}</span>
+        <span>{date(item.createdAt, timeZone)}</span>
       </div>
       <div className="detail-person">
         <Avatar initials={initials(item.name)} tone="peach" size="large" />
@@ -450,6 +484,9 @@ function FeedbackDetail({
       </p>
       <section className="follow-up-editor">
         <h3>Follow-up plan</h3>
+        <p className="field-help">
+          Calendar due dates use your primary location’s timezone: {timeZone}.
+        </p>
         <div className="product-form-grid">
           <Field as="div">
             <span>Assigned staff</span>
@@ -460,6 +497,15 @@ function FeedbackDetail({
               options={[
                 { value: 'unassigned', label: 'Unassigned' },
                 ...members.map((v) => ({ value: v.id, label: v.name })),
+                ...(draft.assigneeId &&
+                !members.some((v) => v.id === draft.assigneeId)
+                  ? [
+                      {
+                        value: draft.assigneeId,
+                        label: item.assigneeName || 'Assigned member',
+                      },
+                    ]
+                  : []),
               ]}
               onValueChange={(v) =>
                 setDraft({
@@ -468,6 +514,15 @@ function FeedbackDetail({
                 })
               }
             />
+            {moreMembers && (
+              <Button
+                variant="ghost"
+                disabled={memberBusy || !!busy}
+                onClick={onMoreMembers}
+              >
+                {memberBusy ? 'Loading staff…' : 'Load more staff'}
+              </Button>
+            )}
           </Field>
           <Field as="div">
             <span>Follow-up priority</span>
@@ -563,7 +618,8 @@ function FeedbackDetail({
               <ol className="product-timeline">
                 {history.items.map((v) => (
                   <li key={v.id}>
-                    <strong>{v.actorName}</strong> · {date(v.createdAt)}
+                    <strong>{v.actorName}</strong> ·{' '}
+                    {date(v.createdAt, timeZone)}
                     <p className="[overflow-wrap:anywhere]">{v.body}</p>
                   </li>
                 ))}

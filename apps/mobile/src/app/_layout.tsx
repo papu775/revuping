@@ -99,6 +99,8 @@ function SessionNavigation({ reduced }: { reduced: boolean }) {
         <Stack.Screen name="account-dashboard" />
         <Stack.Screen name="account-qr-studio" />
         <Stack.Screen name="account-feedback" />
+        <Stack.Screen name="account-settings" />
+        <Stack.Screen name="account-join-team" />
       </Stack.Protected>
       <Stack.Protected guard={demo}>
         <Stack.Screen name="(tabs)" />

@@ -184,6 +184,15 @@ export default function AccountDashboard() {
                 })
               }
             />
+            <Button
+              title="Business & team"
+              onPress={() =>
+                router.push({
+                  pathname: '/account-settings',
+                  params: { workspace: state.workspace.id },
+                })
+              }
+            />
             <Card>
               <View style={{ gap: 12 }}>
                 <Text style={{ color: colors.ink, fontSize: 22 }}>
