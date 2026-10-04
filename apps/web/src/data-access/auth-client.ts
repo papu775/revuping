@@ -1,4 +1,8 @@
 import {
+  inboxPageSchema,
+  inboxItemSchema,
+  inboxHistorySchema,
+  inboxMembersSchema,
   qrLocationsSchema,
   qrSettingsSchema,
   onboardingSchema,
@@ -12,6 +16,10 @@ import {
 } from 'api-contracts';
 
 const schemas = {
+  inboxPage: inboxPageSchema,
+  inboxItem: inboxItemSchema,
+  inboxHistory: inboxHistorySchema,
+  inboxMembers: inboxMembersSchema,
   qrLocations: qrLocationsSchema,
   qrSettings: qrSettingsSchema,
   onboarding: onboardingSchema,

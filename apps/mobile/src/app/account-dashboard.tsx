@@ -175,15 +175,24 @@ export default function AccountDashboard() {
                 })
               }
             />
+            <Button
+              title="Feedback inbox"
+              onPress={() =>
+                router.push({
+                  pathname: '/account-feedback',
+                  params: { workspace: state.workspace.id },
+                })
+              }
+            />
             <Card>
               <View style={{ gap: 12 }}>
                 <Text style={{ color: colors.ink, fontSize: 22 }}>
                   Activity
                 </Text>
                 <Text style={{ color: colors.muted }}>
-                  Activity reporting and the Feedback Inbox are not available
-                  yet. QR feedback is saved privately. Campaigns and
-                  integrations remain unavailable.
+                  Activity reporting is not available yet. Read private QR
+                  feedback in your Feedback Inbox. Campaigns and integrations
+                  remain unavailable.
                 </Text>
               </View>
             </Card>

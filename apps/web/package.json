@@ -161,6 +161,13 @@
         "options": {
           "command": "node apps/web/scripts/check-qr.cjs"
         }
+      },
+      "feedback-check": {
+        "executor": "nx:run-commands",
+        "cache": false,
+        "options": {
+          "command": "node apps/web/scripts/check-feedback.cjs"
+        }
       }
     },
     "tags": [

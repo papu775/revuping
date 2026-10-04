@@ -201,6 +201,19 @@ export function DashboardShell({
                   QR studio
                 </Link>
               )}
+              {real && (
+                <Link
+                  href={`/workspace/feedback?workspace=${real.workspace.id}`}
+                  className={path === '/workspace/feedback' ? 'active' : ''}
+                  aria-current={
+                    path === '/workspace/feedback' ? 'page' : undefined
+                  }
+                  onClick={() => setOpen(false)}
+                >
+                  <MessageSquare size={19} />
+                  Feedback inbox
+                </Link>
+              )}
               {demo && (
                 <>
                   <Link
@@ -319,7 +332,9 @@ export function DashboardShell({
                 {real
                   ? path === '/workspace/qr-studio'
                     ? 'QR studio'
-                    : 'Overview'
+                    : path === '/workspace/feedback'
+                      ? 'Feedback inbox'
+                      : 'Overview'
                   : sectionLabel(path)}
               </strong>
             </span>

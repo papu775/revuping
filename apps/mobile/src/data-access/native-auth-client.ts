@@ -1,4 +1,9 @@
 import {
+  inboxPageSchema,
+  inboxItemSchema,
+  inboxHistorySchema,
+  inboxMembersSchema,
+  type InboxPlan,
   qrLocationsSchema,
   qrSettingsSchema,
   type QrSettingsInput,
@@ -305,6 +310,38 @@ export class NativeAuthClient {
         'DELETE',
         signal,
       ),
+    );
+  }
+  async inbox(id: string, query = '') {
+    return inboxPageSchema.parse(
+      await this.request(
+        `workspaces/${id}/feedback${query ? `?${query}` : ''}`,
+      ),
+    );
+  }
+  async inboxMembers(id: string) {
+    return inboxMembersSchema.parse(
+      await this.request(`workspaces/${id}/feedback/members`),
+    );
+  }
+  async inboxHistory(id: string, feedback: string, page = 1) {
+    return inboxHistorySchema.parse(
+      await this.request(
+        `workspaces/${id}/feedback/${feedback}/history?page=${page}`,
+      ),
+    );
+  }
+  async saveInboxPlan(id: string, feedback: string, value: InboxPlan) {
+    return inboxItemSchema.parse(
+      await this.request(`workspaces/${id}/feedback/${feedback}`, value, 'PUT'),
+    );
+  }
+  async saveInboxNote(id: string, feedback: string, key: string, body: string) {
+    return messageSchema.parse(
+      await this.request(`workspaces/${id}/feedback/${feedback}/notes`, {
+        key,
+        body,
+      }),
     );
   }
   async qrLocations(id: string) {

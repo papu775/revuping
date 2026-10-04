@@ -5,3 +5,4 @@ export * from './lib/onboarding';
 export * from './lib/brand';
 export * from './lib/timezones';
 export * from './lib/qr';
+export * from './lib/inbox';

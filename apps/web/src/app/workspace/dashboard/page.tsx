@@ -73,6 +73,11 @@ export default async function Page({
               </Link>
             </Button>
             <Button asChild variant="secondary">
+              <Link href={`/workspace/feedback?workspace=${workspace.id}`}>
+                Open feedback inbox
+              </Link>
+            </Button>
+            <Button asChild variant="secondary">
               <Link href="/dashboard">Explore the separate fictional demo</Link>
             </Button>
           </div>
@@ -80,9 +85,9 @@ export default async function Page({
         <section className="setup-card lg:col-span-2">
           <h2>Activity</h2>
           <p>
-            Activity reporting and the Feedback Inbox are not available yet. QR
-            feedback is saved privately; Google review clicks do not confirm a
-            published review.
+            Activity reporting is not available yet. Your Feedback Inbox
+            contains private customer responses; Google review clicks do not
+            confirm a published review.
           </p>
         </section>
       </div>

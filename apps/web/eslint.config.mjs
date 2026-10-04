@@ -18,6 +18,7 @@ export default [
       'src/app/workspace/layout.tsx',
       'src/app/workspace/dashboard/page.tsx',
       'src/app/workspace/qr-studio/page.tsx',
+      'src/app/workspace/feedback/page.tsx',
       'src/app/(account)/login/page.tsx',
       'src/app/(account)/signup/page.tsx',
     ],

@@ -1,3 +1,5 @@
+import { FeedbackService } from '../feedback/feedback.service';
+import { FeedbackController } from '../feedback/feedback.controller';
 import { QrService } from '../qr/qr.service';
 import { QrController, CustomerController } from '../qr/qr.controller';
 import { OnboardingController } from './onboarding.controller';
@@ -9,11 +11,18 @@ import { WorkspacesService } from './workspaces.service';
 
 @Module({
   controllers: [
+    FeedbackController,
     WorkspacesController,
     OnboardingController,
     QrController,
     CustomerController,
   ],
-  providers: [WorkspacesService, OnboardingService, LogoStorage, QrService],
+  providers: [
+    FeedbackService,
+    WorkspacesService,
+    OnboardingService,
+    LogoStorage,
+    QrService,
+  ],
 })
 export class WorkspacesModule {}

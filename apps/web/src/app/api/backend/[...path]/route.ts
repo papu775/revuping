@@ -42,6 +42,17 @@ async function proxy(
   const path = (await context.params).path.join('/');
   const methods =
     allowed[path] ??
+    (/^workspaces\/[0-9a-f-]{36}\/feedback(?:\/members|\/[0-9a-f-]{36}\/history)?$/i.test(
+      path,
+    )
+      ? ['GET']
+      : /^workspaces\/[0-9a-f-]{36}\/feedback\/[0-9a-f-]{36}$/i.test(path)
+        ? ['PUT']
+        : /^workspaces\/[0-9a-f-]{36}\/feedback\/[0-9a-f-]{36}\/notes$/i.test(
+              path,
+            )
+          ? ['POST']
+          : undefined) ??
     (/^public\/locations\/[0-9a-f-]{36}(?:\/logo)?$/i.test(path)
       ? ['GET']
       : /^public\/locations\/[0-9a-f-]{36}\/feedback$/i.test(path)
@@ -131,14 +142,17 @@ async function proxy(
       body = combined.buffer;
       headers.set('Content-Type', multipart ? contentType : 'application/json');
     }
-    const upstream = await fetch(`${apiBase()}/${path}`, {
-      method: request.method,
-      headers,
-      body,
-      redirect: 'manual',
-      cache: 'no-store',
-      signal: AbortSignal.timeout(15000),
-    });
+    const upstream = await fetch(
+      `${apiBase()}/${path}${request.nextUrl.search}`,
+      {
+        method: request.method,
+        headers,
+        body,
+        redirect: 'manual',
+        cache: 'no-store',
+        signal: AbortSignal.timeout(15000),
+      },
+    );
     const response = new NextResponse(await upstream.arrayBuffer(), {
       status: upstream.status,
       headers: {
