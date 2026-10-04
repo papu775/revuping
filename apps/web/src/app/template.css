@@ -6299,6 +6299,7 @@
   filter: saturate(0.82) contrast(0.98);
 }
 .auth-photo-composition {
+  --auth-photo-height: 240px;
   position: relative;
   isolation: isolate;
   margin-top: 28px;
@@ -6306,7 +6307,8 @@
 .auth-photo-composition::before {
   content: '';
   position: absolute;
-  inset: 16px -12px 30px 14px;
+  inset: 12px -8px auto 12px;
+  height: var(--auth-photo-height);
   border-radius: 26px;
   background: rgb(var(--accent-rgb) / 0.10);
   z-index: -1;
@@ -6316,7 +6318,7 @@
 }
 .auth-photograph img {
   display: block;
-  height: 240px;
+  height: var(--auth-photo-height);
   object-position: 50% 43%;
 }
 .demo-feedback-preview {
@@ -6400,7 +6402,7 @@
 .business-photo-grid {
   display: grid;
   grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
-  align-items: center;
+  align-items: start;
   gap: clamp(32px, 5vw, 72px);
 }
 .business-supporting-photo {
@@ -6450,8 +6452,10 @@
   line-height: 1.6;
 }
 @media (max-width: 1100px) {
+  .auth-photo-composition {
+    --auth-photo-height: 220px;
+  }
   .auth-photograph img {
-    height: 220px;
     object-position: 46% 43%;
   }
 }

@@ -251,12 +251,23 @@ async function returningRouting(context, completedId) {
     .click();
   await heading('Business');
   assert.equal(new URL(page.url()).searchParams.get('workspace'), second.id);
+  await page.getByRole('combobox', { name: 'Business category' }).click();
+  await page.getByRole('option', { name: 'Salon & beauty', exact: true }).click();
+  await page.getByRole('button', { name: 'Continue', exact: true }).click();
+  await heading('Location');
+  await page.reload();
+  await heading('Location');
   await page.getByRole('button', { name: 'Log out', exact: true }).click();
   await page.waitForURL('**/login');
   await page.getByLabel('Email address', { exact: true }).fill(email);
   await page.getByLabel('Password', { exact: true }).fill(password);
   await page.getByRole('button', { name: 'Log in', exact: true }).click();
   await page.waitForURL('**/workspace');
+  await heading('Location');
+  await expect(
+    page.getByRole('combobox', { name: 'Workspace', exact: true }),
+  ).toContainText('Second studio');
+  await page.getByRole('button', { name: 'Back', exact: true }).click();
   await heading('Business');
   await expect(page.getByLabel('Business name', { exact: true })).toHaveValue(
     'Second studio',
