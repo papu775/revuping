@@ -50,7 +50,10 @@ describe('health and API transport', () => {
   let app: INestApplication;
   let base: string;
   const database = { check: jest.fn(async () => undefined) };
-  const redis = { check: jest.fn(async () => undefined) };
+  const redis = {
+    check: jest.fn(async () => undefined),
+    client: { eval: jest.fn(async () => 0) },
+  };
   const logger = new StructuredLogger('silent');
 
   async function start(docs = true) {
@@ -101,7 +104,9 @@ describe('health and API transport', () => {
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({ status: 'ok' });
     expect(database.check).toHaveBeenCalledTimes(1);
-    expect(redis.check).toHaveBeenCalledTimes(1);
+    // The abuse budget checks Redis before the dependency readiness probe.
+    expect(redis.check).toHaveBeenCalledTimes(2);
+    expect(redis.client.eval).toHaveBeenCalledTimes(1);
   });
 
   it('exposes only the safe registration outcome code for a created account', async () => {

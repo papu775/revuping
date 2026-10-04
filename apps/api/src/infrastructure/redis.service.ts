@@ -5,6 +5,7 @@ import { API_ENVIRONMENT, type ApiEnvironment } from '../config/environment';
 @Injectable()
 export class RedisService implements OnApplicationShutdown {
   readonly client: Redis;
+  private connectionFlight?: Promise<void>;
 
   constructor(@Inject(API_ENVIRONMENT) environment: ApiEnvironment) {
     this.client = new Redis(environment.REDIS_URL, {
@@ -20,8 +21,18 @@ export class RedisService implements OnApplicationShutdown {
   }
 
   async check(): Promise<void> {
-    if (this.client.status === 'wait' || this.client.status === 'end') {
-      await this.client.connect();
+    if (this.connectionFlight) {
+      await this.connectionFlight;
+    } else if (this.client.status === 'wait' || this.client.status === 'end') {
+      // Concurrent first requests must await the same connection; offline
+      // queuing remains disabled so actual dependency failures still fail fast.
+      const flight = this.client.connect();
+      this.connectionFlight = flight;
+      try {
+        await flight;
+      } finally {
+        this.connectionFlight = undefined;
+      }
     }
     const reply = await this.client.ping();
     if (reply !== 'PONG') throw new Error('Redis check failed');

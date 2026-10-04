@@ -32,6 +32,10 @@ API `TRUSTED_PROXIES` accepts exact IP addresses/CIDRs and defaults to none. Arb
 
 Redis limits use atomic Lua counters with fifteen-minute TTLs; no permanent account lockout. Registration: IP 10/account 3; login: IP 30/account 10; resend/recovery: IP 20/account 5; verification: IP 30/token 10; reset: IP 20/token 5; native refresh: IP 120/family 60. Keys hash identifiers, and `AUTH_RATE_NAMESPACE` separates deployments/tests. Dependency failures return sanitized 503, not an authenticated fallback or demo switch.
 
+Unauthenticated email/verification/reset budgets are scoped to the trusted caller IP; an unrelated IP cannot consume a victim's account budget. Refresh family budgets span IPs, with an IP limit before credential lookup. Authenticated user budgets span sessions: workspace creation 10, logo uploads 20, reads 600 and other writes 240 per fifteen minutes, with additional IP caps. Invalid session lookups and readiness requests are also bounded. Rate-limit responses expose numeric `Retry-After`, including through the Next proxy. Default proxy-IP aggregation still requires production ingress configuration as described above.
+
+Duplicate registration returns the same 201 confirmation as new registration without changing the existing account. Synchronous SMTP timing and send failures can still disclose eligibility; the audit report records this remaining limitation. Native ambiguous refresh errors invalidate local credentials and attempt SecureStore removal to prevent replay on a later restoration; only a pre-rotation 429 retains them. Failed server logout still invalidates local state and attempts credential removal, while server revocation remains unconfirmed during outage. Physical storage failure across process restarts still needs device verification.
+
 ## Workspace behavior
 
 `GET workspaces` lists only the caller's memberships. `POST workspaces` takes `{name,key}` and creates the workspace, OWNER membership and idempotency record in one transaction, serialized per user. Reusing that user's key returns the existing workspace even if the submitted name differs. Both clients use the stable `initial-workspace` key for setup, so retry/reload cannot create a second initial workspace. Registration creates no workspace or business records.
@@ -45,7 +49,7 @@ Use Node 24.20.x and pnpm 11.25.0. Preserve any existing env files and credentia
 ```sh
 pnpm install --frozen-lockfile
 cp -n infra/.env.example infra/.env
-cp -n apps/api/.env.example apps/api/.env
+# Create apps/api/.env using the configuration below; it is ignored by Git.
 cp -n apps/web/.env.example apps/web/.env.local
 cp -n apps/mobile/.env.example apps/mobile/.env
 docker compose --env-file infra/.env -f infra/compose.yml up -d --wait
@@ -57,11 +61,48 @@ pnpm dev:web
 pnpm dev:mobile
 ```
 
+Create the ignored `apps/api/.env` explicitly (replace the database and Redis placeholders with your local infrastructure credentials):
+
+```dotenv
+DATABASE_URL=postgresql://REPLACE_USER:REPLACE_PASSWORD@127.0.0.1:5433/REPLACE_DATABASE
+REDIS_URL=redis://:REPLACE_PASSWORD@127.0.0.1:6380/0
+CORS_ORIGINS=http://localhost:3000
+WEB_URL=http://localhost:3000
+SMTP_HOST=127.0.0.1
+SMTP_PORT=1025
+SMTP_SECURE=false
+SMTP_FROM=accounts@revuping.test
+S3_LOCAL_EMULATOR=true
+S3_ENDPOINT=http://127.0.0.1:4566
+S3_REGION=us-east-1
+S3_BUCKET=revuping-logos
+S3_FORCE_PATH_STYLE=true
+```
+
+This local S3 profile uses emulator-only dummy credentials internally. Production forbids the emulator, requires HTTPS web/CORS/S3 origins, and uses server-side S3 credentials or the AWS credential chain. Do not copy local credentials into production. Optional settings and validation live in `apps/api/src/config/environment.ts`.
+
 The reviewed additive migration is `20261003010000_auth_sessions_workspaces`, after `20261003000000_foundation`. It adds User credential/verification state, Session, RefreshToken, EmailActionToken and WorkspaceCreation, plus revocation/expiry/lookup indexes and cascading foreign keys. There are no resets or destructive migration statements. Existing PostgreSQL/Redis volumes and services are preserved. Mailpit captures emails locally, with loopback-only **SMTP 1025** and inbox **http://127.0.0.1:8025**. PostgreSQL remains 5433 and Redis 6380. No external recipient receives test mail; Mailpit has no configured relay.
 
 API additions: `WEB_URL=http://localhost:3000`, `SMTP_HOST=127.0.0.1`, `SMTP_PORT=1025`, `SMTP_SECURE=false`, `SMTP_FROM=accounts@revuping.test`, optional `SMTP_USER`/`SMTP_PASSWORD`, `TRUSTED_PROXIES`, and `AUTH_RATE_NAMESPACE`. API links use trusted `WEB_URL`, never incoming Host. Email action tokens live in the **URL fragment**, are read into memory then removed from browser history, and never appear in HTTP paths/query logs or API response bodies. Delivery is synchronous SMTP acceptance; it does not prove arrival in an external inbox. Failed SMTP returns 503 and removes that unsent action token. Registration may already have created an account if later delivery fails; use resend rather than assuming no account exists. Recovery/resend return the same eligibility message for known and unknown addresses and check SMTP availability for both.
 
 Web additions: `API_INTERNAL_URL` and `AUTH_TRUST_EDGE_HEADERS=false`. Expo uses `EXPO_PUBLIC_API_URL`; Android emulator `http://10.0.2.2:3002/api/v1`, USB device with `adb reverse tcp:3002 tcp:3002` can use localhost, Wi-Fi device uses the computer LAN address. Bind API `API_HOST=0.0.0.0` for emulator/LAN, and allow the selected local port through the firewall. Restart Next/Expo after env changes. Never put server credentials in public variables. Native release builds use HTTPS. Adding SecureStore requires rebuilding an existing custom development build; it is available in Expo Go.
+
+### Gmail SMTP for development
+
+For development emails to a real inbox, replace the SMTP settings in the ignored `apps/api/.env`:
+
+```dotenv
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=465
+SMTP_SECURE=true
+SMTP_FROM=your-account@gmail.com
+SMTP_USER=your-account@gmail.com
+SMTP_PASSWORD=your-google-app-password
+```
+
+Use the same Gmail account for sender and username. Enable Google 2-Step Verification and create an [App Password](https://support.google.com/accounts/answer/185833?hl=en); keep it only in the local API environment file. Gmail uses port 465 with implicit TLS, or port 587 with STARTTLS (`SMTP_SECURE=false`), as described in [Google's SMTP configuration](https://support.google.com/a/answer/176600?hl=en). Restart `pnpm dev:api` after editing the file. This profile sends actual email when authentication actions are used; SMTP acceptance alone does not prove inbox delivery.
+
+Automated checks and the Mailpit-based manual checks below must use local Mailpit instead. The check commands explicitly override every SMTP setting so a development Gmail account is never used by those checks.
 
 ## Checks and cleanup
 
@@ -73,9 +114,13 @@ pnpm build
 pnpm e2e:web
 pnpm e2e:api
 pnpm nx run api:schema-check
-NODE_ENV=test AUTH_RATE_NAMESPACE=rp:auth:test:phase2 LOG_LEVEL=silent \
+SMTP_HOST=127.0.0.1 SMTP_PORT=1025 SMTP_SECURE=false \
+  SMTP_FROM=accounts@revuping.test SMTP_USER= SMTP_PASSWORD= \
+  NODE_ENV=test AUTH_RATE_NAMESPACE=rp:auth:test:phase2 LOG_LEVEL=silent \
   pnpm nx run api-e2e:auth-check
-NODE_ENV=test WEB_URL=http://localhost:3010 CORS_ORIGINS=http://localhost:3010 \
+SMTP_HOST=127.0.0.1 SMTP_PORT=1025 SMTP_SECURE=false \
+  SMTP_FROM=accounts@revuping.test SMTP_USER= SMTP_PASSWORD= \
+  NODE_ENV=test WEB_URL=http://localhost:3010 CORS_ORIGINS=http://localhost:3010 \
   AUTH_RATE_NAMESPACE=rp:auth:test:browser LOG_LEVEL=silent \
   API_INTERNAL_URL=http://127.0.0.1:3002/api/v1 \
   pnpm nx run api-e2e:web-auth-check --parallel=1

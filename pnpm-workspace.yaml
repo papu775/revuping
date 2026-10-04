@@ -15,6 +15,12 @@ allowBuilds:
   nx: true
   argon2: true
 overrides:
+  axios: 1.20.0
+  smol-toml: 1.7.1
+  brace-expansion@5: 5.0.12
+  js-yaml@5: 5.4.1
+  http-cache-semantics: 4.3.0
+  mysql2: 3.23.1
   react: 19.2.3
   react-dom: 19.2.3
   react-native-reanimated: 4.5.1
@@ -29,3 +35,5 @@ peerDependencyRules:
     react-native-screens: 4.26.2
     react-native-gesture-handler: 2.32.0
     react-native-worklets: 0.10.1
+minimumReleaseAgeExclude:
+  - http-cache-semantics@4.3.0

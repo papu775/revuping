@@ -73,7 +73,7 @@ export function Auth({ signup = false }: { signup?: boolean }) {
           </h1>
           <p>
             {registeredEmail
-              ? `We’ve created your account for ${registeredEmail}.`
+              ? `Check ${registeredEmail} for a verification email. If you already have an account, log in or reset your password.`
               : signup
                 ? 'Verify your email, then create your workspace.'
                 : 'Open your RevuPing workspace.'}

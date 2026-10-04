@@ -93,6 +93,8 @@ export class WorkspacesService {
   ) {
     return this.auth.available(() =>
       this.database.client.$transaction(async (tx) => {
+        // Keep the same workspace → membership order as onboarding mutations.
+        await tx.$queryRaw`SELECT "id" FROM "Workspace" WHERE "id" = ${workspaceId}::uuid FOR UPDATE`;
         // Lock the membership used for authorization for the whole mutation.
         await tx.$queryRaw`SELECT "userId" FROM "Membership" WHERE "workspaceId" = ${workspaceId}::uuid AND "userId" = ${identity.user.id}::uuid FOR UPDATE`;
         const membership = await tx.membership.findUnique({

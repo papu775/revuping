@@ -34,13 +34,18 @@ export function EmailActionScreen({
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const attempted = useRef('');
+  const captured = useRef('');
   const [verified, setVerified] = useState(false);
   const [notice, setNotice] = useState('');
   const { pending, label, run, cancel } = useAuthAction();
   const { showToast } = useToast();
   useEffect(() => {
-    if (parameter) setLink(parameter);
-  }, [parameter]);
+    if (parameter) {
+      captured.current = parameter;
+      setLink(parameter);
+      router.setParams({ token: undefined });
+    }
+  }, [parameter, router]);
   const submit = async () => {
     if (pending) return;
     setError('');
@@ -123,14 +128,14 @@ export function EmailActionScreen({
   useEffect(() => {
     if (
       kind === 'verify' &&
-      parameter &&
-      link === parameter &&
-      attempted.current !== parameter
+      captured.current &&
+      link === captured.current &&
+      attempted.current !== captured.current
     ) {
-      attempted.current = parameter;
+      attempted.current = captured.current;
       void submit();
     }
-  }, [kind, parameter, link, submit]);
+  }, [kind, link, submit]);
   if (kind === 'verify' && (verified || session?.user.emailVerified))
     return (
       <Screen>

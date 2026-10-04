@@ -42,6 +42,18 @@ export class ApiErrorFilter implements ExceptionFilter {
         ? exception.getStatus()
         : (parserStatus ?? HttpStatus.INTERNAL_SERVER_ERROR);
     const requestId = response.getHeader('x-request-id') as string;
+    if (status === 429 && exception instanceof HttpException) {
+      const detail = exception.getResponse();
+      if (
+        typeof detail === 'object' &&
+        'retryAfter' in detail &&
+        typeof detail.retryAfter === 'number'
+      )
+        response.setHeader(
+          'Retry-After',
+          Math.max(1, Math.ceil(detail.retryAfter)),
+        );
+    }
     // Only known, safe transport text is public; never pass through exception messages.
     const message =
       status >= 500

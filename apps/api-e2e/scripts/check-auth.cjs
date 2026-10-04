@@ -240,7 +240,7 @@ async function main() {
             displayName: 'Again',
           })
         ).status,
-        409,
+        201,
       );
       assert.equal(
         (
@@ -292,6 +292,7 @@ async function main() {
       assert.match(cookie, /Expires=/);
       assert.ok(!/Secure/.test(cookie));
       assert.deepEqual((await a.call('auth/session')).body, identity);
+      assert.equal((await a.call('AUTH/NATIVE/LOGIN', { email, password })).status, 403);
       const stored = (
         await pool.query(
           'SELECT "secretHash", "csrfHash" FROM "Session" WHERE "secretHash"=$1',
@@ -789,7 +790,9 @@ async function main() {
           await a.call('auth/login', { email: target, password: 'incorrect' }),
         );
       assert.equal(replies.at(-1).status, 429);
-      const key = `${process.env.AUTH_RATE_NAMESPACE}:login:account:${digest(target)}`;
+      assert.match(replies.at(-1).response.headers.get('retry-after'), /^\d+$/);
+      const ip = digest('127.0.0.1');
+      const key = `${process.env.AUTH_RATE_NAMESPACE}:login:account:${digest(`${ip}:${target}`)}`;
       const ttl = await redis.ttl(key);
       assert.ok(ttl > 0 && ttl <= 900);
       assert.ok(!JSON.stringify(replies.at(-1).body).includes(target));

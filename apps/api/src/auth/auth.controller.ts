@@ -71,12 +71,15 @@ export class AuthController {
   @Post('native/refresh')
   async refresh(@Body() input: RefreshDto, @Req() request: Request) {
     this.http.publicMutation(request);
+    // Reject an exhausted IP before resolving arbitrary credentials in PostgreSQL.
+    await this.limits.check(request, 'refresh-auth', 'requests', 120, 120);
     await this.limits.check(
       request,
       'refresh',
       await this.auth.refreshAccount(input.refreshToken),
       120,
       60,
+      true,
     );
     return this.auth.refresh(input.refreshToken);
   }

@@ -177,9 +177,10 @@ describe('native credential lifecycle', () => {
     });
     const { client, storage, changed } = setup(fetcher);
     await expect(client.restore()).rejects.toThrow('offline');
+    await expect(client.restore()).resolves.toBeUndefined();
     expect(fetcher).toHaveBeenCalledTimes(1);
-    expect(storage.remove).not.toHaveBeenCalled();
-    expect(changed).not.toHaveBeenCalled();
+    expect(storage.remove).toHaveBeenCalled();
+    expect(changed).toHaveBeenLastCalledWith(null);
   });
   it('revokes issued credentials when SecureStore cannot persist them', async () => {
     const fetcher = jest.fn(async (_url: string) => reply(issued));
@@ -187,6 +188,42 @@ describe('native credential lifecycle', () => {
     storage.set.mockRejectedValueOnce(new Error('storage unavailable'));
     await expect(client.restore()).rejects.toThrow('storage unavailable');
     expect(fetcher.mock.calls[1][0]).toContain('/auth/logout');
+    expect(changed).toHaveBeenLastCalledWith(null);
+  });
+  it('does not restore a consumed credential when SecureStore removal fails', async () => {
+    const fetcher = jest.fn(async () => { throw new Error('response lost'); });
+    const { client, storage, changed } = setup(fetcher);
+    storage.remove.mockRejectedValueOnce(new Error('SecureStore unavailable'));
+    await expect(client.restore()).rejects.toThrow('SecureStore unavailable');
+    await client.restore();
+    await client.restore();
+    expect(fetcher).toHaveBeenCalledTimes(1);
+    expect(changed).toHaveBeenLastCalledWith(null);
+  });
+  it('serializes clearing credentials behind a pending SecureStore write', async () => {
+    const { client, storage, changed } = setup(jest.fn(async () => reply(issued)));
+    let finish!: () => void;
+    storage.set.mockImplementation(() => new Promise<void>((resolve) => {
+      finish = resolve;
+    }));
+    const login = client.login({ email: session.user.email, password: 'a test passphrase' });
+    for (let i = 0; i < 20 && !storage.set.mock.calls.length; i++) await Promise.resolve();
+    const clearing = client.clear();
+    finish();
+    await expect(login).resolves.toBeUndefined();
+    await clearing;
+    expect(storage.remove.mock.invocationCallOrder.at(-1)).toBeGreaterThan(storage.set.mock.invocationCallOrder[0]);
+    expect(changed).toHaveBeenLastCalledWith(null);
+  });
+  it('clears local credentials when server logout cannot be confirmed', async () => {
+    const fetcher = jest.fn(async (url: string) => {
+      if (url.endsWith('/logout')) throw new Error('connection lost');
+      return reply(issued);
+    });
+    const { client, storage, changed } = setup(fetcher);
+    await client.restore();
+    await expect(client.logout()).rejects.toThrow('connection lost');
+    expect(storage.remove).toHaveBeenCalled();
     expect(changed).toHaveBeenLastCalledWith(null);
   });
 });

@@ -58,7 +58,7 @@ jobs:
         run: pnpm build
       - name: Full native authentication bundle
         env:
-          EXPO_PUBLIC_API_URL: http://10.0.2.2:3002/api/v1
+          EXPO_PUBLIC_API_URL: https://api.example.test/api/v1
         run: pnpm nx run mobile:auth-native-bundle
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm e2e:web

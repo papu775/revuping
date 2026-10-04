@@ -3,6 +3,7 @@ const { randomUUID } = require('node:crypto');
 const { createRequire } = require('node:module');
 const { existsSync, mkdirSync } = require('node:fs');
 const path = require('node:path');
+const http = require('node:http');
 const { chromium } = require('@playwright/test');
 if (existsSync('apps/api/.env')) process.loadEnvFile('apps/api/.env');
 assert.equal(process.env.NODE_ENV, 'test');
@@ -62,7 +63,7 @@ async function visible(page, text) {
 async function main() {
   for (const url of [
     `${base}/login`,
-    'http://127.0.0.1:3002/api/v1/health/live',
+    `${process.env.API_TEST_URL || 'http://127.0.0.1:3002/api/v1'}/health/live`,
   ]) {
     for (let i = 0; i < 60; i++) {
       try {
@@ -73,6 +74,23 @@ async function main() {
       if (i === 59) throw new Error('Test server unavailable');
       await new Promise((resolve) => setTimeout(resolve, 250));
     }
+  }
+  stage = 'bounded unauthenticated proxy requests';
+  for (const body of ['x'.repeat(17000), JSON.stringify({ email: 'é'.repeat(9000) })]) {
+    const status = await new Promise((resolve, reject) => {
+      const request = http.request(`${base}/api/backend/auth/login`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+      }, (response) => {
+        response.resume();
+        response.on('end', () => resolve(response.statusCode));
+      });
+      request.on('error', reject);
+      request.setTimeout(10000, () => request.destroy(new Error('Proxy probe timed out')));
+      // No Content-Length: exercise chunked transport, including multibyte JSON.
+      request.write(body.slice(0, 100));
+      request.end(body.slice(100));
+    });
+    assert.equal(status, 413);
   }
   await redis.connect();
   browser = await chromium.launch({ headless: true });
@@ -94,14 +112,14 @@ async function main() {
   await page
     .getByRole('button', { name: 'Create account', exact: true })
     .click();
-  await visible(page, 'Account created.');
+  await visible(page, 'Check your email for verification.');
   const verificationLink = await capture('Verify');
   stage = 'unverified login';
   await page.goto(`${base}/login`);
   await page.locator('input[name="email"]').fill(email);
   await page.locator('input[autocomplete="current-password"]').fill(password);
   await page.getByRole('button', { name: 'Log in', exact: true }).click();
-  await page.waitForURL('**/workspace');
+  await page.waitForURL('**/verify-email');
   await page
     .getByRole('heading', { name: 'Verify your email', exact: true })
     .waitFor();
@@ -110,37 +128,24 @@ async function main() {
   const action = await context.newPage();
   action.setDefaultTimeout(15000);
   await action.goto(verificationLink);
-  await action
-    .getByRole('button', { name: 'Verify email', exact: true })
-    .click();
-  await visible(action, 'Email verified.');
+  await action.getByRole('heading', { name: 'Email verified', exact: true }).waitFor();
   assert.equal(new URL(action.url()).hash, '');
   await page.bringToFront();
-  await page.getByRole('button', { name: 'I’ve verified my email' }).click();
-  await page
-    .getByRole('heading', { name: 'Create your workspace', exact: true })
-    .waitFor();
+  await page.goto(`${base}/workspace`);
+  await page.getByRole('heading', { name: 'Let’s set up your business', exact: true }).waitFor();
   stage = 'workspace setup and session restoration';
-  await page
-    .getByLabel('Workspace name', { exact: true })
-    .fill('Browser workspace');
-  await page
-    .getByRole('button', { name: 'Create workspace', exact: true })
-    .click();
-  await page
-    .getByRole('button', { name: 'Save workspace name', exact: true })
-    .waitFor();
+  await page.getByLabel('Business name', { exact: true }).fill('Browser workspace');
+  await page.getByRole('button', { name: 'Continue setup', exact: true }).click();
+  await page.getByRole('heading', { name: 'Business', exact: true }).waitFor();
   await page.reload();
-  await page
-    .getByRole('button', { name: 'Save workspace name', exact: true })
-    .waitFor();
-  await page
-    .getByLabel('Workspace name', { exact: true })
-    .fill('Browser workspace updated');
-  await page
-    .getByRole('button', { name: 'Save workspace name', exact: true })
-    .click();
-  await visible(page, 'Workspace name saved.');
+  await page.getByRole('heading', { name: 'Business', exact: true }).waitFor();
+  await page.getByLabel('Business name', { exact: true }).fill('Browser workspace updated');
+  await page.getByRole('combobox', { name: 'Business category' }).click();
+  await page.getByRole('option', { name: 'Salon & beauty', exact: true }).click();
+  await page.getByRole('button', { name: 'Continue', exact: true }).click();
+  await page.getByRole('heading', { name: 'Location', exact: true }).waitFor();
+  const saved = await pool.query('SELECT b.name FROM "Business" b JOIN "Membership" m ON m."workspaceId"=b."workspaceId" JOIN "User" u ON u.id=m."userId" WHERE u.email=$1', [email]);
+  assert.equal(saved.rows[0].name, 'Browser workspace updated');
   const cookie = (await context.cookies()).find(
     (value) => value.name === 'rp_session',
   );
@@ -164,9 +169,7 @@ async function main() {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.emulateMedia({ colorScheme: 'dark' });
   await page.reload();
-  await page
-    .getByRole('button', { name: 'Save workspace name', exact: true })
-    .waitFor();
+  await page.getByRole('heading', { name: 'Location', exact: true }).waitFor();
   const noOverflow = await page.evaluate(
     () => document.documentElement.scrollWidth <= window.innerWidth,
   );
@@ -183,14 +186,14 @@ async function main() {
   await page.goto(`${base}/forgot-password`);
   await page.getByLabel('Email address').fill(email);
   await page.getByRole('button', { name: 'Request reset link' }).click();
-  await visible(page, 'If the account is eligible');
+  await visible(page, 'If your account is eligible');
   const resetLink = await capture('Reset');
   await page.goto(resetLink);
   await page.getByLabel('New password', { exact: true }).fill(nextPassword);
   await page
     .getByRole('button', { name: 'Reset password', exact: true })
     .click();
-  await visible(page, 'Password updated.');
+  await visible(page, 'Password reset. Log in with your new password.');
   await page.goto(`${base}/login`);
   await page.locator('input[name="email"]').fill(email);
   await page
@@ -198,6 +201,8 @@ async function main() {
     .fill(nextPassword);
   await page.getByRole('button', { name: 'Log in', exact: true }).click();
   await page.waitForURL('**/workspace');
+  await page.getByRole('heading', { name: 'Location', exact: true }).waitFor();
+  await page.getByText('Account actions', { exact: true }).click();
   await page
     .getByRole('button', { name: 'Log out all sessions', exact: true })
     .click();
@@ -215,7 +220,7 @@ async function main() {
     (await page.locator('body').innerText()).includes('Demo workspace'),
   );
   console.log(
-    'PASS browser: protected route, registration, captured email verification, unverified gate, workspace create/edit, restoration, HttpOnly secrecy, reset, logout/all, light/dark small viewport and explicit demo isolation.',
+    'PASS browser: protected route, registration, captured email verification, unverified gate, business draft creation/edit, saved-step restoration, bounded chunked proxy requests, HttpOnly secrecy, reset, logout/all, light/dark small viewport and explicit demo isolation.',
   );
 }
 async function cleanup() {

@@ -6,10 +6,17 @@ if (require('node:fs').existsSync('apps/api/.env'))
 const { Pool } = requireApi('pg');
 const { S3Client, DeleteObjectCommand } = requireApi('@aws-sdk/client-s3');
 async function main() {
-  const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+  const workspace = process.env.LOGO_CLEANUP_WORKSPACE_ID || null;
+  if (workspace && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(workspace))
+    throw new Error('Invalid cleanup workspace');
   const local = process.env.S3_LOCAL_EMULATOR === 'true';
-  if (local && process.env.NODE_ENV === 'production')
-    throw new Error('Local emulator forbidden in production');
+  if (local && (!process.env.S3_ENDPOINT || process.env.NODE_ENV === 'production'))
+    throw new Error('Local emulator requires an endpoint and is forbidden in production');
+  if (process.env.NODE_ENV === 'production' && process.env.S3_ENDPOINT && new URL(process.env.S3_ENDPOINT).protocol !== 'https:')
+    throw new Error('Production storage requires HTTPS');
+  if (!!process.env.S3_ACCESS_KEY_ID !== !!process.env.S3_SECRET_ACCESS_KEY || (!local && [process.env.S3_ACCESS_KEY_ID, process.env.S3_SECRET_ACCESS_KEY].includes('test')))
+    throw new Error('Invalid storage credentials');
+  const pool = new Pool({ connectionString: process.env.DATABASE_URL });
   const s3 = new S3Client({
     endpoint: process.env.S3_ENDPOINT,
     region: process.env.S3_REGION || 'us-east-1',
@@ -25,7 +32,8 @@ async function main() {
   });
   try {
     const { rows } = await pool.query(
-      'SELECT o.* FROM "LogoObject" o WHERE o."createdAt" < now() - interval \'1 hour\' AND NOT EXISTS (SELECT 1 FROM "Business" b WHERE b."logoKey" = o.key) LIMIT 100',
+      'SELECT o.* FROM "LogoObject" o WHERE ($1::uuid IS NULL OR o."workspaceId" = $1::uuid) AND o."createdAt" < now() - interval \'1 hour\' AND NOT EXISTS (SELECT 1 FROM "Business" b WHERE b."logoKey" = o.key) LIMIT 100',
+      [workspace],
     );
     for (const row of rows) {
       // The grace period exceeds the upload deadline. Recheck before deletion.

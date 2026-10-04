@@ -33,6 +33,16 @@ export function configureApp(
     const started = performance.now();
     response.setHeader('X-Request-ID', requestId);
     response.setHeader('Cache-Control', 'no-store');
+    response.setHeader('X-Content-Type-Options', 'nosniff');
+    response.setHeader('Referrer-Policy', 'no-referrer');
+    response.setHeader('X-Frame-Options', 'DENY');
+    response.setHeader(
+      'Content-Security-Policy',
+      environment.API_DOCS_ENABLED &&
+        request.path.startsWith(`/${API_PREFIX}/docs`)
+        ? "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; frame-ancestors 'none'"
+        : "default-src 'none'; frame-ancestors 'none'",
+    );
     response.on('finish', () =>
       logger.event('info', {
         event: 'http.request',
@@ -58,7 +68,7 @@ export function configureApp(
       'X-Request-ID',
       'X-CSRF-Token',
     ],
-    exposedHeaders: ['X-Request-ID'],
+    exposedHeaders: ['X-Request-ID', 'Retry-After'],
     credentials: false,
     maxAge: 600,
   });

@@ -45,6 +45,7 @@ async function call(route, body, access, method) {
   });
   return {
     status: response.status,
+    retryAfter: response.headers.get('retry-after'),
     body: response.headers.get('content-type')?.includes('json')
       ? await response.json()
       : Buffer.from(await response.arrayBuffer()),
@@ -195,6 +196,16 @@ async function upload(id, revision, file, access) {
       ).status,
       400,
     );
+    // Different owner mutations must agree on row-lock order under contention.
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const [onboarding, workspace] = await Promise.all([
+        call(`workspaces/${id}/onboarding`, { revision: state.revision, draft, complete: false }, owner.accessToken, 'PUT'),
+        call(`workspaces/${id}`, { name: draft.name }, owner.accessToken, 'PATCH'),
+      ]);
+      assert.equal(onboarding.status, 200);
+      assert.equal(workspace.status, 200);
+      state = onboarding.body;
+    }
     for (const bytes of [
       Buffer.from('<svg/>'),
       Buffer.alloc(2 * 1024 * 1024 + 1),
@@ -349,6 +360,7 @@ async function upload(id, revision, file, access) {
     execFileSync(process.execPath, ['apps/api/scripts/cleanup-logos.cjs'], {
       env: {
         ...process.env,
+        LOGO_CLEANUP_WORKSPACE_ID: id,
         S3_LOCAL_EMULATOR: 'true',
         S3_ENDPOINT: 'http://127.0.0.1:4566',
         S3_FORCE_PATH_STYLE: 'true',
@@ -438,8 +450,28 @@ async function upload(id, revision, file, access) {
         'Storage outage affects upload only; authentication remains available',
       );
     }
+    const rateKey = randomUUID();
+    const aliases = ['workspaces', 'WORKSPACES/', 'workspaces/'];
+    for (let attempt = 0; attempt < 9; attempt++) {
+      const created = await call(aliases[attempt % aliases.length], { name: 'Rate fixture', key: rateKey }, owner.accessToken);
+      assert.equal(created.status, 201);
+      if (attempt === 0) workspaces.push(created.body.id);
+    }
+    const limited = await call('WORKSPACES/', { name: 'Rate fixture', key: rateKey }, owner.accessToken);
+    assert.equal(limited.status, 429);
+    assert.match(limited.retryAfter, /^\d+$/);
+    for (let attempt = 0; attempt < 20; attempt++) {
+      const form = new FormData();
+      form.set('revision', '0');
+      form.set('file', new Blob([image], { type: 'image/png' }), 'fixture.png');
+      const denied = await call(`workspaces/${id}/${attempt % 2 ? 'LOGO/' : 'logo/'}`, form, outsider.accessToken);
+      assert.equal(denied.status, 403);
+    }
+    const throttledUpload = await call(`workspaces/${id}/LOGO/`, new FormData(), outsider.accessToken);
+    assert.equal(throttledUpload.status, 429);
+    assert.match(throttledUpload.retryAfter, /^\d+$/);
     console.log(
-      'Phase3 API checks passed: drafts, exact replay, conflicts, completion, roles, tenant isolation, raster validation, upload/read/replacement/removal',
+      'Phase3 API checks passed: drafts, exact replay, conflicts, completion, roles, tenant isolation, raster validation, upload/read/replacement/removal, concurrent owner mutations and shared creation/upload limits across route aliases',
     );
   } finally {
     for (const id of workspaces) {

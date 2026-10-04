@@ -54,13 +54,17 @@ describe('API environment validation', () => {
 
   it('disables documentation in production unless explicitly enabled', () => {
     expect(
-      validateEnvironment({ ...local, NODE_ENV: 'production' })
-        .API_DOCS_ENABLED,
+      validateEnvironment({
+        ...local,
+        NODE_ENV: 'production',
+        CORS_ORIGINS: local.WEB_URL,
+      }).API_DOCS_ENABLED,
     ).toBe(false);
     expect(
       validateEnvironment({
         ...local,
         NODE_ENV: 'production',
+        CORS_ORIGINS: local.WEB_URL,
         API_DOCS_ENABLED: 'true',
       }).API_DOCS_ENABLED,
     ).toBe(true);
@@ -68,5 +72,15 @@ describe('API environment validation', () => {
       validateEnvironment({ ...local, API_DOCS_ENABLED: 'false' })
         .API_DOCS_ENABLED,
     ).toBe(false);
+  });
+
+  it('rejects universal proxy trust and insecure production service origins', () => {
+    for (const TRUSTED_PROXIES of ['0.0.0.0/0', '::/0', '0.0.0.0/00']) {
+      expect(() => validateEnvironment({ ...local, TRUSTED_PROXIES })).toThrow('Trust explicit proxy networks');
+    }
+    const production = { ...local, NODE_ENV: 'production', CORS_ORIGINS: local.WEB_URL };
+    expect(() => validateEnvironment({ ...production, CORS_ORIGINS: 'http://app.example.test' })).toThrow('require HTTPS');
+    expect(() => validateEnvironment({ ...production, S3_ENDPOINT: 'http://storage.example.test' })).toThrow('require HTTPS');
+    expect(() => validateEnvironment({ ...production, S3_LOCAL_EMULATOR: 'true', S3_ENDPOINT: 'https://storage.example.test' })).toThrow('forbidden in production');
   });
 });

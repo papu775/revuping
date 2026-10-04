@@ -81,44 +81,43 @@ async function proxy(
       headers.set('X-Forwarded-For', forwarded);
   }
   try {
-    let body: string | ArrayBuffer | undefined;
+    let body: ArrayBuffer | undefined;
     if (!['GET', 'HEAD'].includes(request.method)) {
       const contentType = request.headers.get('content-type') ?? '';
-      if (
+      const multipart =
         path.endsWith('/logo') &&
         request.method === 'POST' &&
-        contentType.startsWith('multipart/form-data; boundary=')
-      ) {
-        // Bound the stream, including requests without Content-Length.
-        const reader = request.body?.getReader();
-        if (!reader) return failure(400, 'BAD_REQUEST');
-        const chunks: Uint8Array[] = [];
-        let size = 0;
+        /^multipart\/form-data;\s*boundary=/i.test(contentType);
+      if (!multipart && !/^application\/json(?:;|$)/i.test(contentType))
+        return failure(400, 'BAD_REQUEST');
+      const maximum = multipart ? 2 * 1024 * 1024 + 8192 : 16384;
+      const reader = request.body?.getReader();
+      if (!reader) return failure(400, 'BAD_REQUEST');
+      const chunks: Uint8Array[] = [];
+      let size = 0;
+      try {
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
           size += value.byteLength;
-          if (size > 2 * 1024 * 1024 + 8192) {
+          // Count wire bytes, not decoded UTF-16 characters, before buffering.
+          if (size > maximum) {
             await reader.cancel();
             return failure(413, 'PAYLOAD_TOO_LARGE');
           }
           chunks.push(value);
         }
-        const combined = new Uint8Array(size);
-        let offset = 0;
-        for (const chunk of chunks) {
-          combined.set(chunk, offset);
-          offset += chunk.length;
-        }
-        body = combined.buffer;
-        headers.set('Content-Type', contentType);
-      } else {
-        if (!contentType.startsWith('application/json'))
-          return failure(400, 'BAD_REQUEST');
-        body = await request.text();
-        if (body.length > 16384) return failure(413, 'PAYLOAD_TOO_LARGE');
-        headers.set('Content-Type', 'application/json');
+      } finally {
+        reader.releaseLock();
       }
+      const combined = new Uint8Array(size);
+      let offset = 0;
+      for (const chunk of chunks) {
+        combined.set(chunk, offset);
+        offset += chunk.length;
+      }
+      body = combined.buffer;
+      headers.set('Content-Type', multipart ? contentType : 'application/json');
     }
     const upstream = await fetch(`${apiBase()}/${path}`, {
       method: request.method,
@@ -137,6 +136,9 @@ async function proxy(
         'Cache-Control': 'no-store',
       },
     });
+    const retryAfter = upstream.headers.get('retry-after');
+    if (retryAfter && /^\d{1,4}$/.test(retryAfter))
+      response.headers.set('Retry-After', retryAfter);
     for (const value of upstream.headers.getSetCookie())
       response.headers.append('Set-Cookie', value);
     response.headers.set(

@@ -21,6 +21,8 @@ describe('structured log redaction', () => {
         csrfToken: 'private',
         tokenHash: 'private',
         SMTP_PASSWORD: 'private',
+        S3_ACCESS_KEY_ID: 'private',
+        S3_SECRET_ACCESS_KEY: 'private',
       },
       exception: new Error('database connection with private credentials'),
     });

@@ -1,4 +1,6 @@
-import { Controller, Get, ServiceUnavailableException } from '@nestjs/common';
+import { Controller, Get, Req, ServiceUnavailableException } from '@nestjs/common';
+import type { Request } from 'express';
+import { RateLimitService } from '../auth/rate-limit.service';
 import {
   ApiOkResponse,
   ApiOperation,
@@ -21,6 +23,7 @@ export class HealthController {
   constructor(
     private readonly database: DatabaseService,
     private readonly redis: RedisService,
+    private readonly limits: RateLimitService,
   ) {}
 
   @Get('live')
@@ -38,7 +41,8 @@ export class HealthController {
   @ApiServiceUnavailableResponse({
     description: 'Service unavailable; no infrastructure details are returned',
   })
-  async ready(): Promise<HealthResponse> {
+  async ready(@Req() request: Request): Promise<HealthResponse> {
+    await this.limits.check(request, 'readiness', 'requests', 900, 900);
     const checks = await Promise.allSettled([
       this.database.check(),
       this.redis.check(),

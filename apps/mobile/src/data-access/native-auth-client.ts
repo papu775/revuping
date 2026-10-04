@@ -24,6 +24,8 @@ export class NativeAuthClient {
   private access?: { token: string; expiresAt: number };
   private refreshFlight?: Promise<void>;
   private epoch = 0;
+  private credentialsInvalidated = false;
+  private storageFlight: Promise<void> = Promise.resolve();
   private readonly base: string;
   constructor(
     base: string,
@@ -32,6 +34,11 @@ export class NativeAuthClient {
     private readonly fetcher: typeof fetch = fetch,
   ) {
     this.base = validateApiBaseUrl(base);
+  }
+  private persist(operation: () => Promise<void>): Promise<void> {
+    const next = this.storageFlight.catch(() => undefined).then(operation);
+    this.storageFlight = next;
+    return next;
   }
   private async send(
     path: string,
@@ -90,7 +97,9 @@ export class NativeAuthClient {
     if (signal?.aborted) throw new Error('Action cancelled');
     // Persist rotation before publishing new access state. Never fall back to insecure storage.
     try {
-      await this.storage.set(result.refreshToken);
+      await this.persist(async () => {
+        if (epoch === this.epoch) await this.storage.set(result.refreshToken);
+      });
     } catch (error) {
       await this.send('auth/logout', {}, result.accessToken).catch(
         () => undefined,
@@ -107,15 +116,22 @@ export class NativeAuthClient {
       token: result.accessToken,
       expiresAt: Date.parse(result.accessExpiresAt),
     };
+    this.credentialsInvalidated = false;
     this.onSession(sessionSchema.parse(result));
   }
   async clear(): Promise<void> {
     this.epoch++;
+    // Even a failed SecureStore removal must not permit automatic reuse.
+    this.credentialsInvalidated = true;
     this.access = undefined;
     this.onSession(null);
-    await this.storage.remove();
+    await this.persist(() => this.storage.remove());
   }
   async restore(): Promise<void> {
+    if (this.credentialsInvalidated) {
+      this.onSession(null);
+      return;
+    }
     if (await this.storage.get()) await this.refresh();
     else this.onSession(null);
   }
@@ -166,6 +182,7 @@ export class NativeAuthClient {
     return result;
   }
   refresh(): Promise<void> {
+    if (this.credentialsInvalidated) return Promise.resolve();
     if (this.refreshFlight) return this.refreshFlight;
     const epoch = this.epoch;
     this.refreshFlight = (async () => {
@@ -178,7 +195,10 @@ export class NativeAuthClient {
         );
       } catch (error) {
         // Never automatically retry an ambiguous rotation: the server may have consumed it.
-        if (error instanceof ApiRequestError && error.status === 401)
+        // A lost response may hide a committed rotation. Retaining that token
+        // permits a later foreground/restore attempt to replay it. Only a 429
+        // proves the controller rejected the request before rotating it.
+        if (!(error instanceof ApiRequestError && error.status === 429))
           await this.clear();
         throw error;
       }
@@ -294,7 +314,11 @@ export class NativeAuthClient {
   }
   async logout(all = false): Promise<void> {
     await this.refreshFlight?.catch(() => undefined);
-    await this.request(all ? 'auth/logout-all' : 'auth/logout', {});
-    await this.clear();
+    try {
+      await this.request(all ? 'auth/logout-all' : 'auth/logout', {});
+    } finally {
+      // Local sign-out still removes credentials if server revocation fails.
+      await this.clear();
+    }
   }
 }

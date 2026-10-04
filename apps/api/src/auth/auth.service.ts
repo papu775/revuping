@@ -1,6 +1,5 @@
 import {
   BadRequestException,
-  ConflictException,
   HttpException,
   Injectable,
   ServiceUnavailableException,
@@ -9,7 +8,11 @@ import {
 import { DatabaseService } from '../infrastructure/database.service';
 import type { Prisma, Session, User } from '../generated/prisma/client';
 import type { SessionKind, EmailAction } from '../generated/prisma/enums';
-import type { SessionResponse, NativeSessionResponse } from 'api-contracts';
+import {
+  registrationSuccessMessage,
+  type SessionResponse,
+  type NativeSessionResponse,
+} from 'api-contracts';
 import {
   credential,
   digest,
@@ -77,7 +80,7 @@ export class AuthService {
           'code' in error &&
           error.code === 'P2002'
         )
-          throw new ConflictException();
+          return { message: registrationSuccessMessage };
         throw error;
       }
       try {
@@ -86,7 +89,7 @@ export class AuthService {
         throw new RegistrationVerificationException();
       }
       return {
-        message: 'Account created. Check your email to verify it.',
+        message: registrationSuccessMessage,
       };
     });
   }

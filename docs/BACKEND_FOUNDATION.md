@@ -40,7 +40,7 @@ Run from the repository root with Node 24.20.x and pnpm 11.25.0. Copy examples o
 ```sh
 pnpm install --frozen-lockfile
 cp -n infra/.env.example infra/.env
-cp -n apps/api/.env.example apps/api/.env
+# Create ignored apps/api/.env as documented in docs/AUTHENTICATION.md.
 docker compose --env-file infra/.env -f infra/compose.yml config --quiet
 docker compose --env-file infra/.env -f infra/compose.yml up -d --wait
 docker compose --env-file infra/.env -f infra/compose.yml ps

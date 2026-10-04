@@ -28,10 +28,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [client] = useState(
     () =>
       new NativeAuthClient(
-        process.env.EXPO_PUBLIC_API_URL ??
-          (__DEV__
-            ? 'http://10.0.2.2:3002/api/v1'
-            : 'https://api-unconfigured.invalid/api/v1'),
+        secureNativeBase(
+          process.env.EXPO_PUBLIC_API_URL ??
+            (__DEV__
+              ? 'http://10.0.2.2:3002/api/v1'
+              : 'https://api-unconfigured.invalid/api/v1'),
+        ),
         secureCredentials,
         setSession,
       ),
@@ -81,6 +83,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       {children}
     </Context.Provider>
   );
+}
+function secureNativeBase(base: string): string {
+  if (!__DEV__ && !base.startsWith('https://'))
+    throw new Error('Native release authentication requires an HTTPS API URL.');
+  return base;
 }
 export function useAuth() {
   const value = useContext(Context);

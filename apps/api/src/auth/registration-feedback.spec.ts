@@ -3,6 +3,7 @@ import { AuthService } from './auth.service';
 import { RegistrationVerificationException } from './registration-verification.exception';
 import type { DatabaseService } from '../infrastructure/database.service';
 import type { EmailService } from './email.service';
+import { registrationSuccessMessage } from 'api-contracts';
 
 jest.mock('./credentials', () => ({
   credential: () => 'a'.repeat(43),
@@ -39,9 +40,17 @@ describe('registration outcomes', () => {
   it('confirms success only after verification SMTP acceptance', async () => {
     const { service, email } = setup();
     await expect(service.register(input)).resolves.toEqual({
-      message: 'Account created. Check your email to verify it.',
+      message: registrationSuccessMessage,
     });
     expect(email.send).toHaveBeenCalledTimes(1);
+  });
+  it('returns the same public result for an existing email without replacing its password', async () => {
+    const { service, db, email } = setup();
+    db.user.create.mockRejectedValueOnce({ code: 'P2002' });
+    await expect(service.register(input)).resolves.toEqual({
+      message: registrationSuccessMessage,
+    });
+    expect(email.send).not.toHaveBeenCalled();
   });
   it('does not claim an account exists when SMTP readiness fails before creation', async () => {
     const { service, db, email } = setup();

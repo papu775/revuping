@@ -121,7 +121,7 @@ export function validateEnvironment(input: Record<string, unknown>) {
       ...new Set(result.error.issues.map((issue) => issue.path.join('.'))),
     ];
     throw new Error(
-      `Invalid API configuration: ${fields.join(', ')}. See apps/api/.env.example.`,
+      `Invalid API configuration: ${fields.join(', ')}. See docs/AUTHENTICATION.md.`,
     );
   }
   if (
@@ -135,6 +135,19 @@ export function validateEnvironment(input: Record<string, unknown>) {
     throw new Error(
       'Invalid production auth configuration: WEB_URL, SMTP_HOST, SMTP_FROM, SMTP_USER/SMTP_PASSWORD.',
     );
+  if (result.data.TRUSTED_PROXIES.some((proxy) => Number(proxy.split('/')[1]) === 0))
+    throw new Error(
+      'Trust explicit proxy networks, not all network addresses.',
+    );
+  if (
+    result.data.NODE_ENV === 'production' &&
+    (result.data.CORS_ORIGINS.some(
+      (origin) => !origin.startsWith('https://'),
+    ) ||
+      (result.data.S3_ENDPOINT &&
+        !result.data.S3_ENDPOINT.startsWith('https://')))
+  )
+    throw new Error('Production CORS origins and S3 endpoints require HTTPS.');
   if (!!result.data.S3_ACCESS_KEY_ID !== !!result.data.S3_SECRET_ACCESS_KEY)
     throw new Error(
       'Configure both S3 credential fields or use the server credential chain.',

@@ -54,7 +54,7 @@ export class AuthHttpService {
     return { csrfToken };
   }
   publicMutation(request: Request): string | undefined {
-    if (request.path.includes('/auth/native/')) {
+    if (request.path.toLowerCase().includes('/auth/native/')) {
       this.nativeRequest(request);
       return undefined;
     }

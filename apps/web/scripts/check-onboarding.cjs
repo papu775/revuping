@@ -361,7 +361,7 @@ async function returningRouting(context, completedId) {
     await shot('signup-loader');
     await expect(
       page
-        .getByText('Account created. Check your email to verify it.', {
+        .getByText('Check your email for verification.', {
           exact: false,
         })
         .first(),
@@ -501,6 +501,34 @@ async function returningRouting(context, completedId) {
       page.getByRole('button', { name: 'Remove logo', exact: true }),
     ).toBeVisible();
     await page.unroute('**/api/backend/workspaces/*/logo');
+    const logoWorkspace = (
+      await pool.query(
+        'SELECT m."workspaceId" FROM "Membership" m JOIN "User" u ON u.id=m."userId" WHERE u.email=$1',
+        [email],
+      )
+    ).rows[0]?.workspaceId;
+    assert.ok(logoWorkspace);
+    assert.equal(
+      (
+        await page.request.get(
+          `${base}/api/backend/workspaces/${logoWorkspace}/logo`,
+        )
+      ).status(),
+      200,
+    );
+    const optimized = await page.request.get(
+      `${base}/_next/image?url=${encodeURIComponent(`/api/backend/workspaces/${logoWorkspace}/logo`)}&w=640&q=75`,
+    );
+    assert.equal(optimized.status(), 400);
+    assert.match(await optimized.text(), /not allowed/);
+    assert.equal(
+      (
+        await page.request.get(
+          `${base}/_next/image?url=%2Fimages%2Fcustomer-service.webp&w=640&q=75`,
+        )
+      ).status(),
+      200,
+    );
     await shot('business-logo');
     await matrix('business-with-logo');
     stage = 'upload outage';

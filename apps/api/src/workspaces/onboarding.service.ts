@@ -70,6 +70,7 @@ export class OnboardingService {
       throw new BadRequestException();
     return this.db.client.$transaction(async (tx) => {
       await tx.$queryRaw`SELECT "id" FROM "Workspace" WHERE "id" = ${id}::uuid FOR UPDATE`;
+      await tx.$queryRaw`SELECT "userId" FROM "Membership" WHERE "workspaceId" = ${id}::uuid AND "userId" = ${identity.user.id}::uuid FOR UPDATE`;
       const member = await tx.membership.findUnique({
         where: {
           workspaceId_userId: { workspaceId: id, userId: identity.user.id },
@@ -162,6 +163,7 @@ export class OnboardingService {
   ) {
     const result = await this.db.client.$transaction(async (tx) => {
       await tx.$queryRaw`SELECT "id" FROM "Workspace" WHERE "id" = ${id}::uuid FOR UPDATE`;
+      await tx.$queryRaw`SELECT "userId" FROM "Membership" WHERE "workspaceId" = ${id}::uuid AND "userId" = ${identity.user.id}::uuid FOR UPDATE`;
       const member = await tx.membership.findUnique({
         where: {
           workspaceId_userId: { workspaceId: id, userId: identity.user.id },

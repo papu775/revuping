@@ -40,7 +40,7 @@ export interface WorkspaceInput {
 }
 
 export const registrationSuccessMessage =
-  'Account created. Check your email to verify it.';
+  'Check your email for verification. If you already have an account, log in or reset your password.';
 export const registrationVerificationUnavailableMessage =
   'Your account was created, but we couldn’t deliver the verification email. Request another verification email or log in with the same details.';
 export const registrationUnconfirmedMessage =

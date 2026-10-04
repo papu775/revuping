@@ -161,14 +161,14 @@ describe('native authentication feedback rendering', () => {
     fireEvent.press(button);
     expect(mockRegister).toHaveBeenCalledTimes(1);
     await act(async () => {
-      finish({ message: 'Account created. Check your email to verify it.' });
+      finish({ message: 'Check your email for verification. If you already have an account, log in or reset your password.' });
     });
     expect(
-      view.getAllByText('Account created. Check your email to verify it.'),
+      view.getAllByText('Check your email for verification. If you already have an account, log in or reset your password.'),
     ).toHaveLength(2);
     fireEvent.press(view.getByLabelText('Dismiss notification'));
     expect(
-      view.getByText('Account created. Check your email to verify it.'),
+      view.getByText('Check your email for verification. If you already have an account, log in or reset your password.'),
     ).toBeTruthy();
     expect(
       view.getByRole('button', { name: 'Resend verification email' }),
@@ -192,7 +192,7 @@ describe('native authentication feedback rendering', () => {
       view.getAllByText(/Your account was created, but/).length,
     ).toBeGreaterThan(0);
     expect(
-      view.queryByText('Account created. Check your email to verify it.'),
+      view.queryByText('Check your email for verification. If you already have an account, log in or reset your password.'),
     ).toBeNull();
     expect(
       view.getByRole('button', { name: 'Resend verification email' }),
