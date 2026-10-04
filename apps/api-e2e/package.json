@@ -57,6 +57,13 @@
           "runInBand": true
         },
         "cache": false
+      },
+      "onboarding-check": {
+        "executor": "nx:run-commands",
+        "cache": false,
+        "options": {
+          "command": "node apps/api-e2e/scripts/check-onboarding.cjs"
+        }
       }
     },
     "tags": [

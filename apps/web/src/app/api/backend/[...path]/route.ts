@@ -42,7 +42,13 @@ async function proxy(
   const path = (await context.params).path.join('/');
   const methods =
     allowed[path] ??
-    (/^workspaces\/[0-9a-f-]{36}$/i.test(path) ? ['GET', 'PATCH'] : []);
+    (/^workspaces\/[0-9a-f-]{36}\/onboarding$/i.test(path)
+      ? ['GET', 'PUT']
+      : /^workspaces\/[0-9a-f-]{36}\/logo$/i.test(path)
+        ? ['GET', 'POST', 'DELETE']
+        : /^workspaces\/[0-9a-f-]{36}$/i.test(path)
+          ? ['GET', 'PATCH']
+          : []);
   if (!methods.includes(request.method)) return failure(404, 'NOT_FOUND');
   const headers = new Headers({
     Accept: 'application/json',
@@ -75,13 +81,44 @@ async function proxy(
       headers.set('X-Forwarded-For', forwarded);
   }
   try {
-    let body: string | undefined;
+    let body: string | ArrayBuffer | undefined;
     if (!['GET', 'HEAD'].includes(request.method)) {
-      if (!request.headers.get('content-type')?.startsWith('application/json'))
-        return failure(400, 'BAD_REQUEST');
-      body = await request.text();
-      if (body.length > 16384) return failure(413, 'PAYLOAD_TOO_LARGE');
-      headers.set('Content-Type', 'application/json');
+      const contentType = request.headers.get('content-type') ?? '';
+      if (
+        path.endsWith('/logo') &&
+        request.method === 'POST' &&
+        contentType.startsWith('multipart/form-data; boundary=')
+      ) {
+        // Bound the stream, including requests without Content-Length.
+        const reader = request.body?.getReader();
+        if (!reader) return failure(400, 'BAD_REQUEST');
+        const chunks: Uint8Array[] = [];
+        let size = 0;
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          size += value.byteLength;
+          if (size > 2 * 1024 * 1024 + 8192) {
+            await reader.cancel();
+            return failure(413, 'PAYLOAD_TOO_LARGE');
+          }
+          chunks.push(value);
+        }
+        const combined = new Uint8Array(size);
+        let offset = 0;
+        for (const chunk of chunks) {
+          combined.set(chunk, offset);
+          offset += chunk.length;
+        }
+        body = combined.buffer;
+        headers.set('Content-Type', contentType);
+      } else {
+        if (!contentType.startsWith('application/json'))
+          return failure(400, 'BAD_REQUEST');
+        body = await request.text();
+        if (body.length > 16384) return failure(413, 'PAYLOAD_TOO_LARGE');
+        headers.set('Content-Type', 'application/json');
+      }
     }
     const upstream = await fetch(`${apiBase()}/${path}`, {
       method: request.method,
@@ -91,10 +128,12 @@ async function proxy(
       cache: 'no-store',
       signal: AbortSignal.timeout(15000),
     });
-    const response = new NextResponse(await upstream.text(), {
+    const response = new NextResponse(await upstream.arrayBuffer(), {
       status: upstream.status,
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type':
+          upstream.headers.get('content-type') ?? 'application/json',
+        'X-Content-Type-Options': 'nosniff',
         'Cache-Control': 'no-store',
       },
     });
@@ -109,4 +148,10 @@ async function proxy(
     return failure(503, 'SERVICE_UNAVAILABLE');
   }
 }
-export { proxy as GET, proxy as POST, proxy as PATCH };
+export {
+  proxy as GET,
+  proxy as POST,
+  proxy as PATCH,
+  proxy as PUT,
+  proxy as DELETE,
+};

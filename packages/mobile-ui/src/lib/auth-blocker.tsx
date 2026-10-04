@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   AccessibilityInfo,
-  ActivityIndicator,
+  Animated,
   Keyboard,
   Modal,
   Platform,
@@ -10,7 +10,7 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+
 import { radius, useReducedMotion, useTheme } from 'mobile-tokens';
 
 export function AuthBlocker({
@@ -25,6 +25,29 @@ export function AuthBlocker({
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const reduced = useReducedMotion();
+  const pulse = useRef(new Animated.Value(1)).current;
+  useEffect(() => {
+    if (!label || reduced) {
+      pulse.setValue(1);
+      return;
+    }
+    const animation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulse, {
+          toValue: 0.5,
+          duration: 700,
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulse, {
+          toValue: 1,
+          duration: 700,
+          useNativeDriver: true,
+        }),
+      ]),
+    );
+    animation.start();
+    return () => animation.stop();
+  }, [label, reduced, pulse]);
   const [details, setDetails] = useState(false);
   const [height, setHeight] = useState(0);
   const [keyboardTop, setKeyboardTop] = useState<number | null>(
@@ -102,11 +125,28 @@ export function AuthBlocker({
               },
             ]}
           >
-            {reduced ? (
-              <Ionicons name="sync-outline" size={34} color={colors.violet} />
-            ) : (
-              <ActivityIndicator size="large" color={colors.violet} />
-            )}
+            <Animated.View
+              accessibilityElementsHidden
+              style={{
+                opacity: pulse,
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 4,
+                height: 36,
+              }}
+            >
+              {[12, 20, 28, 16, 8].map((height, i) => (
+                <View
+                  key={i}
+                  style={{
+                    width: 3,
+                    height,
+                    borderRadius: 2,
+                    backgroundColor: colors.violet,
+                  }}
+                />
+              ))}
+            </Animated.View>
             <Text style={[styles.label, { color: colors.ink }]}>{label}</Text>
           </View>
         </View>
@@ -129,7 +169,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: radius.lg,
     maxWidth: 340,
-    width: '100%',
+    alignSelf: 'center',
   },
   label: {
     fontSize: 15,

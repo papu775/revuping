@@ -1,0 +1,469 @@
+import { useEffect, useState } from 'react';
+import { AppState, Image, Text, View } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
+import { Button, Card, Field, Select, AuthBlocker, useToast } from 'mobile-ui';
+import { useTheme } from 'mobile-tokens';
+import {
+  ApiRequestError,
+  onboardingDraftSchema,
+  type OnboardingDraft,
+  type OnboardingResponse,
+} from 'api-contracts';
+import { useAuth } from '../data-access/auth-context';
+import { useAuthAction } from './use-auth-action';
+const days = [
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+  'Sunday',
+];
+export function BusinessSetup({ id, owner }: { id: string; owner: boolean }) {
+  const { client } = useAuth();
+  const { colors } = useTheme();
+  const { showToast } = useToast();
+  const action = useAuthAction();
+  const [state, setState] = useState<OnboardingResponse | null>(null);
+  const [draft, setDraft] = useState<OnboardingDraft | null>(null);
+  const [step, setStep] = useState(0);
+  const [editing, setEditing] = useState(false);
+  const [error, setError] = useState('');
+  const [logo, setLogo] = useState<Awaited<
+    ReturnType<typeof client.logoSource>
+  > | null>(null);
+  useEffect(() => {
+    let alive = true;
+    client
+      .onboarding(id)
+      .then((result) => {
+        if (alive) {
+          setState(result);
+          setDraft(result.draft);
+          setStep(result.draft.step);
+        }
+      })
+      .catch(() => {
+        if (alive)
+          setError('Unable to load setup. Return to this screen to retry.');
+      });
+    return () => {
+      alive = false;
+    };
+  }, [client, id]);
+  useEffect(() => {
+    let alive = true;
+    const refreshLogo = () => {
+      if (state?.hasLogo)
+        client
+          .logoSource(id, state.revision)
+          .then((value) => {
+            if (alive) setLogo(value);
+          })
+          .catch(() => {
+            if (alive) setLogo(null);
+          });
+      else setLogo(null);
+    };
+    refreshLogo();
+    const listener = AppState.addEventListener('change', (status) => {
+      if (status === 'active') refreshLogo();
+    });
+    return () => {
+      alive = false;
+      listener.remove();
+    };
+  }, [client, id, state]);
+  const apply = (result: OnboardingResponse) => {
+    setState(result);
+    setDraft(result.draft);
+  };
+  const update = (patch: Partial<OnboardingDraft>) =>
+    setDraft((current) => (current ? { ...current, ...patch } : current));
+  const fail = (error: unknown) =>
+    setError(
+      error instanceof ApiRequestError && error.status === 409
+        ? 'Another session changed this business. Reopen this screen to load the latest details.'
+        : 'Unable to save. Use a valid image or check your connection and retry.',
+    );
+  const save = async (next: number, complete = false) => {
+    if (!draft || !state) return;
+    const checked = onboardingDraftSchema.safeParse({ ...draft, step: next });
+    if (!checked.success) {
+      setError(checked.error.issues[0]?.message ?? 'Check your details.');
+      return;
+    }
+    if ((step === 0 || complete) && !draft.category) {
+      setError('Choose a category.');
+      return;
+    }
+    if ((step === 1 || complete) && !draft.locationName.trim()) {
+      setError('Enter a location name.');
+      return;
+    }
+    setError('');
+    await action.run(
+      complete ? 'Finishing setup…' : 'Saving progress…',
+      (signal) =>
+        client.saveOnboarding(
+          id,
+          { draft: checked.data, revision: state.revision, complete },
+          signal,
+        ),
+      (result) => {
+        apply(result);
+        setStep(next);
+        if (complete) setEditing(false);
+        showToast('Business details saved.');
+      },
+      fail,
+    );
+  };
+  const pick = async () => {
+    if (!state || !draft) return;
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsMultipleSelection: false,
+        quality: 1,
+      });
+      if (result.canceled) return;
+      const file = result.assets[0];
+      if ((file.fileSize ?? 0) > 2 * 1024 * 1024) {
+        setError('Choose a logo under 2 MB.');
+        return;
+      }
+      setError('');
+      let savedDraft: OnboardingResponse | null = null;
+      await action.run(
+        'Uploading logo…',
+        async (signal) => {
+          const saved = await client.saveOnboarding(
+            id,
+            { draft, revision: state.revision, complete: false },
+            signal,
+          );
+          savedDraft = saved;
+          return client.uploadLogo(
+            id,
+            saved.revision,
+            {
+              uri: file.uri,
+              name: file.fileName ?? 'logo',
+              type: file.mimeType ?? 'application/octet-stream',
+            },
+            signal,
+          );
+        },
+        (value) => {
+          apply(value);
+          showToast('Logo saved.');
+        },
+        (error) => {
+          if (savedDraft) apply(savedDraft);
+          fail(error);
+        },
+      );
+    } catch {
+      setError('Unable to open your image library. Check app permissions.');
+    }
+  };
+  if (!state || !draft)
+    return (
+      <Text style={{ color: colors.muted }}>{error || 'Loading setup…'}</Text>
+    );
+  const summary = (
+    <View style={{ gap: 16 }}>
+      <Text style={{ color: colors.ink, fontSize: 20 }}>{draft.name}</Text>
+      <Text style={{ color: colors.muted }}>{draft.category}</Text>
+      <Text style={{ color: colors.ink }}>{draft.locationName}</Text>
+      <Text style={{ color: colors.muted }}>
+        {draft.address || 'Address not added'} · {draft.timezone}
+      </Text>
+      <Text style={{ color: colors.ink }}>
+        Brand colour: {draft.brandColor}
+      </Text>
+      {days.map((day, i) => (
+        <Text key={day} style={{ color: colors.muted }}>
+          {day}:{' '}
+          {draft.hours[i]
+            .map((item) => `${item.open}–${item.close}`)
+            .join(', ') || 'Closed / not specified'}
+        </Text>
+      ))}
+    </View>
+  );
+  return (
+    <AuthBlocker label={action.label} onCancel={action.cancel}>
+      <Card>
+        <View style={{ gap: 16 }}>
+          {logo && (
+            <Image
+              source={logo}
+              accessibilityLabel="Business logo"
+              style={{ width: 80, height: 80, borderRadius: 16 }}
+            />
+          )}
+          <Text
+            accessibilityRole="header"
+            style={{ color: colors.ink, fontSize: 24, fontWeight: '600' }}
+          >
+            {(state.completedAt && !editing) || !owner
+              ? state.completedAt
+                ? 'Your business is ready'
+                : 'Business setup'
+              : ['Business', 'Primary location', 'Hours & branding', 'Review'][
+                  step
+                ]}
+          </Text>
+          {!owner && (
+            <Text style={{ color: colors.muted }}>
+              Read access. A workspace owner can edit these details.
+            </Text>
+          )}
+          {(state.completedAt && !editing) || !owner ? (
+            <>
+              <Text style={{ color: colors.muted }}>
+                Details saved. No feedback collected yet. Review tools arrive in
+                a future phase.
+              </Text>
+              {summary}
+              {owner && (
+                <Button
+                  title="Edit business details"
+                  onPress={() => {
+                    setEditing(true);
+                    setStep(0);
+                  }}
+                />
+              )}
+            </>
+          ) : (
+            <>
+              <Text style={{ color: colors.muted }}>
+                Step {step + 1} of 4 · Progress saves when you continue.
+              </Text>
+              {step === 0 && (
+                <>
+                  <Field
+                    label="Business name"
+                    value={draft.name}
+                    onChangeText={(name) => update({ name })}
+                    maxLength={100}
+                    editable={owner}
+                  />
+                  <Select
+                    label="Category"
+                    value={draft.category || 'Choose a category'}
+                    options={[
+                      'Salon & beauty',
+                      'Restaurant & café',
+                      'Retail',
+                      'Health & wellness',
+                      'Professional services',
+                      'Other',
+                    ]}
+                    onChange={(category) => {
+                      if (owner) update({ category });
+                    }}
+                  />
+                  {owner && (
+                    <>
+                      <Text style={{ color: colors.muted }}>
+                        Optional logo: PNG, JPEG or WebP, up to 2 MB and 4096 ×
+                        4096 pixels.
+                      </Text>
+                      <Button
+                        title={logo ? 'Replace logo' : 'Choose logo'}
+                        variant="secondary"
+                        onPress={() => void pick()}
+                      />
+                      {logo && (
+                        <Button
+                          title="Remove logo"
+                          variant="ghost"
+                          onPress={() =>
+                            void action.run(
+                              'Removing logo…',
+                              (signal) =>
+                                client.removeLogo(id, state.revision, signal),
+                              (result) => {
+                                setState(result);
+                                showToast('Logo removed.');
+                              },
+                              fail,
+                            )
+                          }
+                        />
+                      )}
+                    </>
+                  )}
+                </>
+              )}
+              {step === 1 && (
+                <>
+                  <Field
+                    label="Location name"
+                    value={draft.locationName}
+                    onChangeText={(locationName) => update({ locationName })}
+                    editable={owner}
+                  />
+                  <Field
+                    label="Address (optional)"
+                    value={draft.address}
+                    onChangeText={(address) => update({ address })}
+                    maxLength={500}
+                    multiline
+                    editable={owner}
+                  />
+                  <Field
+                    label="IANA timezone"
+                    value={draft.timezone}
+                    onChangeText={(timezone) => update({ timezone })}
+                    editable={owner}
+                  />
+                  {owner && (
+                    <Button
+                      title="Use device timezone"
+                      variant="ghost"
+                      onPress={() =>
+                        update({
+                          timezone:
+                            Intl.DateTimeFormat().resolvedOptions().timeZone,
+                        })
+                      }
+                    />
+                  )}
+                  <Text style={{ color: colors.muted }}>
+                    Check this editable suggestion. Address does not determine
+                    timezone.
+                  </Text>
+                </>
+              )}
+              {step === 2 && (
+                <>
+                  <Field
+                    label="Brand colour (#RRGGBB)"
+                    value={draft.brandColor}
+                    onChangeText={(brandColor) => update({ brandColor })}
+                    editable={owner}
+                  />
+                  <Text style={{ color: colors.muted }}>
+                    Hours are optional. Use HH:mm within one day. Overnight
+                    intervals are not supported.
+                  </Text>
+                  {days.map((day, i) => (
+                    <View key={day} style={{ gap: 8 }}>
+                      <Text style={{ color: colors.ink, fontWeight: '600' }}>
+                        {day}
+                      </Text>
+                      {!draft.hours[i].length && (
+                        <Text style={{ color: colors.muted }}>
+                          Closed / not specified
+                        </Text>
+                      )}
+                      {draft.hours[i].map((interval, j) => (
+                        <View key={j}>
+                          {(['open', 'close'] as const).map((key) => (
+                            <Field
+                              key={key}
+                              label={`${day} ${key} ${j + 1}`}
+                              value={interval[key]}
+                              onChangeText={(value) =>
+                                update({
+                                  hours: draft.hours.map((items, n) =>
+                                    n === i
+                                      ? items.map((item, m) =>
+                                          m === j
+                                            ? { ...item, [key]: value }
+                                            : item,
+                                        )
+                                      : items,
+                                  ),
+                                })
+                              }
+                              editable={owner}
+                            />
+                          ))}
+                          {owner && (
+                            <Button
+                              title={`Remove ${day} interval ${j + 1}`}
+                              variant="ghost"
+                              onPress={() =>
+                                update({
+                                  hours: draft.hours.map((items, n) =>
+                                    n === i
+                                      ? items.filter((_, m) => m !== j)
+                                      : items,
+                                  ),
+                                })
+                              }
+                            />
+                          )}
+                        </View>
+                      ))}
+                      {owner && draft.hours[i].length < 4 && (
+                        <Button
+                          title={`Add ${day} interval`}
+                          variant="ghost"
+                          onPress={() =>
+                            update({
+                              hours: draft.hours.map((items, n) =>
+                                n === i
+                                  ? [
+                                      ...items,
+                                      { open: '09:00', close: '17:00' },
+                                    ]
+                                  : items,
+                              ),
+                            })
+                          }
+                        />
+                      )}
+                    </View>
+                  ))}
+                </>
+              )}
+              {step === 3 && (
+                <>
+                  {summary}
+                  {owner && (
+                    <Button
+                      title="Edit business"
+                      variant="ghost"
+                      onPress={() => setStep(0)}
+                    />
+                  )}
+                </>
+              )}
+              {!!error && (
+                <Text
+                  accessibilityRole="alert"
+                  style={{ color: colors.danger }}
+                >
+                  {error}
+                </Text>
+              )}
+              {owner && (
+                <View style={{ gap: 8 }}>
+                  <Button
+                    title={step === 3 ? 'Finish setup' : 'Continue'}
+                    onPress={() => void save(Math.min(3, step + 1), step === 3)}
+                    disabled={action.pending}
+                  />
+                  <Button
+                    title="Back"
+                    variant="secondary"
+                    disabled={!step || action.pending}
+                    onPress={() => void save(step - 1)}
+                  />
+                </View>
+              )}
+            </>
+          )}
+        </View>
+      </Card>
+    </AuthBlocker>
+  );
+}

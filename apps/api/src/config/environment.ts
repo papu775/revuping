@@ -35,6 +35,16 @@ const environmentSchema = z.object({
         !url.password
       );
     }),
+  S3_ENDPOINT: serviceUrl(['http:', 'https:']).optional(),
+  S3_REGION: z.string().min(1).default('us-east-1'),
+  S3_BUCKET: z
+    .string()
+    .regex(/^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$/)
+    .default('revuping-logos'),
+  S3_LOCAL_EMULATOR: z.enum(['true', 'false']).default('false'),
+  S3_FORCE_PATH_STYLE: z.enum(['true', 'false']).default('false'),
+  S3_ACCESS_KEY_ID: z.string().min(1).optional(),
+  S3_SECRET_ACCESS_KEY: z.string().min(1).optional(),
   SMTP_HOST: z.string().min(1).default('127.0.0.1'),
   SMTP_PORT: z.coerce.number().int().min(1).max(65535).default(1025),
   SMTP_SECURE: z.enum(['true', 'false']).default('false'),
@@ -124,6 +134,26 @@ export function validateEnvironment(input: Record<string, unknown>) {
   )
     throw new Error(
       'Invalid production auth configuration: WEB_URL, SMTP_HOST, SMTP_FROM, SMTP_USER/SMTP_PASSWORD.',
+    );
+  if (!!result.data.S3_ACCESS_KEY_ID !== !!result.data.S3_SECRET_ACCESS_KEY)
+    throw new Error(
+      'Configure both S3 credential fields or use the server credential chain.',
+    );
+  if (
+    result.data.S3_LOCAL_EMULATOR === 'true' &&
+    (result.data.NODE_ENV === 'production' || !result.data.S3_ENDPOINT)
+  )
+    throw new Error(
+      'Local S3 emulator requires an endpoint and is forbidden in production.',
+    );
+  if (
+    result.data.S3_LOCAL_EMULATOR !== 'true' &&
+    [result.data.S3_ACCESS_KEY_ID, result.data.S3_SECRET_ACCESS_KEY].includes(
+      'test',
+    )
+  )
+    throw new Error(
+      'Dummy S3 credentials are only allowed for the local emulator.',
     );
   return Object.freeze({
     ...result.data,

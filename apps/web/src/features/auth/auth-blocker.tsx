@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { LoaderCircle } from 'lucide-react';
+import { AudioLines } from 'lucide-react';
 
 export function AuthBlocker({
   label,
@@ -9,6 +9,7 @@ export function AuthBlocker({
   label: string | null;
   children: React.ReactNode;
 }) {
+  const content = useRef<HTMLDivElement>(null);
   const overlay = useRef<HTMLDivElement>(null);
   const previousFocus = useRef<HTMLElement | null>(null);
   const [details, setDetails] = useState(false);
@@ -23,6 +24,23 @@ export function AuthBlocker({
   useLayoutEffect(() => {
     if (!label) return;
     const previous = previousFocus.current;
+    const covered: Array<{ element: HTMLElement; inert: boolean }> = [];
+    let branch: HTMLElement | null = content.current;
+    while (branch?.parentElement) {
+      for (const sibling of Array.from(branch.parentElement.children)) {
+        if (
+          sibling instanceof HTMLElement &&
+          sibling !== branch &&
+          !sibling.contains(overlay.current) &&
+          !sibling.classList.contains('toast-stack')
+        ) {
+          covered.push({ element: sibling, inert: sibling.inert });
+          sibling.inert = true;
+        }
+      }
+      if (branch.parentElement === document.body) break;
+      branch = branch.parentElement;
+    }
     overlay.current?.focus({ preventScroll: true });
     const element = overlay.current;
     const stopScroll = (event: Event) => event.preventDefault();
@@ -41,6 +59,7 @@ export function AuthBlocker({
     viewport?.addEventListener('resize', place);
     viewport?.addEventListener('scroll', place);
     return () => {
+      for (const item of covered) item.element.inert = item.inert;
       viewport?.removeEventListener('resize', place);
       viewport?.removeEventListener('scroll', place);
       element?.removeEventListener('wheel', stopScroll);
@@ -51,6 +70,7 @@ export function AuthBlocker({
   return (
     <>
       <div
+        ref={content}
         inert={!!label}
         aria-busy={!!label}
         className="auth-blocking-content"
@@ -88,10 +108,10 @@ export function AuthBlocker({
             aria-atomic="true"
             className={`auth-blocking-panel ${details ? 'is-ready' : ''}`}
           >
-            <LoaderCircle
+            <AudioLines
               size={34}
               aria-hidden="true"
-              className="animate-spin motion-reduce:animate-none"
+              className="brand-loading-mark"
             />
             <span>{label}</span>
           </div>

@@ -1,4 +1,5 @@
 import {
+  onboardingSchema,
   ApiRequestError,
   apiErrorSchema,
   csrfSchema,
@@ -9,6 +10,7 @@ import {
 } from 'api-contracts';
 
 const schemas = {
+  onboarding: onboardingSchema,
   session: sessionSchema,
   workspace: workspaceSchema,
   workspaces: workspacesSchema,

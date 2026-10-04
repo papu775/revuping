@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   ScrollView,
   Text,
@@ -33,6 +33,8 @@ export function EmailActionScreen({
   const [link, setLink] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const attempted = useRef('');
+  const [verified, setVerified] = useState(false);
   const [notice, setNotice] = useState('');
   const { pending, label, run, cancel } = useAuthAction();
   const { showToast } = useToast();
@@ -85,7 +87,17 @@ export function EmailActionScreen({
           : kind === 'forgot'
             ? 'Requesting reset link…'
             : 'Requesting verification email…',
-      (signal) => client.publicAction(action, input, signal),
+      async (signal) => {
+        try {
+          await client.publicAction(action, input, signal);
+        } catch (error) {
+          if (kind !== 'verify' || !token || !session) throw error;
+          const current = await client.current(signal).catch(() => null);
+          if (!current?.user.emailVerified) throw error;
+        }
+        if (kind === 'verify' && token && session)
+          await client.current(signal).catch(() => null);
+      },
       () => {
         const message =
           kind === 'reset'
@@ -97,8 +109,9 @@ export function EmailActionScreen({
         showToast(message, token ? 'success' : 'info');
         setPassword('');
         setLink('');
-        if (kind === 'verify' && token && session)
-          void client.current().catch(() => undefined);
+        if (kind === 'verify' && token) {
+          setVerified(true);
+        }
       },
       (error) => {
         const message = authErrorMessage(error);
@@ -107,6 +120,32 @@ export function EmailActionScreen({
       },
     );
   };
+  useEffect(() => {
+    if (
+      kind === 'verify' &&
+      parameter &&
+      link === parameter &&
+      attempted.current !== parameter
+    ) {
+      attempted.current = parameter;
+      void submit();
+    }
+  }, [kind, parameter, link, submit]);
+  if (kind === 'verify' && (verified || session?.user.emailVerified))
+    return (
+      <Screen>
+        <Header title="Email verified" />
+        <View style={{ padding: 24, gap: 20 }}>
+          <Text style={{ color: colors.ink }}>
+            Your email is confirmed. Business setup is next.
+          </Text>
+          <Button
+            title={session ? 'Continue setup' : 'Log in'}
+            onPress={() => router.replace(session ? '/workspace' : '/login')}
+          />
+        </View>
+      </Screen>
+    );
   return (
     <AuthBlocker label={label} onCancel={cancel}>
       <Screen>

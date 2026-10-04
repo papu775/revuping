@@ -1,3 +1,5 @@
+import { BusinessSetup } from '../features/business-setup';
+import { Select } from 'mobile-ui';
 import { useEffect, useRef, useState } from 'react';
 import {
   ScrollView,
@@ -38,6 +40,10 @@ export default function WorkspaceScreen() {
   const busy = useRef(false);
   const generation = useRef(0);
   const account = useRef(session?.user.id);
+  const workspaceOptions = workspaces.map(
+    (item, index) =>
+      `${item.name} · ${item.role}${workspaces.filter((other) => other.name === item.name && other.role === item.role).length > 1 ? ` (${index + 1})` : ''}`,
+  );
   const workspace = workspaces.find((item) => item.id === selected);
   useEffect(() => {
     setName(workspace?.name ?? '');
@@ -176,7 +182,7 @@ export default function WorkspaceScreen() {
                   />
                 </View>
               </Card>
-            ) : loading ? (
+            ) : loading && !workspace ? (
               <Text
                 accessibilityLiveRegion="polite"
                 style={{ color: colors.muted }}
@@ -184,74 +190,61 @@ export default function WorkspaceScreen() {
                 Loading workspaces…
               </Text>
             ) : (
-              <Card>
-                <View style={{ gap: 16 }}>
-                  <Text
-                    style={{
-                      color: colors.ink,
-                      fontSize: 20,
-                      fontWeight: '600',
-                    }}
-                  >
-                    {workspace ? workspace.name : 'Create your workspace'}
-                  </Text>
-                  <Text style={{ color: colors.muted }}>
-                    {workspace
-                      ? 'Your workspace is ready. Business setup and review tools will be available in a later phase.'
-                      : 'Choose a workspace name. No business or sample records will be created.'}
-                  </Text>
-                  {!!workspaces.length && (
-                    <View style={{ gap: 8 }}>
-                      <Text style={{ color: colors.muted }}>
-                        Select workspace
+              <View style={{ gap: 16 }}>
+                {workspaces.length > 1 && (
+                  <Select
+                    label="Workspace"
+                    value={
+                      workspaceOptions[
+                        workspaces.findIndex((item) => item.id === selected)
+                      ] ?? ''
+                    }
+                    options={workspaceOptions}
+                    onChange={(value) =>
+                      setSelected(
+                        workspaces[workspaceOptions.indexOf(value)]?.id ?? '',
+                      )
+                    }
+                  />
+                )}
+                {workspace ? (
+                  <BusinessSetup
+                    key={workspace.id}
+                    id={workspace.id}
+                    owner={workspace.role === 'OWNER'}
+                  />
+                ) : (
+                  <Card>
+                    <View style={{ gap: 16 }}>
+                      <Text style={{ color: colors.ink, fontSize: 22 }}>
+                        Let’s set up your business
                       </Text>
-                      {workspaces.map((item) => (
-                        <Button
-                          key={item.id}
-                          title={`${item.name} · ${item.role}${item.id === selected ? ' · Selected' : ''}`}
-                          variant={
-                            item.id === selected ? 'primary' : 'secondary'
-                          }
-                          onPress={() => setSelected(item.id)}
-                        />
-                      ))}
-                    </View>
-                  )}
-                  {(!workspace || workspace.role === 'OWNER') && (
-                    <>
+                      <Text style={{ color: colors.muted }}>
+                        We’ll use your business name for the workspace too.
+                      </Text>
                       <Field
-                        label="Workspace name"
+                        label="Business name"
                         value={name}
                         onChangeText={setName}
                         maxLength={100}
                       />
                       <Button
-                        title={
-                          workspace ? 'Save workspace name' : 'Create workspace'
-                        }
-                        disabled={!name.trim()}
+                        title="Continue setup"
                         loading={pending}
+                        disabled={!name.trim()}
                         onPress={() =>
                           void run(async () => {
-                            const updated = workspace
-                              ? await client.updateWorkspace(workspace.id, name)
-                              : await client.createWorkspace(name);
-                            setSelected(updated.id);
-                            setNotice('Workspace saved.');
+                            const created = await client.createWorkspace(name);
+                            setSelected(created.id);
                             await load();
+                            showToast('Workspace created.');
                           })
                         }
                       />
-                    </>
-                  )}
-                  {workspace?.role === 'STAFF' && (
-                    <Text style={{ color: colors.muted }}>
-                      You have read access. An owner can change the workspace
-                      name.
-                    </Text>
-                  )}
-                </View>
-              </Card>
+                    </View>
+                  </Card>
+                )}
+              </View>
             )}
             <Button
               title="Log out"

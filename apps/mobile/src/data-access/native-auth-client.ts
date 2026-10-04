@@ -1,4 +1,6 @@
 import {
+  onboardingSchema,
+  type SaveOnboardingInput,
   ApiRequestError,
   apiErrorSchema,
   nativeSessionSchema,
@@ -50,10 +52,17 @@ export class NativeAuthClient {
         credentials: 'omit',
         headers: {
           Accept: 'application/json',
-          ...(body === undefined ? {} : { 'Content-Type': 'application/json' }),
+          ...(body === undefined || body instanceof FormData
+            ? {}
+            : { 'Content-Type': 'application/json' }),
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
-        body: body === undefined ? undefined : JSON.stringify(body),
+        body:
+          body === undefined
+            ? undefined
+            : body instanceof FormData
+              ? body
+              : JSON.stringify(body),
         signal: controller.signal,
       });
       const value: unknown = await response.json();
@@ -182,13 +191,14 @@ export class NativeAuthClient {
     path: string,
     body?: unknown,
     method?: string,
+    signal?: AbortSignal,
   ): Promise<unknown> {
     const epoch = this.epoch;
     if (!this.access || this.access.expiresAt < Date.now() + 5000)
       await this.refresh();
     const original = this.access?.token;
     try {
-      const result = await this.send(path, body, original, method);
+      const result = await this.send(path, body, original, method, signal);
       if (epoch !== this.epoch) throw new Error('Account changed');
       return result;
     } catch (error) {
@@ -197,7 +207,13 @@ export class NativeAuthClient {
         throw error;
       if (this.access?.token === original) await this.refresh();
       try {
-        const result = await this.send(path, body, this.access?.token, method);
+        const result = await this.send(
+          path,
+          body,
+          this.access?.token,
+          method,
+          signal,
+        );
         if (epoch !== this.epoch) throw new Error('Account changed');
         return result;
       } catch (retryError) {
@@ -207,10 +223,13 @@ export class NativeAuthClient {
       }
     }
   }
-  async current() {
+  async current(signal?: AbortSignal) {
     const epoch = this.epoch;
-    const session = sessionSchema.parse(await this.request('auth/session'));
+    const session = sessionSchema.parse(
+      await this.request('auth/session', undefined, 'GET', signal),
+    );
     if (epoch !== this.epoch) throw new Error('Account changed');
+    if (signal?.aborted) throw new Error('Action cancelled');
     this.onSession(session);
     return session;
   }
@@ -226,6 +245,52 @@ export class NativeAuthClient {
     return workspaceSchema.parse(
       await this.request(`workspaces/${id}`, { name }, 'PATCH'),
     );
+  }
+  async onboarding(id: string) {
+    return onboardingSchema.parse(
+      await this.request(`workspaces/${id}/onboarding`),
+    );
+  }
+  async saveOnboarding(
+    id: string,
+    input: SaveOnboardingInput,
+    signal?: AbortSignal,
+  ) {
+    return onboardingSchema.parse(
+      await this.request(`workspaces/${id}/onboarding`, input, 'PUT', signal),
+    );
+  }
+  async uploadLogo(
+    id: string,
+    revision: number,
+    file: { uri: string; name: string; type: string },
+    signal?: AbortSignal,
+  ) {
+    const form = new FormData();
+    form.append('revision', String(revision));
+    // React Native's FormData accepts native file descriptors; no public URL fetching.
+    form.append('file', file as unknown as Blob);
+    return onboardingSchema.parse(
+      await this.request(`workspaces/${id}/logo`, form, 'POST', signal),
+    );
+  }
+  async removeLogo(id: string, revision: number, signal?: AbortSignal) {
+    return onboardingSchema.parse(
+      await this.request(
+        `workspaces/${id}/logo`,
+        { revision },
+        'DELETE',
+        signal,
+      ),
+    );
+  }
+  async logoSource(id: string, revision: number) {
+    if (!this.access || this.access.expiresAt < Date.now() + 5000)
+      await this.refresh();
+    return {
+      uri: `${this.base}/workspaces/${id}/logo?v=${revision}`,
+      headers: { Authorization: `Bearer ${this.access?.token}` },
+    };
   }
   async logout(all = false): Promise<void> {
     await this.refreshFlight?.catch(() => undefined);

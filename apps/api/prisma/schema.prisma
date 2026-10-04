@@ -120,9 +120,20 @@ model Membership {
   @@index([userId])
 }
 
+model LogoObject {
+  key         String   @id
+  workspaceId String   @db.Uuid
+  createdAt   DateTime @default(now()) @db.Timestamptz(3)
+  @@index([createdAt])
+}
+
 model Business {
   id          String     @id @default(uuid()) @db.Uuid
   workspaceId String     @unique @db.Uuid
+  draft       Json?
+  revision    Int        @default(0)
+  completedAt DateTime?   @db.Timestamptz(3)
+  logoKey     String?     @unique
   name        String
   createdAt   DateTime   @default(now()) @db.Timestamptz(3)
   updatedAt   DateTime   @updatedAt @db.Timestamptz(3)
@@ -134,6 +145,9 @@ model Business {
 }
 
 model Location {
+  timezone    String    @default("UTC")
+  hours       Json?
+  isPrimary   Boolean   @default(false)
   id          String    @id @default(uuid()) @db.Uuid
   workspaceId String    @db.Uuid
   businessId  String    @db.Uuid

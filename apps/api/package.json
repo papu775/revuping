@@ -178,6 +178,13 @@
         "options": {
           "command": "jest --runInBand"
         }
+      },
+      "cleanup-logos": {
+        "executor": "nx:run-commands",
+        "cache": false,
+        "options": {
+          "command": "node apps/api/scripts/cleanup-logos.cjs"
+        }
       }
     },
     "tags": [
@@ -187,6 +194,7 @@
     ]
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1146.0",
     "@nestjs/common": "^11.0.0",
     "@nestjs/core": "^11.0.0",
     "@nestjs/platform-express": "^11.0.0",
@@ -203,12 +211,14 @@
     "pino": "9.14.0",
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.0",
+    "sharp": "^0.35.5",
     "tslib": "^2.3.0",
     "zod": "4.6.5"
   },
   "devDependencies": {
     "@nestjs/testing": "^11.0.0",
     "@types/express": "5.0.6",
+    "@types/multer": "^2.3.0",
     "@types/nodemailer": "^8.0.2",
     "@types/pg": "8.16.0",
     "prisma": "7.10.0"

@@ -1,3 +1,4 @@
+import { emailTemplate } from './email-template';
 import {
   Inject,
   Injectable,
@@ -44,14 +45,13 @@ export class EmailService {
     const title = verify
       ? 'Verify your RevuPing email'
       : 'Reset your RevuPing password';
-    const text = `${title}\n\nOpen ${link}\n\nThis link expires in ${verify ? '24 hours' : '30 minutes'} and can be used once. If you did not request this, ignore this email.`;
+    const content = emailTemplate(verify, link);
     try {
       const result = await this.transport.sendMail({
         from: this.environment.SMTP_FROM,
         to,
         subject: title,
-        text,
-        html: `<h1>${title}</h1><p><a href="${link}">${verify ? 'Verify email' : 'Reset password'}</a></p><p>This link expires in ${verify ? '24 hours' : '30 minutes'} and can be used once. If you did not request this, ignore this email.</p>`,
+        ...content,
       });
       if (!result.accepted.length || result.rejected.length)
         throw new Error('Delivery rejected');

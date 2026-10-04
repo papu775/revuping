@@ -1,4 +1,6 @@
 'use client';
+import { BusinessSetup } from './business-setup';
+import { Select } from '@/components/ui/select';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -69,7 +71,15 @@ export function Workspace({
       setSession(restored);
       setWorkspaces(list);
       setSelected((id) =>
-        list.some((item) => item.id === id) ? id : (list[0]?.id ?? ''),
+        list.some((item) => item.id === id)
+          ? id
+          : (list.find(
+              (item) =>
+                item.id ===
+                new URLSearchParams(window.location.search).get('workspace'),
+            )?.id ??
+            list[0]?.id ??
+            ''),
       );
       setError('');
     } catch (error) {
@@ -144,7 +154,7 @@ export function Workspace({
             </Button>
           </div>
         </header>
-        <main className="dashboard-content mx-auto max-w-[780px] break-words p-8 max-[600px]:px-[18px]">
+        <main className="setup-shell break-words">
           <PageHeading
             eyebrow="Your account"
             title={
@@ -204,87 +214,68 @@ export function Workspace({
                 I’ve verified my email
               </Button>
             </section>
-          ) : loading ? (
+          ) : loading && !workspace ? (
             <p role="status">Loading your workspaces…</p>
           ) : (
-            <section className="auth-form !py-4">
-              <h2 className="!text-2xl !leading-tight">
-                {workspace ? workspace.name : 'Create your workspace'}
-              </h2>
-              <p className="mb-6 mt-3">
-                {workspace
-                  ? 'Your workspace is ready. Business setup and review tools will be available in a later phase.'
-                  : 'Choose a name for your workspace. No business or sample records will be created.'}
-              </p>
-              {!!workspaces.length && (
-                <Field>
-                  Workspace
-                  <select
+            <>
+              {workspaces.length > 1 && (
+                <div className="mb-6">
+                  <Select
+                    label="Workspace"
                     value={selected}
-                    onChange={(event) => setSelected(event.target.value)}
+                    onValueChange={setSelected}
+                    options={workspaces.map((item) => ({
+                      value: item.id,
+                      label: `${item.name} · ${item.role}`,
+                    }))}
+                  />
+                </div>
+              )}
+              {workspace ? (
+                <BusinessSetup
+                  key={workspace.id}
+                  id={workspace.id}
+                  owner={workspace.role === 'OWNER'}
+                />
+              ) : (
+                <section className="setup-card max-w-[640px]">
+                  <h2>Let’s set up your business</h2>
+                  <p>
+                    Start with your business name. We’ll use it for your
+                    workspace too.
+                  </p>
+                  <form
+                    className="setup-fields"
+                    onSubmit={(event) => {
+                      event.preventDefault();
+                      void run(async () => {
+                        const created = await authRequest(
+                          'workspaces',
+                          'workspace',
+                          { name, key: 'initial-workspace' },
+                        );
+                        setSelected(created.id);
+                        await load();
+                        toast('Workspace created.');
+                      });
+                    }}
                   >
-                    {workspaces.map((item) => (
-                      <option key={item.id} value={item.id}>
-                        {item.name} · {item.role}
-                      </option>
-                    ))}
-                  </select>
-                </Field>
+                    <Field>
+                      Business name
+                      <input
+                        value={name}
+                        onChange={(event) => setName(event.target.value)}
+                        required
+                        maxLength={100}
+                      />
+                    </Field>
+                    <Button type="submit" disabled={pending || !name.trim()}>
+                      Continue setup
+                    </Button>
+                  </form>
+                </section>
               )}
-              {(!workspace || workspace.role === 'OWNER') && (
-                <form
-                  onSubmit={(event) => {
-                    event.preventDefault();
-                    void run(async () => {
-                      const updated = workspace
-                        ? await authRequest(
-                            `workspaces/${workspace.id}`,
-                            'workspace',
-                            { name },
-                            'PATCH',
-                          )
-                        : await authRequest('workspaces', 'workspace', {
-                            name,
-                            key: 'initial-workspace',
-                          });
-                      setSelected(updated.id);
-                      setNotice(
-                        workspace
-                          ? 'Workspace name saved.'
-                          : 'Workspace created.',
-                      );
-                      await load();
-                    });
-                  }}
-                >
-                  <Field>
-                    Workspace name
-                    <input
-                      value={name}
-                      onChange={(event) => setName(event.target.value)}
-                      required
-                      maxLength={100}
-                    />
-                  </Field>
-                  <Button
-                    type="submit"
-                    disabled={pending || !name.trim()}
-                    aria-busy={pending}
-                  >
-                    {pending
-                      ? 'Saving…'
-                      : workspace
-                        ? 'Save workspace name'
-                        : 'Create workspace'}
-                  </Button>
-                </form>
-              )}
-              {workspace?.role === 'STAFF' && (
-                <p>
-                  You have read access. An owner can change the workspace name.
-                </p>
-              )}
-            </section>
+            </>
           )}
           <p className="auth-switch">
             <Link href="/dashboard">Explore the separate fictional demo</Link>

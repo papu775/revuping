@@ -133,6 +133,20 @@
         "options": {
           "command": "node apps/web/scripts/check-design.cjs"
         }
+      },
+      "onboarding-check": {
+        "executor": "nx:run-commands",
+        "cache": false,
+        "options": {
+          "command": "node apps/web/scripts/check-onboarding.cjs"
+        }
+      },
+      "verification-check": {
+        "executor": "nx:run-commands",
+        "cache": false,
+        "options": {
+          "command": "node apps/web/scripts/check-verification-states.cjs"
+        }
       }
     },
     "tags": [
