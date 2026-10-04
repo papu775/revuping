@@ -16,7 +16,7 @@ import {
 import { useToast } from '@/components/ui/toaster';
 import { useAuthAction } from './use-auth-action';
 import { AuthBlocker } from './auth-blocker';
-import { ArrowRight, Check } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { Logo } from '@/components/shared';
 import { Button } from '@/components/ui/button';
 export function Auth({ signup = false }: { signup?: boolean }) {
@@ -80,24 +80,6 @@ export function Auth({ signup = false }: { signup?: boolean }) {
           </p>
           {!registeredEmail && (
             <>
-              <div className="auth-demo-note">
-                <Check size={16} />
-                <span>
-                  Want to explore first? Demo access uses fictional data and
-                  needs no account.
-                </span>
-              </div>
-              <Button asChild className="auth-demo-entry">
-                <Link href="/dashboard">
-                  Continue with demo access <ArrowRight size={17} />
-                </Link>
-              </Button>
-              <div className="auth-divider">
-                <span>
-                  or{' '}
-                  {signup ? 'create a real account' : 'log in to your account'}
-                </span>
-              </div>
               <form
                 noValidate
                 onBlur={(event) => {
@@ -318,7 +300,6 @@ export function Auth({ signup = false }: { signup?: boolean }) {
                 )}
                 <Button
                   type="submit"
-                  variant="secondary"
                   disabled={pending || !!registeredEmail}
                   aria-busy={pending}
                 >
@@ -337,6 +318,17 @@ export function Auth({ signup = false }: { signup?: boolean }) {
                   <ArrowRight size={17} />
                 </Button>
               </form>
+              <div className="auth-divider">
+                <span>or explore first</span>
+              </div>
+              <Button asChild variant="secondary" className="auth-demo-entry">
+                <Link href="/dashboard">
+                  Continue with demo access <ArrowRight size={17} />
+                </Link>
+              </Button>
+              <p className="auth-demo-note">
+                Fictional data. No account needed.
+              </p>
             </>
           )}
           {!!registeredEmail && (

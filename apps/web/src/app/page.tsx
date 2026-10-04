@@ -18,6 +18,7 @@ import { HeroIntro, FaqItem } from '@/components/template-motion';
 import { HeroArtwork } from '@/components/hero/hero-artwork';
 import { ConversationCurves } from '@/components/conversation-curves';
 import { ProductShowcase } from '@/features/marketing/product-showcase';
+import { DemoFeedbackPreview } from '@/components/demo-feedback-preview';
 export default function Landing() {
   return (
     <>
@@ -45,6 +46,11 @@ export default function Landing() {
             </p>
             <div className="hero-actions">
               <Button asChild>
+                <Link href="/signup">
+                  Create account <ArrowRight size={18} />
+                </Link>
+              </Button>
+              <Button asChild variant="secondary">
                 <Link href="/dashboard">
                   Try the demo <ArrowRight size={18} />
                 </Link>
@@ -54,8 +60,8 @@ export default function Landing() {
               </SectionLink>
             </div>
             <div className="hero-footnote">
-              <Check size={14} /> No credit card <span>·</span> No setup needed{' '}
-              <span>·</span> Interactive demo
+              <Check size={14} /> Email verification <span>·</span> Guided
+              business setup
             </div>
           </HeroIntro>
           <HeroArtwork />
@@ -75,31 +81,34 @@ export default function Landing() {
             </p>
           </div>
           <div className="business-photo-grid">
-            <figure>
-              <img
-                src="/images/customer-service.webp"
-                width={1200}
-                height={800}
-                loading="lazy"
-                alt="Illustrative photograph of a café owner talking with a customer"
-              />
-              <figcaption>A moment to listen.</figcaption>
+            <figure className="business-supporting-photo">
+              <div className="photo-frame">
+                <img
+                  src="/images/flower-shop.webp"
+                  width={1200}
+                  height={800}
+                  loading="lazy"
+                  alt="Illustrative photograph of a florist preparing flowers while talking with a customer"
+                />
+              </div>
+              <figcaption>Care in every conversation.</figcaption>
             </figure>
-            <figure>
-              <img
-                src="/images/flower-shop.webp"
-                width={1200}
-                height={800}
-                loading="lazy"
-                alt="Illustrative photograph of a florist preparing flowers while talking with a customer"
-              />
-              <figcaption>A thoughtful next step.</figcaption>
-            </figure>
+            <div className="business-product-preview">
+              <span className="eyebrow">
+                From a conversation to a next step
+              </span>
+              <h3>Make room for the details.</h3>
+              <p>
+                See the feedback, add context and decide how to follow up. Keep
+                the customer conversation together.
+              </p>
+              <DemoFeedbackPreview />
+              <SectionLink href="#features" className="text-link">
+                Explore the workflow <ArrowRight size={16} />
+              </SectionLink>
+            </div>
           </div>
-          <small>
-            Original illustrative photography. These businesses and people are
-            fictional examples.
-          </small>
+          <small>Generated photography · Fictional product preview</small>
         </section>
         <section className="value-strip" aria-label="Product capabilities">
           <div className="wrap">

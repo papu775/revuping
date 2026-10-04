@@ -89,10 +89,21 @@ export function MarketingHeader() {
             Log in
           </Link>
           <ThemeControl />
-          <Button asChild size="small">
+          <Button
+            asChild
+            variant="secondary"
+            size="small"
+            className="hidden lg:inline-flex"
+          >
             <Link href="/dashboard" aria-label="Try the demo">
               <span className="hidden min-[480px]:inline">Try the demo</span>
               <span className="min-[480px]:hidden">Demo</span> <ArrowUpRight />
+            </Link>
+          </Button>
+          <Button asChild size="small">
+            <Link href="/signup" aria-label="Create account">
+              <span className="hidden min-[480px]:inline">Create account</span>
+              <span className="min-[480px]:hidden">Sign up</span>
             </Link>
           </Button>
           <button
@@ -127,7 +138,11 @@ export function MarketingHeader() {
             className="overflow-hidden border-t border-line lg:hidden"
           >
             <div className="flex flex-col gap-1 p-4">
-              {[...links, ['Log in', '/login']].map(([label, href]) => (
+              {[
+                ...links,
+                ['Log in', '/login'],
+                ['Try the demo', '/dashboard'],
+              ].map(([label, href]) => (
                 <Link
                   key={href}
                   href={href}
